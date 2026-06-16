@@ -92,7 +92,7 @@ body::after {
   z-index: 1;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 0 20px 80px;
+  padding: 0 56px 80px 20px;
 }
 
 /* -- Component 1: Title -- */
@@ -2064,11 +2064,6 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   pointer-events: none;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
-.shop-overlay.is-open {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}
 
 .shop-header {
   display: flex;
@@ -2243,6 +2238,123 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
     left: 12px;
     width: auto;
   }
+}
+
+/* ── Toolbar ────────────────────────────────────────────────────────────────── */
+#dashToolbar {
+  position: fixed;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 9990;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tb-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  color: rgba(255,255,255,0.5);
+  font-size: 16px;
+  padding: 0;
+}
+.tb-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.15);
+}
+.tb-btn.tb-active {
+  background: rgba(99,102,241,0.15);
+  border-color: rgba(99,102,241,0.3);
+  color: rgba(99,102,241,0.9);
+}
+
+/* ── Generic Overlay ────────────────────────────────────────────────────────── */
+.dash-overlay {
+  position: fixed;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%) translateX(10px);
+  width: 380px;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 9991;
+  background: rgba(15,15,26,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.dash-overlay::-webkit-scrollbar { width: 4px; }
+.dash-overlay::-webkit-scrollbar-track { background: transparent; }
+.dash-overlay::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
+.dash-overlay.overlay-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+.overlay-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.overlay-title {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.overlay-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.3);
+  font-size: 16px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  line-height: 1;
+}
+.overlay-close:hover { color: rgba(255,255,255,0.7); }
+
+/* Shopping overlay overrides — keep internal flex layout, strip outer padding */
+#overlay-shopping {
+  position: fixed;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%) translateX(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  max-height: 80vh;
+  z-index: 9991;
+  bottom: auto;
+}
+#overlay-shopping.overlay-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2428,71 +2540,6 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
     </div>
   </div>
 
-  <!-- 8. Daily Log -->
-  <div class="section">
-    <div class="section-title">Daily Log</div>
-    <div class="gm-card" id="logCard">
-      <div class="gm-eyebrow">LOG</div>
-      <div class="log-sub-header"><i class="ti ti-bolt"></i> Wins</div>
-      <div class="win-input-row">
-        <input type="text" class="win-input" id="winInput" placeholder="Add a win...">
-        <button class="win-add-btn" id="winAddBtn">+ Add</button>
-      </div>
-      <ul class="win-list" id="winList"></ul>
-      <div class="log-sub-header">Brain dump</div>
-      <textarea class="auto-textarea" id="brainDump" placeholder="Dump everything here..."></textarea>
-      <div class="log-sub-header">Night</div>
-      <div class="night-fields-row">
-        <div class="night-field">
-          <label class="night-field-label" for="nightStrain">Strain</label>
-          <input type="text" class="night-input" id="nightStrain" placeholder="e.g. 18.3">
-        </div>
-        <div class="night-field">
-          <label class="night-field-label" for="nightVibe">Vibe</label>
-          <input type="text" class="night-input" id="nightVibe" placeholder="e.g. focused">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 9. To-Do List -->
-  <div class="section">
-    <div class="section-title">To Do</div>
-    <div class="gm-card" id="todayCard">
-      <div class="gm-card-header">
-        <div class="gm-card-header-left">
-          <div class="gm-eyebrow">TO DO</div>
-          <div class="gm-progress-row">
-            <div class="gm-progress-num"   id="gmProgressNum">0</div>
-            <div class="gm-progress-total" id="gmProgressTotal">/ 0</div>
-            <div class="gm-progress-label" id="gmProgressLabel">nothing here yet</div>
-          </div>
-        </div>
-        <div class="gm-streak" id="gmStreak">
-          <i class="ti ti-bolt"></i>
-          <span class="gm-streak-num" id="gmStreakNum">0</span>
-          <span>day streak</span>
-        </div>
-      </div>
-      <div class="gm-bar" id="gmBar"></div>
-      <div id="emptyState" class="empty-state">No tasks yet -- add one below.</div>
-      <ul id="goalList" class="goal-list gm-list"></ul>
-      <div id="doneSectionWrap" style="display:none">
-        <div class="done-section-hdr" id="doneSectionToggle">
-          <span class="done-section-label" id="doneSectionCount">Done (0)</span>
-          <button class="done-clear-btn" id="clearDoneBtn">Clear all</button>
-        </div>
-        <ul id="doneList" class="goal-list" style="display:none"></ul>
-      </div>
-      <div class="gm-input-wrap">
-        <input type="text" id="goalInput" placeholder="Add a task...">
-        <button class="goal-add-btn"    id="goalAddBtn">+ Add</button>
-        <button class="goal-polish-btn" id="goalPolishBtn">Polish</button>
-      </div>
-      <div class="polish-status" id="polishStatus"></div>
-    </div>
-  </div>
-
   <!-- 10. Streaks + Consistency Graph (side by side) -->
   <div class="overview-row">
     <div class="gm-card" id="streaksCard">
@@ -2523,137 +2570,211 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   </div>
   <div class="graph-tooltip" id="graphTooltip"></div>
 
-  <!-- 11. Countdown Timers -->
-  <div class="countdown-bar" id="countdownBar" style="display:none">
-    <span class="countdown-prefix">Countdown</span>
-    <div class="countdown-items" id="countdownItems"></div>
-    <button class="countdown-add-btn" id="countdownAddBtn">+ Add</button>
-  </div>
-
-  <!-- 12. Money Tracker -->
-  <div class="section" id="moneySection">
-    <div class="section-title">Money Tracker</div>
-    <div class="gm-card" id="moneyCard">
-      <div class="gm-eyebrow" style="margin-bottom:12px">LOG EXPENSE</div>
-      <div class="money-expense-form">
-        <div class="money-form-row">
-          <input type="number" class="money-amount-input" id="moneyAmount" placeholder="£0.00" min="0" step="0.01">
-          <select class="money-select" id="moneyCategory">
-            <option value="Food">Food</option>
-            <option value="Transport">Transport</option>
-            <option value="Going Out">Going Out</option>
-            <option value="Subscriptions">Subscriptions</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <input type="text" class="money-note-input" id="moneyNote" placeholder="Note (optional)...">
-        <button class="money-add-btn" id="moneyAddBtn">Add Expense</button>
-      </div>
-      <div class="money-divider"></div>
-      <div class="money-section-label">Today's Expenses</div>
-      <div id="moneyExpenseList">
-        <div class="empty-state">No expenses logged today.</div>
-      </div>
-      <div class="money-divider"></div>
-      <div class="money-stats-block">
-        <div class="money-stat-row">
-          <span class="money-stat-label">Today's total</span>
-          <span class="money-stat-value" id="moneyTodayTotal">£0.00</span>
-        </div>
-        <div class="money-stat-row">
-          <span class="money-stat-label">This week</span>
-          <span class="money-stat-value" id="moneyWeekTotal">£0.00</span>
-        </div>
-        <div class="money-divider"></div>
-        <div class="money-section-label">Monthly Budget</div>
-        <div class="money-stat-row">
-          <span class="money-stat-label" id="moneyBudgetLabel">£0 / £800</span>
-          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary)" id="moneyBudgetPct">0%</span>
-        </div>
-        <div class="money-budget-bar">
-          <div class="money-budget-fill" id="moneyBudgetFill"></div>
-        </div>
-        <div class="money-edit-row">
-          <span class="money-edit-label">Budget £</span>
-          <input type="number" class="money-edit-input" id="moneyBudgetInput" placeholder="800" min="0">
-          <button class="money-save-btn" id="moneyBudgetSave">Save</button>
-        </div>
-        <div class="money-divider"></div>
-        <div class="money-section-label">Savings Goal</div>
-        <div class="money-stat-row">
-          <span class="money-stat-label" id="moneySavingsLabel">£0 / £1,000</span>
-          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary)" id="moneySavingsPct">0%</span>
-        </div>
-        <div class="money-budget-bar">
-          <div class="money-budget-fill" id="moneySavingsFill"></div>
-        </div>
-        <div class="money-edit-row">
-          <span class="money-edit-label">Goal £</span>
-          <input type="number" class="money-edit-input" id="moneySavingsGoalInput" placeholder="1000" min="0">
-          <span class="money-edit-label">Saved £</span>
-          <input type="number" class="money-edit-input" id="moneySavedInput" placeholder="0" min="0">
-          <button class="money-save-btn" id="moneySavingsSave">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 13. Uni Prep -->
-  <div class="section" id="uniSection">
-    <div class="section-title">Year 2 Prep</div>
-    <div class="gm-card" id="uniCard">
-      <div class="gm-card-header" style="margin-bottom:0">
-        <div class="gm-card-header-left">
-          <div class="gm-eyebrow">UNI PREP <i class="ti ti-school"></i></div>
-          <div class="uni-header-sub" id="uniCountdown">Loading...</div>
-        </div>
-        <div class="tracker-counter" id="uniProgressLabel">0 / 0 ready</div>
-      </div>
-      <div class="uni-progress-bar">
-        <div class="uni-progress-fill" id="uniProgressFill"></div>
-      </div>
-      <div class="uni-progress-text" id="uniProgressText">0 / 0 modules ready</div>
-      <div class="uni-add-row">
-        <input type="text" class="uni-module-input" id="uniModuleInput" placeholder="Module name...">
-        <button class="uni-add-btn" id="uniAddBtn">+ Add Module</button>
-      </div>
-      <div id="uniModuleList">
-        <div class="empty-state">No modules added yet -- click "+ Add Module" to start.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 14. Weekly Review -->
-  <div class="section" id="weeklyReviewSection">
-    <div class="section-title">Weekly Review</div>
-    <div class="gm-card" id="weeklyCard">
-      <div class="gm-eyebrow" style="margin-bottom:14px">LAST 7 DAYS</div>
-      <div class="weekly-grid" id="weeklyGrid"></div>
-    </div>
-  </div>
-
-  <!-- 15. Goal Ticker -->
-  <div class="ticker-row" style="margin-top:8px">
-    <div class="goal-ticker" id="goalTicker" aria-live="polite" aria-atomic="true">
-      <div class="goal-ticker-led"><span class="goal-ticker-led-dot"></span></div>
-      <div class="goal-ticker-label">GOALS</div>
-      <div class="goal-ticker-stage" id="goalTickerStage">
-        <div class="goal-ticker-row">
-          <span class="goal-ticker-status" data-status="">.</span>
-          <span class="goal-ticker-text">Loading...</span>
-        </div>
-      </div>
-      <div class="goal-ticker-meta" id="goalTickerMeta">0/0</div>
-    </div>
-  </div>
 
 </div><!-- /page-wrap -->
 
-<!-- Shopping List FAB + Overlay -->
-<button class="shop-fab" id="shopFab" title="Shopping List">
-  <i class="ti ti-shopping-cart"></i>
-</button>
-<div class="shop-overlay" id="shopOverlay">
+<!-- ── Toolbar ── -->
+<div id="dashToolbar">
+  <button class="tb-btn" data-overlay="overlay-todos"      title="To Do"><i class="ti ti-checkbox"></i></button>
+  <button class="tb-btn" data-overlay="overlay-money"      title="Money"><i class="ti ti-coin"></i></button>
+  <button class="tb-btn" data-overlay="overlay-log"        title="Daily Log"><i class="ti ti-pencil"></i></button>
+  <button class="tb-btn" data-overlay="overlay-countdowns" title="Countdowns"><i class="ti ti-clock"></i></button>
+  <button class="tb-btn" data-overlay="overlay-uni"        title="Uni Prep"><i class="ti ti-school"></i></button>
+  <button class="tb-btn" data-overlay="overlay-weekly"     title="Weekly Review"><i class="ti ti-chart-bar"></i></button>
+  <button class="tb-btn" data-overlay="overlay-shopping"   title="Shopping"><i class="ti ti-shopping-cart"></i></button>
+  <button class="tb-btn" data-overlay="overlay-goals"      title="Goals"><i class="ti ti-target"></i></button>
+</div>
+
+<!-- ── Overlays ── -->
+
+<!-- To Do -->
+<div class="dash-overlay" id="overlay-todos">
+  <div class="overlay-hdr">
+    <span class="overlay-title">To Do</span>
+    <button class="overlay-close" data-overlay="overlay-todos"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="gm-card" id="todayCard" style="margin-bottom:0">
+    <div class="gm-card-header">
+      <div class="gm-card-header-left">
+        <div class="gm-eyebrow">TO DO</div>
+        <div class="gm-progress-row">
+          <div class="gm-progress-num"   id="gmProgressNum">0</div>
+          <div class="gm-progress-total" id="gmProgressTotal">/ 0</div>
+          <div class="gm-progress-label" id="gmProgressLabel">nothing here yet</div>
+        </div>
+      </div>
+      <div class="gm-streak" id="gmStreak">
+        <i class="ti ti-bolt"></i>
+        <span class="gm-streak-num" id="gmStreakNum">0</span>
+        <span>day streak</span>
+      </div>
+    </div>
+    <div class="gm-bar" id="gmBar"></div>
+    <div id="emptyState" class="empty-state">No tasks yet -- add one below.</div>
+    <ul id="goalList" class="goal-list gm-list"></ul>
+    <div id="doneSectionWrap" style="display:none">
+      <div class="done-section-hdr" id="doneSectionToggle">
+        <span class="done-section-label" id="doneSectionCount">Done (0)</span>
+        <button class="done-clear-btn" id="clearDoneBtn">Clear all</button>
+      </div>
+      <ul id="doneList" class="goal-list" style="display:none"></ul>
+    </div>
+    <div class="gm-input-wrap">
+      <input type="text" id="goalInput" placeholder="Add a task...">
+      <button class="goal-add-btn"    id="goalAddBtn">+ Add</button>
+      <button class="goal-polish-btn" id="goalPolishBtn">Polish</button>
+    </div>
+    <div class="polish-status" id="polishStatus"></div>
+  </div>
+</div>
+
+<!-- Money -->
+<div class="dash-overlay" id="overlay-money">
+  <div class="overlay-hdr">
+    <span class="overlay-title">Money</span>
+    <button class="overlay-close" data-overlay="overlay-money"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="gm-card" id="moneyCard" style="margin-bottom:0">
+    <div class="gm-eyebrow" style="margin-bottom:12px">LOG EXPENSE</div>
+    <div class="money-expense-form">
+      <div class="money-form-row">
+        <input type="number" class="money-amount-input" id="moneyAmount" placeholder="£0.00" min="0" step="0.01">
+        <select class="money-select" id="moneyCategory">
+          <option value="Food">Food</option>
+          <option value="Transport">Transport</option>
+          <option value="Going Out">Going Out</option>
+          <option value="Subscriptions">Subscriptions</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <input type="text" class="money-note-input" id="moneyNote" placeholder="Note (optional)...">
+      <button class="money-add-btn" id="moneyAddBtn">Add Expense</button>
+    </div>
+    <div class="money-divider"></div>
+    <div class="money-section-label">Today's Expenses</div>
+    <div id="moneyExpenseList"><div class="empty-state">No expenses logged today.</div></div>
+    <div class="money-divider"></div>
+    <div class="money-stats-block">
+      <div class="money-stat-row">
+        <span class="money-stat-label">Today's total</span>
+        <span class="money-stat-value" id="moneyTodayTotal">£0.00</span>
+      </div>
+      <div class="money-stat-row">
+        <span class="money-stat-label">This week</span>
+        <span class="money-stat-value" id="moneyWeekTotal">£0.00</span>
+      </div>
+      <div class="money-divider"></div>
+      <div class="money-section-label">Monthly Budget</div>
+      <div class="money-stat-row">
+        <span class="money-stat-label" id="moneyBudgetLabel">£0 / £800</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary)" id="moneyBudgetPct">0%</span>
+      </div>
+      <div class="money-budget-bar"><div class="money-budget-fill" id="moneyBudgetFill"></div></div>
+      <div class="money-edit-row">
+        <span class="money-edit-label">Budget £</span>
+        <input type="number" class="money-edit-input" id="moneyBudgetInput" placeholder="800" min="0">
+        <button class="money-save-btn" id="moneyBudgetSave">Save</button>
+      </div>
+      <div class="money-divider"></div>
+      <div class="money-section-label">Savings Goal</div>
+      <div class="money-stat-row">
+        <span class="money-stat-label" id="moneySavingsLabel">£0 / £1,000</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary)" id="moneySavingsPct">0%</span>
+      </div>
+      <div class="money-budget-bar"><div class="money-budget-fill" id="moneySavingsFill"></div></div>
+      <div class="money-edit-row">
+        <span class="money-edit-label">Goal £</span>
+        <input type="number" class="money-edit-input" id="moneySavingsGoalInput" placeholder="1000" min="0">
+        <span class="money-edit-label">Saved £</span>
+        <input type="number" class="money-edit-input" id="moneySavedInput" placeholder="0" min="0">
+        <button class="money-save-btn" id="moneySavingsSave">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Daily Log -->
+<div class="dash-overlay" id="overlay-log">
+  <div class="overlay-hdr">
+    <span class="overlay-title">Daily Log</span>
+    <button class="overlay-close" data-overlay="overlay-log"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="gm-card" id="logCard" style="margin-bottom:0">
+    <div class="gm-eyebrow">LOG</div>
+    <div class="log-sub-header"><i class="ti ti-bolt"></i> Wins</div>
+    <div class="win-input-row">
+      <input type="text" class="win-input" id="winInput" placeholder="Add a win...">
+      <button class="win-add-btn" id="winAddBtn">+ Add</button>
+    </div>
+    <ul class="win-list" id="winList"></ul>
+    <div class="log-sub-header">Brain dump</div>
+    <textarea class="auto-textarea" id="brainDump" placeholder="Dump everything here..."></textarea>
+    <div class="log-sub-header">Night</div>
+    <div class="night-fields-row">
+      <div class="night-field">
+        <label class="night-field-label" for="nightStrain">Strain</label>
+        <input type="text" class="night-input" id="nightStrain" placeholder="e.g. 18.3">
+      </div>
+      <div class="night-field">
+        <label class="night-field-label" for="nightVibe">Vibe</label>
+        <input type="text" class="night-input" id="nightVibe" placeholder="e.g. focused">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Countdowns -->
+<div class="dash-overlay" id="overlay-countdowns">
+  <div class="overlay-hdr">
+    <span class="overlay-title">Countdowns</span>
+    <button class="overlay-close" data-overlay="overlay-countdowns"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="countdown-bar" id="countdownBar" style="flex-wrap:wrap;margin-bottom:10px">
+    <div class="countdown-items" id="countdownItems" style="flex:1;min-width:100%"></div>
+  </div>
+  <button class="countdown-add-btn" id="countdownAddBtn">+ Add Countdown</button>
+</div>
+
+<!-- Uni Prep -->
+<div class="dash-overlay" id="overlay-uni">
+  <div class="overlay-hdr">
+    <span class="overlay-title">Uni Prep</span>
+    <button class="overlay-close" data-overlay="overlay-uni"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="gm-card" id="uniCard" style="margin-bottom:0">
+    <div class="gm-card-header" style="margin-bottom:0">
+      <div class="gm-card-header-left">
+        <div class="gm-eyebrow">UNI PREP <i class="ti ti-school"></i></div>
+        <div class="uni-header-sub" id="uniCountdown">Loading...</div>
+      </div>
+      <div class="tracker-counter" id="uniProgressLabel">0 / 0 ready</div>
+    </div>
+    <div class="uni-progress-bar"><div class="uni-progress-fill" id="uniProgressFill"></div></div>
+    <div class="uni-progress-text" id="uniProgressText">0 / 0 modules ready</div>
+    <div class="uni-add-row">
+      <input type="text" class="uni-module-input" id="uniModuleInput" placeholder="Module name...">
+      <button class="uni-add-btn" id="uniAddBtn">+ Add Module</button>
+    </div>
+    <div id="uniModuleList">
+      <div class="empty-state">No modules added yet -- click "+ Add Module" to start.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Weekly Review -->
+<div class="dash-overlay" id="overlay-weekly">
+  <div class="overlay-hdr">
+    <span class="overlay-title">Weekly Review</span>
+    <button class="overlay-close" data-overlay="overlay-weekly"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="gm-card" id="weeklyCard" style="margin-bottom:0">
+    <div class="gm-eyebrow" style="margin-bottom:14px">LAST 7 DAYS</div>
+    <div class="weekly-grid" id="weeklyGrid"></div>
+  </div>
+</div>
+
+<!-- Shopping List -->
+<div class="shop-overlay dash-overlay" id="overlay-shopping">
   <div class="shop-header">
     <div class="shop-title">
       Shopping List
@@ -2673,6 +2794,27 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
       <option value="General">General</option>
     </select>
     <button class="shop-add-btn" id="shopAddBtn">+ Add</button>
+  </div>
+</div>
+
+<!-- Goals / Ticker -->
+<div class="dash-overlay" id="overlay-goals">
+  <div class="overlay-hdr">
+    <span class="overlay-title">Goals</span>
+    <button class="overlay-close" data-overlay="overlay-goals"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="ticker-row">
+    <div class="goal-ticker" id="goalTicker" aria-live="polite" aria-atomic="true">
+      <div class="goal-ticker-led"><span class="goal-ticker-led-dot"></span></div>
+      <div class="goal-ticker-label">GOALS</div>
+      <div class="goal-ticker-stage" id="goalTickerStage">
+        <div class="goal-ticker-row">
+          <span class="goal-ticker-status" data-status="">.</span>
+          <span class="goal-ticker-text">Loading...</span>
+        </div>
+      </div>
+      <div class="goal-ticker-meta" id="goalTickerMeta">0/0</div>
+    </div>
   </div>
 </div>
 
@@ -3187,16 +3329,18 @@ function loadShoppingList() {
 }
 
 function initShoppingList() {
-  const fab      = document.getElementById('shopFab');
-  const overlay  = document.getElementById('shopOverlay');
+  const overlay  = document.getElementById('overlay-shopping');
   const closeBtn = document.getElementById('shopClose');
   const addBtn   = document.getElementById('shopAddBtn');
   const input    = document.getElementById('shopAddInput');
   const select   = document.getElementById('shopStoreSelect');
   const clearBtn = document.getElementById('shopClearChecked');
 
-  fab.addEventListener('click', () => overlay.classList.toggle('is-open'));
-  closeBtn.addEventListener('click', () => overlay.classList.remove('is-open'));
+  closeBtn.addEventListener('click', () => {
+    overlay.classList.remove('overlay-open');
+    const tbBtn = document.querySelector('[data-overlay="overlay-shopping"]');
+    if (tbBtn) tbBtn.classList.remove('tb-active');
+  });
 
   function addItem() {
     const text  = input.value.trim();
@@ -3735,9 +3879,11 @@ function renderCountdowns() {
   if (!bar || !items) return;
   const today = new Date(); today.setHours(0,0,0,0);
   const active = loadCountdowns().filter(c => new Date(c.date + 'T00:00:00') >= today);
-  if (!active.length) { bar.style.display = 'none'; return; }
-  bar.style.display = 'flex';
   items.innerHTML = '';
+  if (!active.length) {
+    items.innerHTML = '<span style="font-size:12px;color:var(--text-tertiary)">No active countdowns.</span>';
+    return;
+  }
   active.forEach(c => {
     const el = document.createElement('div');
     el.className = 'countdown-item';
@@ -4580,6 +4726,44 @@ async function initDashboard() {
   renderWeeklyReview();
 }
 initDashboard();
+
+// ── Toolbar overlay system ───────────────────────────────────────────────────
+function overlayCloseAll() {
+  document.querySelectorAll('.dash-overlay.overlay-open').forEach(function(el) {
+    el.classList.remove('overlay-open');
+  });
+  document.querySelectorAll('.tb-btn.tb-active').forEach(function(el) {
+    el.classList.remove('tb-active');
+  });
+}
+
+document.querySelectorAll('.tb-btn').forEach(function(btn) {
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var id = btn.dataset.overlay;
+    var overlay = document.getElementById(id);
+    if (!overlay) return;
+    var isOpen = overlay.classList.contains('overlay-open');
+    overlayCloseAll();
+    if (!isOpen) {
+      overlay.classList.add('overlay-open');
+      btn.classList.add('tb-active');
+    }
+  });
+});
+
+document.querySelectorAll('.overlay-close').forEach(function(btn) {
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    overlayCloseAll();
+  });
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dash-overlay') && !e.target.closest('#dashToolbar')) {
+    overlayCloseAll();
+  }
+});
 </script>
 </body>
 </html>
