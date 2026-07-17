@@ -6,10 +6,10 @@
 <title>My Dashboard</title>
 <style>
 :root {
-  --color-magenta: #6366f1;
+  --color-magenta: #f97316;
   --color-orange:  #f59e0b;
   --color-red:     #ef4444;
-  --color-bg:      #0f0f1a;
+  --color-bg:      #1a0e0e;
   --color-card:    rgba(255,255,255,0.04);
   --color-card-border: rgba(255,255,255,0.06);
   --color-text:    #f0f0f0;
@@ -18,23 +18,23 @@
   --text-primary:   rgba(255,255,255,0.95);
   --text-secondary: rgba(255,255,255,0.4);
   --text-tertiary:  rgba(255,255,255,0.25);
-  --success:        #6366f1;
+  --success:        #f97316;
   --warning:        #f59e0b;
   --danger:         rgba(239,68,68,0.7);
   --card-bg:        rgba(255,255,255,0.04);
   --radius:         10px;
   --font-mono:      ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --accent:         #6366f1;
-  --accent-dim:     rgba(99,102,241,0.10);
-  --accent-border:  rgba(99,102,241,0.25);
-  --p-bg:     #0f0f1a;
+  --accent:         #f97316;
+  --accent-dim:     rgba(249,115,22,0.10);
+  --accent-border:  rgba(249,115,22,0.25);
+  --p-bg:     #1a0e0e;
   --p-card:   rgba(255,255,255,0.04);
   --p-border: rgba(255,255,255,0.06);
-  --p-accent: #6366f1;
-  --p-deep:   #4f46e5;
-  --p-light:  #818cf8;
-  --p-glow:   rgba(99,102,241,0.4);
-  --p-top:    linear-gradient(90deg, transparent, #6366f1, transparent);
+  --p-accent: #f97316;
+  --p-deep:   #ea580c;
+  --p-light:  #fb923c;
+  --p-glow:   rgba(249,115,22,0.4);
+  --p-top:    linear-gradient(90deg, transparent, #f97316, transparent);
   --p-text:   rgba(255,255,255,0.95);
   --p-sub:    rgba(255,255,255,0.4);
   --p-val:    #ffffff;
@@ -47,7 +47,7 @@ html { height: 100%; }
 
 body {
   min-height: 100%;
-  background: linear-gradient(145deg, #0f0f1a, #131332, #0d1b3a, #0f0f1a);
+  background: linear-gradient(145deg, #1a0e0e, #1e1012, #1c0d10, #1a0e0e);
   background-attachment: fixed;
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: var(--text-primary);
@@ -62,9 +62,9 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse at 50% 20%, rgba(99,102,241,0.09) 0%, transparent 65%),
-    radial-gradient(ellipse at 80% 85%, rgba(79,70,229,0.07) 0%, transparent 55%),
-    radial-gradient(ellipse at 10% 65%, rgba(255,107,163,0.04) 0%, transparent 50%);
+    radial-gradient(ellipse at 50% 20%, rgba(249,115,22,0.09) 0%, transparent 65%),
+    radial-gradient(ellipse at 80% 85%, rgba(234,88,12,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 65%, rgba(236,72,153,0.08) 0%, transparent 50%);
   filter: blur(0);
   animation: none;
 }
@@ -106,130 +106,6 @@ body::after {
   -webkit-text-fill-color: transparent;
   margin-bottom: 14px;
 }
-
-/* -- Component 2: Goal Ticker -- */
-.ticker-row { margin-bottom: 18px; }
-
-.goal-ticker {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 12px;
-  border-radius: var(--radius);
-  position: relative;
-  overflow: hidden;
-  background-image:
-    linear-gradient(180deg, rgba(8,8,26,0.85) 0%, rgba(8,8,26,0.75) 100%),
-    repeating-linear-gradient(0deg, rgba(99,102,241,0.022) 0, rgba(99,102,241,0.022) 1px, transparent 1px, transparent 3px);
-  box-shadow: inset 0 1px 0 rgba(99,102,241,0.03);
-}
-
-.goal-ticker::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -40%;
-  width: 30%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-  animation: ticker-sweep 8s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes ticker-sweep {
-  0%   { left: -40%; }
-  100% { left: 110%; }
-}
-
-.goal-ticker-led { display: flex; align-items: center; flex-shrink: 0; }
-
-.goal-ticker-led-dot {
-  display: block;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #6366f1;
-  box-shadow: 0 0 8px rgba(99,102,241,0.7);
-  animation: led-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes led-pulse {
-  0%,100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: 0.45; transform: scale(0.85); }
-}
-
-.goal-ticker-label {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-
-.goal-ticker-stage {
-  flex: 1;
-  height: 22px;
-  position: relative;
-  overflow: hidden;
-}
-
-.goal-ticker-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  height: 22px;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-primary);
-  white-space: nowrap;
-  position: absolute;
-  width: 100%;
-}
-
-.goal-ticker-row.is-leaving  { animation: ticker-leave 0.45s cubic-bezier(0.55,0,0.55,1) forwards; }
-.goal-ticker-row.is-entering { animation: ticker-enter 0.45s cubic-bezier(0.22,1,0.36,1) forwards; }
-
-@keyframes ticker-leave {
-  from { opacity: 1; transform: translateY(0); }
-  to   { opacity: 0; transform: translateY(-100%); }
-}
-@keyframes ticker-enter {
-  from { opacity: 0; transform: translateY(100%); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.goal-ticker-status {
-  width: 18px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.goal-ticker-status[data-status="done"]    { color: var(--success); }
-.goal-ticker-status[data-status="pending"] { color: var(--text-tertiary); }
-.goal-ticker-status[data-status="empty"]   { color: var(--text-tertiary); }
-.goal-ticker-status[data-status=""]        { color: var(--text-tertiary); }
-
-.goal-ticker-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-
-.goal-ticker-meta {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.04);
-  flex-shrink: 0;
-}
-
 /* -- Component 4: To Do List -- */
 .section { margin-bottom: 22px; }
 
@@ -244,8 +120,8 @@ body::after {
   gap: 12px;
   margin-bottom: 14px;
 }
-.section-title::before { content: ''; width: 18px; height: 1px; background: rgba(99,102,241,0.2); opacity: 0.6; flex-shrink: 0; }
-.section-title::after  { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.2), transparent); }
+.section-title::before { content: ''; width: 18px; height: 1px; background: rgba(249,115,22,0.2); opacity: 0.6; flex-shrink: 0; }
+.section-title::after  { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(249,115,22,0.2), transparent); }
 
 /* Cards */
 .gm-card {
@@ -255,13 +131,13 @@ body::after {
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 10px;
   padding: 18px 22px;
-  box-shadow: 0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(99,102,241,0.03);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(249,115,22,0.03);
   margin-bottom: 14px;
   position: relative;
   overflow: hidden;
   transition: border-color 0.3s ease;
 }
-.gm-card:hover { border-color: rgba(99,102,241,0.3); }
+.gm-card:hover { border-color: rgba(249,115,22,0.3); }
 .gm-card::before {
   content: '';
   position: absolute;
@@ -273,7 +149,7 @@ body::after {
 }
 
 .gm-all-done {
-  background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.07) 0%, rgba(255,255,255,0.04) 60%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.07) 0%, rgba(255,255,255,0.04) 60%);
 }
 .gm-all-done .gm-progress-num   { color: var(--success); }
 .gm-all-done .gm-progress-label { color: var(--success); }
@@ -372,8 +248,8 @@ body::after {
   transition: background 0.3s, box-shadow 0.3s;
 }
 .gm-bar-seg-done {
-  background: linear-gradient(90deg, #6366f1, #818cf8);
-  box-shadow: 0 0 6px rgba(99,102,241,0.40);
+  background: linear-gradient(90deg, #f97316, #fb923c);
+  box-shadow: 0 0 6px rgba(249,115,22,0.40);
 }
 
 /* Goal list */
@@ -405,7 +281,7 @@ body::after {
 
 .goal-item.is-done {
   opacity: 0.45;
-  background: rgba(99,102,241,0.04);
+  background: rgba(249,115,22,0.04);
 }
 .goal-item.is-done .goal-text {
   text-decoration: line-through;
@@ -467,7 +343,7 @@ body::after {
 .goal-cb-wrap input:checked ~ .goal-cb-box {
   background: var(--color-magenta);
   border-color: var(--color-magenta);
-  box-shadow: 0 0 12px rgba(99,102,241,0.40);
+  box-shadow: 0 0 12px rgba(249,115,22,0.40);
 }
 .goal-cb-box::after {
   content: '';
@@ -585,7 +461,7 @@ body::after {
 .gm-input-wrap input[type="text"]::placeholder { color: var(--text-tertiary); }
 
 .goal-add-btn {
-  background: linear-gradient(180deg, #6366f1, #4f46e5);
+  background: linear-gradient(180deg, #f97316, #ea580c);
   color: #ffffff;
   font-weight: 700;
   font-size: 13px;
@@ -594,11 +470,11 @@ body::after {
   border-radius: 12px;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(249,115,22,0.3), 0 1px 2px rgba(0,0,0,0.2);
   transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
   font-family: inherit;
 }
-.goal-add-btn:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+.goal-add-btn:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 4px 12px rgba(249,115,22,0.4); }
 
 .goal-polish-btn {
   background: rgba(255,255,255,0.04);
@@ -651,10 +527,6 @@ body::after {
 /* Responsive */
 @media (max-width: 480px) {
   .dash-title { font-size: 22px; }
-  .goal-ticker { padding: 9px 12px; }
-  .goal-ticker-label { font-size: 9px; letter-spacing: 0.14em; }
-  .goal-ticker-row  { font-size: 12px; }
-  .goal-ticker-meta { font-size: 10px; padding: 2px 7px; }
 }
 
 /* -- Tracker grid layout (kept for reference, not used in single-col layout) -- */
@@ -684,8 +556,8 @@ body::after {
 .tracker-progress-fill {
   height: 100%;
   border-radius: 2px;
-  background: linear-gradient(90deg, #6366f1, #818cf8);
-  box-shadow: 0 0 6px rgba(99,102,241,0.4);
+  background: linear-gradient(90deg, #f97316, #fb923c);
+  box-shadow: 0 0 6px rgba(249,115,22,0.4);
   transition: width 0.35s cubic-bezier(0.22,1,0.36,1);
   width: 0%;
 }
@@ -788,33 +660,6 @@ body::after {
   min-width: 56px;
   text-align: center;
 }
-.energy-section-label {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  margin-bottom: 10px;
-}
-.energy-circles { display: flex; gap: 10px; }
-.energy-circle {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.04);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-tertiary);
-  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s, color 0.25s;
-}
-.energy-circle:hover { border-color: rgba(255,255,255,0.25); }
-.energy-circle.is-filled { border-color: transparent; color: #050506; }
 
 /* -- Daily Log -- */
 .log-sub-header {
@@ -940,7 +785,7 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
   padding: 8px 14px;
   background: rgba(255,255,255,0.025);
   border-radius: 12px;
-  border: 1px solid rgba(99,102,241,0.1);
+  border: 1px solid rgba(249,115,22,0.1);
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
@@ -963,7 +808,7 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
   padding: 2px 8px;
   border-radius: 6px;
   background: var(--accent-dim);
-  color: #818cf8;
+  color: #fb923c;
   border: 1px solid var(--accent-border);
 }
 .countdown-add-btn {
@@ -991,10 +836,10 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
   padding: 12px 16px;
   background: rgba(255,255,255,0.025);
   border-radius: 12px;
-  border: 1px solid rgba(99,102,241,0.1);
+  border: 1px solid rgba(249,115,22,0.1);
   transition: background 0.2s ease, border-color 0.2s ease;
 }
-.streak-item-active { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.3); }
+.streak-item-active { background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.3); }
 .streak-emoji { font-size: 22px; flex-shrink: 0; line-height: 1; }
 .streak-body  { display: flex; flex-direction: column; gap: 2px; }
 .streak-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary); }
@@ -1041,7 +886,7 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 .graph-tooltip {
   position: fixed;
   background: #222;
-  border: 1px solid rgba(99,102,241,0.2);
+  border: 1px solid rgba(249,115,22,0.2);
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 11px;
@@ -1068,7 +913,7 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
   background: var(--color-card);
   border-radius: 10px;
   padding: 12px 14px;
-  border: 1px solid rgba(99,102,241,0.1);
+  border: 1px solid rgba(249,115,22,0.1);
 }
 .weekly-stat-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 6px; }
 .weekly-stat-value { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; margin-bottom: 3px; }
@@ -1094,8 +939,8 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #6366f1;
-  box-shadow: 0 0 6px rgba(99,102,241,0.7);
+  background: #f97316;
+  box-shadow: 0 0 6px rgba(249,115,22,0.7);
   transition: background 0.3s, box-shadow 0.3s;
 }
 
@@ -1202,78 +1047,6 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 /* -- Countdown live timer -- */
 .countdown-days { white-space: nowrap; }
 
-/* -- Step Counter -- */
-.step-ring-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 0 12px;
-}
-.step-ring-svg-wrap {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  flex-shrink: 0;
-}
-.step-ring-svg-wrap svg { width: 100%; height: 100%; }
-.step-ring-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-.step-ring-count {
-  font-family: var(--font-mono);
-  font-size: 20px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  transition: color 0.5s;
-}
-.step-ring-label {
-  font-family: var(--font-mono);
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  margin-top: 4px;
-}
-.step-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-.step-quick-btn {
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
-  border-radius: 8px;
-  padding: 7px 14px;
-  color: #818cf8;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.2s;
-}
-.step-quick-btn:hover { background: rgba(99,102,241,0.28); }
-.step-custom-row { display: flex; gap: 6px; align-items: center; margin-top: 2px; }
-.step-custom-input {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px;
-  padding: 7px 10px;
-  color: var(--text-primary);
-  font-size: 12px;
-  font-family: var(--font-mono);
-  outline: none;
-  transition: border-color 0.2s;
-  width: 84px;
-}
-.step-custom-input:focus { border-color: rgba(255,255,255,0.25); }
-.step-custom-input::placeholder { color: var(--text-tertiary); }
-
 /* -- Money Tracker -- */
 .money-grid {
   display: grid;
@@ -1332,7 +1105,7 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
   border: 1px solid var(--accent-border);
   border-radius: 10px;
   padding: 9px 18px;
-  color: #818cf8;
+  color: #fb923c;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -1340,7 +1113,7 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
   transition: background 0.2s;
   white-space: nowrap;
 }
-.money-add-btn:hover { background: rgba(99,102,241,0.28); }
+.money-add-btn:hover { background: rgba(249,115,22,0.28); }
 .money-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 14px 0; }
 .money-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 8px; }
 .money-stats-block { display: flex; flex-direction: column; gap: 0; }
@@ -1400,122 +1173,6 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 }
 .money-exp-del:hover { color: var(--danger); opacity: 1; }
 
-/* -- Uni Prep Panel -- */
-.uni-header-sub { font-size: 11px; color: var(--color-magenta); margin-top: 3px; }
-.uni-progress-bar { height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; margin: 10px 0 4px; overflow: hidden; }
-.uni-progress-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.35s cubic-bezier(0.22,1,0.36,1); }
-.uni-progress-text { font-family: var(--font-mono); font-size: 10px; color: var(--text-tertiary); text-align: right; margin-bottom: 14px; }
-.uni-add-row { display: flex; gap: 8px; margin-bottom: 14px; }
-.uni-module-input {
-  flex: 1;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px;
-  padding: 9px 13px;
-  color: var(--text-primary);
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.uni-module-input:focus { border-color: rgba(255,255,255,0.25); }
-.uni-module-input::placeholder { color: var(--text-tertiary); }
-.uni-add-btn {
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
-  border-radius: 10px;
-  padding: 9px 16px;
-  color: #818cf8;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-.uni-add-btn:hover { background: rgba(99,102,241,0.28); }
-.uni-module-item { background: rgba(255,255,255,0.025); border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; overflow: hidden; }
-.uni-module-header {
-  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
-  cursor: pointer; user-select: none; transition: background 0.15s;
-}
-.uni-module-header:hover { background: rgba(255,255,255,0.02); }
-.uni-module-toggle { font-size: 9px; color: var(--text-tertiary); transition: transform 0.2s; flex-shrink: 0; }
-.uni-module-toggle.is-open { transform: rotate(90deg); }
-.uni-module-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--text-primary); }
-.uni-module-del {
-  background: none; border: none; cursor: pointer; font-size: 14px;
-  color: var(--text-tertiary); opacity: 0.5; padding: 2px; flex-shrink: 0;
-  transition: opacity 0.2s, color 0.2s;
-}
-.uni-module-del:hover { color: var(--danger); opacity: 1; }
-.uni-status-badge {
-  font-size: 9.5px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase;
-  padding: 3px 8px; border-radius: 6px; cursor: pointer; flex-shrink: 0;
-  border: 1px solid; transition: all 0.2s;
-}
-.uni-status-not-started { background: rgba(255,255,255,0.04); color: var(--text-tertiary); border-color: rgba(255,255,255,0.10); }
-.uni-status-in-progress  { background: rgba(242,192,99,0.12); color: #F2C063; border-color: rgba(242,192,99,0.35); }
-.uni-status-ready        { background: rgba(99,102,241,0.12); color: var(--color-magenta); border-color: rgba(99,102,241,0.35); }
-.uni-module-body { padding: 0 14px 14px; border-top: 1px solid rgba(255,255,255,0.05); display: none; }
-.uni-module-body.is-open { display: block; }
-.uni-body-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary); margin: 10px 0 6px; }
-.uni-notes-textarea {
-  width: 100%;
-  background: rgba(255,255,255,0.035);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 10px;
-  padding: 9px 12px;
-  color: var(--text-primary);
-  font-size: 12px;
-  font-family: inherit;
-  resize: none;
-  outline: none;
-  min-height: 60px;
-  line-height: 1.5;
-  overflow: hidden;
-  transition: border-color 0.2s;
-}
-.uni-notes-textarea:focus { border-color: rgba(255,255,255,0.18); }
-.uni-notes-textarea::placeholder { color: var(--text-tertiary); }
-.uni-reading-add-row { display: flex; gap: 6px; margin-bottom: 6px; }
-.uni-reading-input {
-  flex: 1;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 8px;
-  padding: 6px 10px;
-  color: var(--text-primary);
-  font-size: 12px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.uni-reading-input:focus { border-color: rgba(255,255,255,0.20); }
-.uni-reading-input::placeholder { color: var(--text-tertiary); }
-.uni-reading-add-btn {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: 8px;
-  padding: 6px 12px;
-  color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.2s;
-}
-.uni-reading-add-btn:hover { background: rgba(255,255,255,0.09); }
-.uni-reading-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; margin-bottom: 3px; background: rgba(255,255,255,0.02); border-radius: 7px; }
-.uni-reading-text { flex: 1; font-size: 12px; color: var(--text-secondary); }
-.uni-reading-del {
-  background: none; border: none; cursor: pointer; font-size: 12px;
-  color: var(--text-tertiary); opacity: 0.5; padding: 2px; flex-shrink: 0;
-  transition: opacity 0.2s, color 0.2s;
-}
-.uni-reading-del:hover { color: var(--danger); opacity: 1; }
-
-}
 
 /* ==============================================================
    PREMIUM GAMING DASHBOARD -- NEON WARM THEME
@@ -1523,21 +1180,21 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 
 /* -- Scrollbar -- */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0f0f1a; }
-::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.5); }
+::-webkit-scrollbar-track { background: #1a0e0e; }
+::-webkit-scrollbar-thumb { background: rgba(249,115,22,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(249,115,22,0.5); }
 
 /* -- Sticky header bar -- */
 .header-block {
   background: rgba(15,15,26,0.85);
   border-bottom: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 4px 32px rgba(0,0,0,0.8), 0 1px 0 rgba(99,102,241,0.06);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.8), 0 1px 0 rgba(249,115,22,0.06);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 .clock-time { color: var(--p-val); }
 .clock-phase-label { color: rgba(150,140,190,0.55); letter-spacing: 0.22em; }
-.clock-phase-dot { background: rgba(99,102,241,0.4); }
+.clock-phase-dot { background: rgba(249,115,22,0.4); }
 
 /* Score ring */
 #scoreFill { stroke: var(--color-magenta); }
@@ -1553,29 +1210,29 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 .countdown-prefix { color: rgba(150,140,190,0.42); }
 .countdown-label { color: rgba(180,170,210,0.6); }
 .countdown-days {
-  background: rgba(99,102,241,0.1);
+  background: rgba(249,115,22,0.1);
   color: var(--p-light);
-  border-color: rgba(99,102,241,0.25);
+  border-color: rgba(249,115,22,0.25);
 }
 .countdown-add-btn {
-  border-color: rgba(99,102,241,0.18);
+  border-color: rgba(249,115,22,0.18);
   color: rgba(150,140,190,0.5);
 }
 .countdown-add-btn:hover {
-  border-color: rgba(99,102,241,0.45);
+  border-color: rgba(249,115,22,0.45);
   color: var(--p-val);
-  background: rgba(99,102,241,0.07);
+  background: rgba(249,115,22,0.07);
 }
 
 /* -- Streaks panel -- */
 .streak-item {
   background: rgba(10,10,28,0.7);
-  border: 1px solid rgba(99,102,241,0.1);
+  border: 1px solid rgba(249,115,22,0.1);
   border-radius: var(--radius);
 }
 .streak-item-active {
-  background: rgba(99,102,241,0.08);
-  border-color: rgba(99,102,241,0.28);
+  background: rgba(249,115,22,0.08);
+  border-color: rgba(249,115,22,0.28);
 }
 .streak-label { color: rgba(150,140,190,0.42); }
 .streak-count { color: var(--p-val); }
@@ -1595,8 +1252,8 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 
 /* -- Section title divider -- */
 .section-title { color: rgba(255,255,255,0.2); }
-.section-title::before { background: rgba(99,102,241,0.2); }
-.section-title::after { background: linear-gradient(90deg, rgba(99,102,241,0.2), transparent); }
+.section-title::before { background: rgba(249,115,22,0.2); }
+.section-title::after { background: linear-gradient(90deg, rgba(249,115,22,0.2), transparent); }
 
 /* -- Card eyebrow + counters -- */
 .gm-eyebrow { color: rgba(255,255,255,0.3); letter-spacing: 0.1em; }
@@ -1604,26 +1261,26 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 .tracker-counter.all-done { color: rgba(52,211,153,0.9); text-shadow: 0 0 8px rgba(52,211,153,0.4); }
 
 /* -- Progress bars -- */
-.tracker-progress-bar { background: rgba(99,102,241,0.07); border-radius: 2px; }
+.tracker-progress-bar { background: rgba(249,115,22,0.07); border-radius: 2px; }
 .tracker-progress-fill {
-  background: linear-gradient(90deg, #6366f1, #818cf8);
-  box-shadow: 0 0 8px rgba(99,102,241,0.3);
+  background: linear-gradient(90deg, #f97316, #fb923c);
+  box-shadow: 0 0 8px rgba(249,115,22,0.3);
 }
 
 /* -- Segmented bar (todos) -- */
-.gm-bar-seg { background: rgba(99,102,241,0.07); border-radius: 2px; }
-.gm-bar-seg-done { background: linear-gradient(90deg, #6366f1, #818cf8); box-shadow: 0 0 5px rgba(99,102,241,0.35); }
+.gm-bar-seg { background: rgba(249,115,22,0.07); border-radius: 2px; }
+.gm-bar-seg-done { background: linear-gradient(90deg, #f97316, #fb923c); box-shadow: 0 0 5px rgba(249,115,22,0.35); }
 
 /* -- Todo items -- */
 .goal-item {
   background: rgba(10,10,28,0.6);
-  border: 1px solid rgba(99,102,241,0.08);
+  border: 1px solid rgba(249,115,22,0.08);
   border-radius: var(--radius);
 }
-.goal-item:hover { background: rgba(99,102,241,0.05); }
-.goal-item.is-done { background: rgba(99,102,241,0.04); opacity: 0.42; }
+.goal-item:hover { background: rgba(249,115,22,0.05); }
+.goal-item.is-done { background: rgba(249,115,22,0.04); opacity: 0.42; }
 .goal-item.is-queued {
-  background: rgba(99,102,241,0.07);
+  background: rgba(249,115,22,0.07);
   box-shadow: inset 3px 0 0 0 var(--p-accent);
 }
 .goal-item.is-queued .goal-text { color: var(--p-light); }
@@ -1632,64 +1289,64 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 /* -- Todo checkboxes (square, purple) -- */
 .goal-cb-box {
   border-radius: 2px;
-  border: 1.5px solid rgba(99,102,241,0.38);
-  background: rgba(99,102,241,0.05);
+  border: 1.5px solid rgba(249,115,22,0.38);
+  background: rgba(249,115,22,0.05);
 }
 .goal-cb-wrap input:checked ~ .goal-cb-box {
   background: var(--p-accent);
   border-color: var(--p-accent);
-  box-shadow: 0 0 8px rgba(99,102,241,0.4);
+  box-shadow: 0 0 8px rgba(249,115,22,0.4);
 }
 .goal-cb-box::after { border-color: #0d0d0d; }
 
 /* -- Show-more + push buttons -- */
 .show-more-row {
-  border-color: rgba(99,102,241,0.15);
+  border-color: rgba(249,115,22,0.15);
   color: rgba(150,140,190,0.48);
   border-radius: var(--radius);
 }
-.show-more-row:hover { background: rgba(99,102,241,0.05); }
+.show-more-row:hover { background: rgba(249,115,22,0.05); }
 .gm-push-btn {
-  border-color: rgba(99,102,241,0.15);
+  border-color: rgba(249,115,22,0.15);
   color: rgba(150,140,190,0.48);
   border-radius: var(--radius);
 }
-.gm-push-btn:hover { border-color: rgba(99,102,241,0.4); color: var(--p-text); background: rgba(99,102,241,0.05); }
+.gm-push-btn:hover { border-color: rgba(249,115,22,0.4); color: var(--p-text); background: rgba(249,115,22,0.05); }
 
 /* -- Todo input row -- */
-.gm-input-wrap { border-top-color: rgba(99,102,241,0.1); }
+.gm-input-wrap { border-top-color: rgba(249,115,22,0.1); }
 .gm-input-wrap input[type="text"] {
   background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.18);
+  border: 1px solid rgba(249,115,22,0.18);
   border-radius: var(--radius);
   color: var(--p-text);
 }
-.gm-input-wrap input[type="text"]:focus { border-color: rgba(99,102,241,0.5); }
+.gm-input-wrap input[type="text"]:focus { border-color: rgba(249,115,22,0.5); }
 .gm-input-wrap input[type="text"]::placeholder { color: rgba(150,140,190,0.28); }
 
 /* -- Add / Polish buttons -- */
 .goal-add-btn {
-  background: linear-gradient(180deg, #6366f1, #4f46e5);
+  background: linear-gradient(180deg, #f97316, #ea580c);
   color: var(--p-val);
   border-radius: var(--radius);
-  box-shadow: 0 0 12px rgba(99,102,241,0.25), 0 2px 6px rgba(0,0,0,0.4);
-  border: 1px solid rgba(99,102,241,0.5);
+  box-shadow: 0 0 12px rgba(249,115,22,0.25), 0 2px 6px rgba(0,0,0,0.4);
+  border: 1px solid rgba(249,115,22,0.5);
 }
-.goal-add-btn:hover { filter: brightness(1.12); box-shadow: 0 0 18px rgba(99,102,241,0.4); }
+.goal-add-btn:hover { filter: brightness(1.12); box-shadow: 0 0 18px rgba(249,115,22,0.4); }
 .goal-polish-btn {
-  background: rgba(99,102,241,0.07);
-  border: 1px solid rgba(99,102,241,0.2);
+  background: rgba(249,115,22,0.07);
+  border: 1px solid rgba(249,115,22,0.2);
   color: rgba(180,170,210,0.8);
   border-radius: var(--radius);
 }
-.goal-polish-btn:hover { background: rgba(99,102,241,0.13); }
+.goal-polish-btn:hover { background: rgba(249,115,22,0.13); }
 .polish-status { color: rgba(150,140,190,0.42); }
 
 /* -- Done section -- */
-.done-section-hdr { border-top-color: rgba(99,102,241,0.1); }
+.done-section-hdr { border-top-color: rgba(249,115,22,0.1); }
 .done-section-label { color: rgba(150,140,190,0.38); }
 .done-clear-btn {
-  border-color: rgba(99,102,241,0.15);
+  border-color: rgba(249,115,22,0.15);
   color: rgba(150,140,190,0.42);
   border-radius: var(--radius);
 }
@@ -1707,135 +1364,108 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 .supp-group-toggle { color: rgba(150,140,190,0.38); }
 .supp-item {
   background: rgba(10,10,28,0.6);
-  border: 1px solid rgba(99,102,241,0.07);
+  border: 1px solid rgba(249,115,22,0.07);
   border-radius: var(--radius);
 }
-.supp-item:hover { background: rgba(99,102,241,0.05); }
+.supp-item:hover { background: rgba(249,115,22,0.05); }
 .supp-item.is-done { opacity: 0.38; }
 .supp-text { color: var(--p-text); }
 
 /* Supp checkboxes -- square, purple */
 .supp-item .goal-cb-box {
   border-radius: 2px;
-  border: 1.5px solid rgba(99,102,241,0.35);
-  background: rgba(99,102,241,0.05);
+  border: 1.5px solid rgba(249,115,22,0.35);
+  background: rgba(249,115,22,0.05);
 }
 .supp-item .goal-cb-wrap input:checked ~ .goal-cb-box {
   background: var(--p-accent);
   border-color: var(--p-accent);
-  box-shadow: 0 0 7px rgba(99,102,241,0.38);
+  box-shadow: 0 0 7px rgba(249,115,22,0.38);
 }
 
 /* -- Sleep inputs -- */
 .sleep-time-input {
   background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.14);
+  border: 1px solid rgba(249,115,22,0.14);
   border-radius: var(--radius);
   color: var(--p-text);
 }
-.sleep-time-input:focus { border-color: rgba(99,102,241,0.45); }
+.sleep-time-input:focus { border-color: rgba(249,115,22,0.45); }
 .sleep-field-label { color: rgba(150,140,190,0.42); }
 .sleep-hours-display { color: rgba(180,170,210,0.55); }
-.energy-section-label { color: rgba(150,140,190,0.42); }
-.energy-circle {
-  border: 2px solid rgba(99,102,241,0.2);
-  background: rgba(10,10,28,0.7);
-  color: rgba(150,140,190,0.42);
-}
-.energy-circle:hover { border-color: rgba(99,102,241,0.42); }
-.energy-circle.is-filled { border-color: var(--p-accent); background: var(--p-accent); color: #0d0d0d; }
-
-/* -- Step ring -- */
-.step-ring-count { color: var(--p-val); }
-.step-ring-label { color: rgba(150,140,190,0.42); }
-.step-quick-btn {
-  background: rgba(99,102,241,0.08);
-  border: 1px solid rgba(99,102,241,0.22);
-  color: var(--p-light);
-  border-radius: var(--radius);
-}
-.step-quick-btn:hover { background: rgba(99,102,241,0.16); }
-.step-custom-input {
-  background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.14);
-  border-radius: var(--radius);
-  color: var(--p-text);
-}
-.step-custom-input:focus { border-color: rgba(99,102,241,0.45); }
-.step-custom-input::placeholder { color: rgba(150,140,190,0.28); }
 
 /* -- Daily Log inputs -- */
 .log-sub-header { color: rgba(150,140,190,0.42); }
 .win-input {
   background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.14);
+  border: 1px solid rgba(249,115,22,0.14);
   border-radius: var(--radius);
   color: var(--p-text);
 }
-.win-input:focus { border-color: rgba(99,102,241,0.45); }
+.win-input:focus { border-color: rgba(249,115,22,0.45); }
 .win-input::placeholder { color: rgba(150,140,190,0.28); }
 .win-add-btn {
-  background: rgba(99,102,241,0.07);
-  border: 1px solid rgba(99,102,241,0.18);
+  background: rgba(249,115,22,0.07);
+  border: 1px solid rgba(249,115,22,0.18);
   color: rgba(180,170,210,0.78);
   border-radius: var(--radius);
 }
-.win-add-btn:hover { background: rgba(99,102,241,0.13); }
+.win-add-btn:hover { background: rgba(249,115,22,0.13); }
 .win-item { background: rgba(10,10,28,0.6); border-radius: var(--radius); }
 .win-text { color: var(--p-text); }
 .win-del { color: rgba(150,140,190,0.32); }
 .win-del:hover { color: var(--p-rose); }
 .auto-textarea {
   background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.12);
+  border: 1px solid rgba(249,115,22,0.12);
   border-radius: var(--radius);
   color: var(--p-text);
 }
-.auto-textarea:focus { border-color: rgba(99,102,241,0.45); }
+.auto-textarea:focus { border-color: rgba(249,115,22,0.45); }
 .auto-textarea::placeholder { color: rgba(150,140,190,0.28); }
 .night-input {
   background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.14);
+  border: 1px solid rgba(249,115,22,0.14);
   border-radius: var(--radius);
   color: var(--p-text);
 }
-.night-input:focus { border-color: rgba(99,102,241,0.45); }
+.night-input:focus { border-color: rgba(249,115,22,0.45); }
 .night-input::placeholder { color: rgba(150,140,190,0.28); }
 .night-field-label { color: rgba(150,140,190,0.42); }
 
 /* -- Money panel -- */
 .money-amount-input, .money-select, .money-note-input, .money-edit-input {
   background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.14);
+  border: 1px solid rgba(249,115,22,0.14);
   border-radius: var(--radius);
   color: var(--p-text);
 }
 .money-amount-input:focus, .money-select:focus, .money-note-input:focus, .money-edit-input:focus {
-  border-color: rgba(99,102,241,0.45);
+  border-color: rgba(249,115,22,0.45);
 }
 .money-amount-input::placeholder, .money-note-input::placeholder { color: rgba(150,140,190,0.28); }
 .money-add-btn {
-  background: rgba(99,102,241,0.08);
-  border: 1px solid rgba(99,102,241,0.25);
+  background: rgba(249,115,22,0.08);
+  border: 1px solid rgba(249,115,22,0.25);
   color: var(--p-light);
   border-radius: var(--radius);
 }
-.money-add-btn:hover { background: rgba(99,102,241,0.16); }
+.money-add-btn:hover { background: rgba(249,115,22,0.16); }
 .money-save-btn {
-  background: rgba(99,102,241,0.07);
-  border: 1px solid rgba(99,102,241,0.18);
+  background: rgba(249,115,22,0.07);
+  border: 1px solid rgba(249,115,22,0.18);
   color: rgba(180,170,210,0.78);
   border-radius: var(--radius);
 }
-.money-save-btn:hover { background: rgba(99,102,241,0.13); }
-.money-divider { background: rgba(99,102,241,0.08); }
+.money-save-btn:hover { background: rgba(249,115,22,0.13); }
+.money-divider { background: rgba(249,115,22,0.08); }
 .money-section-label { color: rgba(150,140,190,0.42); }
 .money-stat-label { color: rgba(150,140,190,0.42); }
 .money-stat-value { color: var(--p-val); }
-.money-budget-bar { background: rgba(99,102,241,0.07); }
+.money-budget-bar { background: rgba(249,115,22,0.07); }
 .money-expense-item {
   background: rgba(10,10,28,0.6);
-  border: 1px solid rgba(99,102,241,0.07);
+  border: 1px solid rgba(249,115,22,0.07);
   border-radius: var(--radius);
 }
 .money-edit-label { color: rgba(150,140,190,0.42); }
@@ -1846,54 +1476,10 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 .money-exp-del { color: rgba(150,140,190,0.28); }
 .money-exp-del:hover { color: var(--p-rose); }
 
-/* -- Uni Prep -- */
-.uni-header-sub { color: var(--p-light); }
-.uni-progress-bar { background: rgba(99,102,241,0.07); }
-.uni-progress-fill { background: linear-gradient(90deg, #6366f1, #818cf8); }
-.uni-progress-text { color: rgba(150,140,190,0.42); }
-.uni-module-input, .uni-notes-textarea, .uni-reading-input {
-  background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.14);
-  border-radius: var(--radius);
-  color: var(--p-text);
-}
-.uni-module-input:focus, .uni-notes-textarea:focus, .uni-reading-input:focus {
-  border-color: rgba(99,102,241,0.45);
-}
-.uni-module-input::placeholder, .uni-notes-textarea::placeholder, .uni-reading-input::placeholder {
-  color: rgba(150,140,190,0.28);
-}
-.uni-add-btn, .uni-reading-add-btn {
-  background: rgba(99,102,241,0.08);
-  border: 1px solid rgba(99,102,241,0.25);
-  color: var(--p-light);
-  border-radius: var(--radius);
-}
-.uni-add-btn:hover, .uni-reading-add-btn:hover { background: rgba(99,102,241,0.16); }
-.uni-module-item {
-  background: rgba(10,10,28,0.6);
-  border: 1px solid rgba(99,102,241,0.1);
-  border-radius: var(--radius);
-}
-.uni-module-header:hover { background: rgba(99,102,241,0.04); }
-.uni-module-toggle { color: rgba(150,140,190,0.32); }
-.uni-module-name { color: var(--p-text); }
-.uni-module-del { color: rgba(150,140,190,0.28); }
-.uni-module-del:hover { color: var(--p-rose); }
-.uni-module-body { border-top-color: rgba(99,102,241,0.08); }
-.uni-body-label { color: rgba(150,140,190,0.42); }
-.uni-reading-item { background: rgba(10,10,28,0.5); border-radius: var(--radius); }
-.uni-reading-text { color: rgba(180,170,210,0.55); }
-.uni-reading-del { color: rgba(150,140,190,0.28); }
-.uni-reading-del:hover { color: var(--p-rose); }
-.uni-status-not-started { background: rgba(10,10,28,0.7); color: rgba(150,140,190,0.45); border-color: rgba(99,102,241,0.15); }
-.uni-status-in-progress  { background: rgba(180,170,210,0.06); color: var(--p-white); border-color: rgba(180,170,210,0.2); }
-.uni-status-ready        { background: rgba(99,102,241,0.1); color: var(--p-light); border-color: rgba(99,102,241,0.28); }
-
 /* -- Weekly review -- */
 .weekly-stat {
   background: rgba(10,10,28,0.6);
-  border: 1px solid rgba(99,102,241,0.1);
+  border: 1px solid rgba(249,115,22,0.1);
   border-radius: var(--radius);
 }
 .weekly-stat-label { color: rgba(150,140,190,0.42); }
@@ -1903,19 +1489,6 @@ button { transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15
 /* -- Sync indicator -- */
 #syncDot { background: var(--p-accent); box-shadow: 0 0 6px var(--p-glow); }
 #syncLabel { color: rgba(150,140,190,0.42); }
-
-/* -- Goal ticker -- */
-.goal-ticker {
-  background-image:
-    linear-gradient(180deg, rgba(8,8,26,0.85) 0%, rgba(8,8,26,0.75) 100%),
-    repeating-linear-gradient(0deg, rgba(99,102,241,0.022) 0, rgba(99,102,241,0.022) 1px, transparent 1px, transparent 3px);
-  border-radius: var(--radius);
-  box-shadow: inset 0 1px 0 rgba(99,102,241,0.03);
-}
-.goal-ticker-label { color: rgba(150,140,190,0.38); }
-.goal-ticker-row { color: var(--p-text); }
-.goal-ticker-led-dot { background: var(--p-accent); box-shadow: 0 0 8px var(--p-glow); }
-.goal-ticker-meta { background: rgba(99,102,241,0.07); color: rgba(180,170,210,0.6); }
 
 /* -- gm-progress numbers (todos) -- */
 .gm-progress-num { color: var(--p-val); }
@@ -1935,29 +1508,29 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
 }
 
 /* -- Generic border colors -- */
-.gm-input-wrap { border-top-color: rgba(99,102,241,0.1); }
-.done-section-hdr { border-top-color: rgba(99,102,241,0.1); }
+.gm-input-wrap { border-top-color: rgba(249,115,22,0.1); }
+.done-section-hdr { border-top-color: rgba(249,115,22,0.1); }
 .gm-card-header { margin-bottom: 14px; }
 
 /* -- Progress bars in money / uni -- */
 .money-budget-fill {
-  background: linear-gradient(90deg, #6366f1, #818cf8);
+  background: linear-gradient(90deg, #f97316, #fb923c);
 }
 
 /* -- Fuel / hydration bars -- */
 .fuel-bar-fill, .water-bar-fill, .macro-bar-fill {
-  background: linear-gradient(90deg, #6366f1, #818cf8);
-  box-shadow: 0 0 6px rgba(99,102,241,0.25);
+  background: linear-gradient(90deg, #f97316, #fb923c);
+  box-shadow: 0 0 6px rgba(249,115,22,0.25);
 }
 .fuel-bar, .water-bar, .macro-bar {
-  background: rgba(99,102,241,0.06);
+  background: rgba(249,115,22,0.06);
 }
 
 /* -- Queued todo flash -- */
 @keyframes gm-queue-flash {
   0%   { background: rgba(10,10,28,0.6);    transform: scale(1); }
-  50%  { background: rgba(99,102,241,0.16);  transform: scale(1.015); }
-  100% { background: rgba(99,102,241,0.07);  transform: scale(1); }
+  50%  { background: rgba(249,115,22,0.16);  transform: scale(1.015); }
+  100% { background: rgba(249,115,22,0.07);  transform: scale(1); }
 }
 
 /* -- Countdown days pill -- */
@@ -1977,27 +1550,27 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
 .gym-split-btn.active {
   background: var(--color-magenta); color: #fff;
   border-color: var(--color-magenta);
-  box-shadow: 0 0 10px rgba(99,102,241,0.4);
+  box-shadow: 0 0 10px rgba(249,115,22,0.4);
 }
 .gym-check-wrap {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 10px; margin-bottom: 10px;
-  background: rgba(10,10,28,0.6); border: 1px solid rgba(99,102,241,0.08);
+  background: rgba(10,10,28,0.6); border: 1px solid rgba(249,115,22,0.08);
   border-radius: var(--radius); cursor: pointer;
   transition: background 0.18s;
 }
-.gym-check-wrap:hover { background: rgba(99,102,241,0.06); }
+.gym-check-wrap:hover { background: rgba(249,115,22,0.06); }
 .gym-check-wrap.is-done { opacity: 0.65; }
 .gym-check-wrap input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
 .gym-check-box {
   width: 18px; height: 18px; flex-shrink: 0;
-  border-radius: 3px; border: 1.5px solid rgba(99,102,241,0.35);
-  background: rgba(99,102,241,0.05); position: relative;
+  border-radius: 3px; border: 1.5px solid rgba(249,115,22,0.35);
+  background: rgba(249,115,22,0.05); position: relative;
   transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 .gym-check-wrap input:checked ~ .gym-check-box {
   background: var(--color-magenta); border-color: var(--color-magenta);
-  box-shadow: 0 0 8px rgba(99,102,241,0.4);
+  box-shadow: 0 0 8px rgba(249,115,22,0.4);
 }
 .gym-check-box::after {
   content: ''; position: absolute; left: 4px; top: 2px;
@@ -2011,11 +1584,11 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
 .gym-week-dots { display: flex; gap: 5px; margin-top: 2px; }
 .gym-week-dot {
   width: 10px; height: 10px; border-radius: 50%;
-  background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2);
+  background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.2);
   transition: background 0.2s;
 }
-.gym-week-dot.filled { background: var(--color-magenta); border-color: var(--color-magenta); box-shadow: 0 0 5px rgba(99,102,241,0.35); }
-.gym-week-dot.today { border-color: rgba(99,102,241,0.6); }
+.gym-week-dot.filled { background: var(--color-magenta); border-color: var(--color-magenta); box-shadow: 0 0 5px rgba(249,115,22,0.35); }
+.gym-week-dot.today { border-color: rgba(249,115,22,0.6); }
 
 /* ============================================================== */
 
@@ -2028,7 +1601,7 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #6366f1;
+  background: #f97316;
   border: none;
   cursor: pointer;
   display: flex;
@@ -2036,33 +1609,12 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   justify-content: center;
   font-size: 22px;
   color: #fff;
-  box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  box-shadow: 0 4px 20px rgba(249,115,22,0.4);
   transition: box-shadow 0.2s, transform 0.15s;
 }
 .shop-fab:hover {
-  box-shadow: 0 6px 28px rgba(99,102,241,0.65);
+  box-shadow: 0 6px 28px rgba(249,115,22,0.65);
   transform: scale(1.06);
-}
-
-.shop-overlay {
-  position: fixed;
-  bottom: 88px;
-  right: 24px;
-  width: 340px;
-  max-height: 70vh;
-  z-index: 9998;
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.7);
-  transform: translateY(20px);
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .shop-header {
@@ -2108,18 +1660,6 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   transition: border-color 0.2s, color 0.2s;
 }
 .shop-clear-btn:hover { border-color: rgba(255,107,107,0.5); color: var(--p-rose); }
-.shop-close-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  color: var(--text-tertiary);
-  padding: 2px 4px;
-  line-height: 1;
-  transition: color 0.2s;
-}
-.shop-close-btn:hover { color: var(--p-text); }
-
 .shop-body {
   flex: 1;
   overflow-y: auto;
@@ -2144,15 +1684,15 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   padding: 10px 12px;
   margin-bottom: 4px;
   background: rgba(10,10,28,0.6);
-  border: 1px solid rgba(99,102,241,0.08);
+  border: 1px solid rgba(249,115,22,0.08);
   border-radius: var(--radius);
   transition: background 0.2s;
 }
-.shop-item:hover { background: rgba(99,102,241,0.05); }
+.shop-item:hover { background: rgba(249,115,22,0.05); }
 .shop-item:hover .shop-item-del { opacity: 0.7; }
 .shop-item.is-done {
   opacity: 0.45;
-  background: rgba(99,102,241,0.04);
+  background: rgba(249,115,22,0.04);
 }
 .shop-item.is-done .shop-item-text {
   text-decoration: line-through;
@@ -2184,7 +1724,7 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  border-top: 1px solid rgba(99,102,241,0.1);
+  border-top: 1px solid rgba(249,115,22,0.1);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -2192,7 +1732,7 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   flex: 1;
   min-width: 100px;
   background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.18);
+  border: 1px solid rgba(249,115,22,0.18);
   border-radius: var(--radius);
   padding: 9px 12px;
   color: var(--p-text);
@@ -2201,11 +1741,11 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   outline: none;
   transition: border-color 0.2s;
 }
-.shop-add-input:focus { border-color: rgba(99,102,241,0.5); }
+.shop-add-input:focus { border-color: rgba(249,115,22,0.5); }
 .shop-add-input::placeholder { color: rgba(150,140,190,0.28); }
 .shop-store-select {
   background: rgba(6,6,18,0.8);
-  border: 1px solid rgba(99,102,241,0.18);
+  border: 1px solid rgba(249,115,22,0.18);
   border-radius: var(--radius);
   padding: 9px 10px;
   color: var(--p-text);
@@ -2216,10 +1756,10 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   color-scheme: dark;
   transition: border-color 0.2s;
 }
-.shop-store-select:focus { border-color: rgba(99,102,241,0.5); }
+.shop-store-select:focus { border-color: rgba(249,115,22,0.5); }
 .shop-add-btn {
-  background: rgba(99,102,241,0.08);
-  border: 1px solid rgba(99,102,241,0.25);
+  background: rgba(249,115,22,0.08);
+  border: 1px solid rgba(249,115,22,0.25);
   border-radius: var(--radius);
   padding: 9px 14px;
   color: var(--p-light);
@@ -2230,131 +1770,123 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
   white-space: nowrap;
   transition: background 0.2s;
 }
-.shop-add-btn:hover { background: rgba(99,102,241,0.16); }
+.shop-add-btn:hover { background: rgba(249,115,22,0.16); }
 
-@media (max-width: 500px) {
-  .shop-overlay {
-    right: 12px;
-    left: 12px;
-    width: auto;
-  }
+/* -- Home screen icon grid -- */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 20px 16px;
 }
-
-/* ── Toolbar ────────────────────────────────────────────────────────────────── */
-#dashToolbar {
-  position: fixed;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 9990;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.tb-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.icon-tile {
+  border-radius: 12px;
+  padding: 16px 8px;
+  text-align: center;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
-  color: rgba(255,255,255,0.5);
-  font-size: 16px;
-  padding: 0;
 }
-.tb-btn:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.15);
-}
-.tb-btn.tb-active {
-  background: rgba(99,102,241,0.15);
-  border-color: rgba(99,102,241,0.3);
-  color: rgba(99,102,241,0.9);
-}
+.icon-tile i { display: block; font-size: 24px; margin-bottom: 8px; }
+.icon-tile span { display: block; font-size: 11px; color: rgba(255,255,255,0.6); }
+.icon-tile.tile-orange { background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2); }
+.icon-tile.tile-orange i { color: #f97316; }
+.icon-tile.tile-orange:hover { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.35); }
+.icon-tile.tile-pink { background: rgba(236,72,153,0.08); border: 1px solid rgba(236,72,153,0.2); }
+.icon-tile.tile-pink i { color: #ec4899; }
+.icon-tile.tile-pink:hover { background: rgba(236,72,153,0.15); border-color: rgba(236,72,153,0.35); }
+.icon-tile.tile-deep { background: rgba(234,88,12,0.08); border: 1px solid rgba(234,88,12,0.2); }
+.icon-tile.tile-deep i { color: #ea580c; }
+.icon-tile.tile-deep:hover { background: rgba(234,88,12,0.15); border-color: rgba(234,88,12,0.35); }
+.icon-tile.tile-red { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); }
+.icon-tile.tile-red i { color: #ef4444; }
+.icon-tile.tile-red:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.35); }
 
-/* ── Generic Overlay ────────────────────────────────────────────────────────── */
-.dash-overlay {
+/* -- Modal system -- */
+@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-overlay {
   position: fixed;
-  right: 60px;
-  top: 50%;
-  transform: translateY(-50%) translateX(10px);
-  width: 380px;
-  max-height: 80vh;
-  overflow-y: auto;
-  z-index: 9991;
-  background: rgba(15,15,26,0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
-  padding: 20px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.dash-overlay::-webkit-scrollbar { width: 4px; }
-.dash-overlay::-webkit-scrollbar-track { background: transparent; }
-.dash-overlay::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
-.dash-overlay.overlay-open {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(-50%) translateX(0);
-}
-.overlay-hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.overlay-title {
-  font-size: 13px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.4);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-.overlay-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: rgba(255,255,255,0.3);
-  font-size: 16px;
-  padding: 2px;
-  display: flex;
+  inset: 0;
+  display: none;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
-  line-height: 1;
+  background: rgba(10,5,5,0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 500;
 }
-.overlay-close:hover { color: rgba(255,255,255,0.7); }
+.modal-overlay.is-open { display: flex; animation: modalFadeIn 0.15s ease; }
+.modal-content {
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  background: #1a0e0e;
+  border-radius: 16px;
+  border: 0.5px solid rgba(249,115,22,0.15);
+  position: relative;
+  margin: 0 16px;
+}
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 20px;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  background: none;
+  border: none;
+  line-height: 1;
+  padding: 4px;
+}
+.modal-close:hover { color: #fff; }
+.modal-content .overview-row { grid-template-columns: 1fr; }
 
-/* Shopping overlay overrides — keep internal flex layout, strip outer padding */
-#overlay-shopping {
-  position: fixed;
-  right: 60px;
-  top: 50%;
-  transform: translateY(-50%) translateX(10px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  padding: 0;
+/* -- Day Tasks Banner -- */
+.day-tasks-wrap {
   display: flex;
   flex-direction: column;
-  width: 380px;
-  max-height: 80vh;
-  z-index: 9991;
-  bottom: auto;
+  gap: 8px;
+  margin-bottom: 14px;
 }
-#overlay-shopping.overlay-open {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(-50%) translateX(0);
+.day-task {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-left: 4px solid #6366f1;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.3s, transform 0.3s;
+  user-select: none;
+}
+.day-task:hover { background: rgba(99,102,241,0.14); }
+.day-task-icon {
+  font-size: 18px;
+  color: #818cf8;
+  flex-shrink: 0;
+}
+.day-task-text {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.day-task-hint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(150,140,190,0.42);
+  flex-shrink: 0;
+}
+.day-task.is-dismissed {
+  opacity: 0;
+  transform: translateX(20px);
+  pointer-events: none;
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2368,7 +1900,7 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
 <div class="page-wrap">
 
   <!-- Ambient light orbs -->
-  <div style="position:absolute;top:-60px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(99,102,241,0.2);filter:blur(60px);pointer-events:none;"></div>
+  <div style="position:absolute;top:-60px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(249,115,22,0.2);filter:blur(60px);pointer-events:none;"></div>
   <div style="position:absolute;bottom:30%;left:-50px;width:180px;height:180px;border-radius:50%;background:rgba(236,72,153,0.15);filter:blur(50px);pointer-events:none;"></div>
   <div style="position:absolute;top:45%;right:-30px;width:150px;height:150px;border-radius:50%;background:rgba(56,189,248,0.1);filter:blur(40px);pointer-events:none;"></div>
 
@@ -2385,7 +1917,7 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
       <svg class="score-ring-svg" viewBox="0 0 82 82" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#6366f1"/>
+            <stop offset="0%" stop-color="#f97316"/>
             <stop offset="100%" stop-color="#ec4899"/>
           </linearGradient>
           <filter id="score-glow" x="-30%" y="-30%" width="160%" height="160%">
@@ -2393,7 +1925,7 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
             <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
         </defs>
-        <circle cx="41" cy="41" r="35" fill="none" stroke="rgba(99,102,241,0.12)" stroke-width="6"/>
+        <circle cx="41" cy="41" r="35" fill="none" stroke="rgba(249,115,22,0.12)" stroke-width="6"/>
         <circle id="scoreFill" cx="41" cy="41" r="35" fill="none" stroke="url(#scoreGrad)" stroke-width="6"
           stroke-linecap="round" transform="rotate(-90 41 41)"
           filter="url(#score-glow)"
@@ -2406,414 +1938,328 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
     </div>
   </div>
 
-  <!-- 2. Supplement Tracker -->
-  <div class="gm-card" id="suppsCard" style="margin-bottom:14px">
-    <div class="gm-card-header">
-      <div class="gm-card-header-left">
-        <div class="gm-eyebrow">SUPPS</div>
-      </div>
-      <div class="tracker-counter" id="suppsCounter">0 / 16 taken</div>
-    </div>
-    <div class="tracker-progress-bar">
-      <div class="tracker-progress-fill" id="suppsProgressFill"></div>
-    </div>
-    <div id="suppsGroups"></div>
-  </div>
+  <div class="day-tasks-wrap" id="dayTasksWrap"></div>
 
-  <!-- 3. Hygiene -->
-  <div class="gm-card" id="hygieneCard" style="margin-bottom:14px">
-    <div class="gm-card-header">
-      <div class="gm-card-header-left">
-        <div class="gm-eyebrow">HYGIENE</div>
-      </div>
-      <div class="tracker-counter" id="hygieneCounter">0 / 15</div>
-    </div>
-    <div class="tracker-progress-bar">
-      <div class="tracker-progress-fill" id="hygieneProgressFill"></div>
-    </div>
-    <div id="hygieneList"></div>
+  <!-- Home screen icon grid -->
+  <div class="icon-grid">
+    <div class="icon-tile tile-orange" onclick="openModal('overlay-supps')"><i class="ti ti-pill"></i><span>Supps</span></div>
+    <div class="icon-tile tile-pink" onclick="openModal('overlay-hygiene')"><i class="ti ti-droplet"></i><span>Hygiene</span></div>
+    <div class="icon-tile tile-deep" onclick="openModal('overlay-sleep')"><i class="ti ti-moon"></i><span>Sleep</span></div>
+    <div class="icon-tile tile-red" onclick="openModal('overlay-gym')"><i class="ti ti-barbell"></i><span>Gym</span></div>
+    <div class="icon-tile tile-orange" onclick="openModal('overlay-streaks')"><i class="ti ti-flame"></i><span>Streaks</span></div>
+    <div class="icon-tile tile-pink" onclick="openModal('overlay-todos')"><i class="ti ti-checkbox"></i><span>Todos</span></div>
+    <div class="icon-tile tile-deep" onclick="openModal('overlay-money')"><i class="ti ti-currency-pound"></i><span>Money</span></div>
+    <div class="icon-tile tile-red" onclick="openModal('overlay-log')"><i class="ti ti-notebook"></i><span>Daily log</span></div>
+    <div class="icon-tile tile-orange" onclick="openModal('overlay-countdowns')"><i class="ti ti-hourglass"></i><span>Countdowns</span></div>
+    <div class="icon-tile tile-pink" onclick="openModal('overlay-weekly')"><i class="ti ti-calendar-week"></i><span>Weekly</span></div>
+    <div class="icon-tile tile-deep" onclick="openModal('overlay-shopping')"><i class="ti ti-shopping-cart"></i><span>Shopping</span></div>
   </div>
-
-  <!-- 4. Fuel -->
-  <div class="gm-card" id="fuelCard" style="margin-bottom:14px">
-    <div class="gm-card-header">
-      <div class="gm-card-header-left">
-        <div class="gm-eyebrow">FUEL</div>
-      </div>
-      <div class="tracker-counter" id="fuelCounter">0 / 5</div>
-    </div>
-    <div class="tracker-progress-bar">
-      <div class="tracker-progress-fill" id="fuelProgressFill"></div>
-    </div>
-    <div id="fuelList"></div>
-  </div>
-
-  <!-- 5. Gym -->
-  <div class="gm-card" id="gymCard" style="margin-bottom:14px">
-    <div class="gm-card-header">
-      <div class="gm-card-header-left">
-        <div class="gm-eyebrow">GYM</div>
-      </div>
-      <div class="tracker-counter" id="gymWeekCounter">0 / 7</div>
-    </div>
-    <div class="gym-split-btns" id="gymSplitBtns">
-      <button class="gym-split-btn" data-split="anterior">Anterior</button>
-      <button class="gym-split-btn" data-split="posterior">Posterior</button>
-      <button class="gym-split-btn" data-split="rest">Rest</button>
-    </div>
-    <label class="gym-check-wrap" id="gymCheckWrap">
-      <input type="checkbox" id="gymDoneCheck">
-      <span class="gym-check-box"></span>
-      <span class="gym-check-label">Trained today</span>
-    </label>
-    <div class="gym-week-dots" id="gymWeekDots"></div>
-  </div>
-  </div>
-
-  <!-- 6. Step Counter -->
-  <div class="gm-card" id="stepsCard" style="margin-bottom:14px">
-    <div class="gm-card-header">
-      <div class="gm-card-header-left">
-        <div class="gm-eyebrow">STEPS</div>
-      </div>
-      <div class="tracker-counter" id="stepsCounter">0 / 15,000</div>
-    </div>
-    <div class="step-ring-wrap">
-      <div class="step-ring-svg-wrap">
-        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <filter id="step-glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="2.5" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-          <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(99,102,241,0.1)" stroke-width="8"/>
-          <circle id="stepsFill" cx="60" cy="60" r="52"
-            fill="none" stroke="#6366f1" stroke-width="8"
-            stroke-linecap="round"
-            transform="rotate(-90 60 60)"
-            filter="url(#step-glow)"
-            stroke-dasharray="326.73" stroke-dashoffset="326.73"
-            style="transition: stroke-dashoffset 0.7s cubic-bezier(0.22,1,0.36,1), stroke 0.7s cubic-bezier(0.22,1,0.36,1);"/>
-        </svg>
-        <div class="step-ring-overlay">
-          <div class="step-ring-count" id="stepsCount" style="color:#6366f1">0</div>
-          <div class="step-ring-label">/ 15,000</div>
-        </div>
-      </div>
-      <div class="step-actions">
-        <button class="step-quick-btn" id="stepsAdd1k">+1,000</button>
-        <button class="step-quick-btn" id="stepsAdd5k">+5,000</button>
-      </div>
-      <div class="step-custom-row">
-        <input type="number" class="step-custom-input" id="stepsCustomInput" placeholder="custom" min="0">
-        <button class="step-quick-btn" id="stepsAddCustom">+ Add</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 7. Sleep & Recovery -->
-  <div class="gm-card" id="sleepCard" style="margin-bottom:14px">
-    <div class="gm-card-header">
-      <div class="gm-card-header-left">
-        <div class="gm-eyebrow">SLEEP</div>
-      </div>
-    </div>
-    <div class="sleep-times-row">
-      <div class="sleep-field">
-        <span class="sleep-field-label">Bed time</span>
-        <input type="time" class="sleep-time-input" id="sleepBedTime">
-      </div>
-      <div class="sleep-hours-display" id="sleepHoursDisplay">--</div>
-      <div class="sleep-field">
-        <span class="sleep-field-label">Wake time</span>
-        <input type="time" class="sleep-time-input" id="sleepWakeTime">
-      </div>
-    </div>
-    <div class="energy-section-label">Energy rating</div>
-    <div class="energy-circles" id="energyCircles">
-      <div class="energy-circle" data-val="1">1</div>
-      <div class="energy-circle" data-val="2">2</div>
-      <div class="energy-circle" data-val="3">3</div>
-      <div class="energy-circle" data-val="4">4</div>
-      <div class="energy-circle" data-val="5">5</div>
-    </div>
-  </div>
-
-  <!-- 10. Streaks + Consistency Graph (side by side) -->
-  <div class="overview-row">
-    <div class="gm-card" id="streaksCard">
-      <div class="gm-card-header" style="margin-bottom:12px">
-        <div class="gm-eyebrow">STREAKS</div>
-      </div>
-      <div class="streaks-row" id="streaksRow"></div>
-    </div>
-    <div class="gm-card" id="consistencyCard">
-      <div class="gm-card-header" style="margin-bottom:12px">
-        <div class="gm-eyebrow">CONSISTENCY</div>
-        <div class="tracker-counter" id="consistencyStats"></div>
-      </div>
-      <div class="consistency-wrap">
-        <div class="consistency-grid" id="consistencyGrid"></div>
-      </div>
-      <div class="consistency-footer">
-        <div class="consistency-legend">
-          <span>Less</span>
-          <div class="legend-cell" style="background:rgba(20,20,40,0.6);margin:0 2px"></div>
-          <div class="legend-cell" style="background:rgba(50,40,120,0.5);margin:0 2px"></div>
-          <div class="legend-cell" style="background:rgba(80,70,180,0.55);margin:0 2px"></div>
-          <div class="legend-cell" style="background:#6366f1;margin:0 2px"></div>
-          <span>More</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="graph-tooltip" id="graphTooltip"></div>
-
 
 </div><!-- /page-wrap -->
 
-<!-- ── Toolbar ── -->
-<div id="dashToolbar">
-  <button class="tb-btn" data-overlay="overlay-todos"      title="To Do"><i class="ti ti-checkbox"></i></button>
-  <button class="tb-btn" data-overlay="overlay-money"      title="Money"><i class="ti ti-coin"></i></button>
-  <button class="tb-btn" data-overlay="overlay-log"        title="Daily Log"><i class="ti ti-pencil"></i></button>
-  <button class="tb-btn" data-overlay="overlay-countdowns" title="Countdowns"><i class="ti ti-clock"></i></button>
-  <button class="tb-btn" data-overlay="overlay-uni"        title="Uni Prep"><i class="ti ti-school"></i></button>
-  <button class="tb-btn" data-overlay="overlay-weekly"     title="Weekly Review"><i class="ti ti-chart-bar"></i></button>
-  <button class="tb-btn" data-overlay="overlay-shopping"   title="Shopping"><i class="ti ti-shopping-cart"></i></button>
-  <button class="tb-btn" data-overlay="overlay-goals"      title="Goals"><i class="ti ti-target"></i></button>
-</div>
-
 <!-- ── Overlays ── -->
 
-<!-- To Do -->
-<div class="dash-overlay" id="overlay-todos">
-  <div class="overlay-hdr">
-    <span class="overlay-title">To Do</span>
-    <button class="overlay-close" data-overlay="overlay-todos"><i class="ti ti-x"></i></button>
+<!-- Supps -->
+<div class="modal-overlay" id="overlay-supps">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-supps')"><i class="ti ti-x"></i></button>
+    <div class="gm-card" id="suppsCard" style="margin-bottom:0">
+      <div class="gm-card-header">
+        <div class="gm-card-header-left">
+          <div class="gm-eyebrow">SUPPS</div>
+        </div>
+        <div class="tracker-counter" id="suppsCounter">0 / 16 taken</div>
+      </div>
+      <div class="tracker-progress-bar">
+        <div class="tracker-progress-fill" id="suppsProgressFill"></div>
+      </div>
+      <div id="suppsGroups"></div>
+    </div>
   </div>
-  <div class="gm-card" id="todayCard" style="margin-bottom:0">
-    <div class="gm-card-header">
-      <div class="gm-card-header-left">
-        <div class="gm-eyebrow">TO DO</div>
-        <div class="gm-progress-row">
-          <div class="gm-progress-num"   id="gmProgressNum">0</div>
-          <div class="gm-progress-total" id="gmProgressTotal">/ 0</div>
-          <div class="gm-progress-label" id="gmProgressLabel">nothing here yet</div>
+</div>
+
+<!-- Hygiene -->
+<div class="modal-overlay" id="overlay-hygiene">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-hygiene')"><i class="ti ti-x"></i></button>
+    <div class="gm-card" id="hygieneCard" style="margin-bottom:0">
+      <div class="gm-card-header">
+        <div class="gm-card-header-left">
+          <div class="gm-eyebrow">HYGIENE</div>
+        </div>
+        <div class="tracker-counter" id="hygieneCounter">0 / 15</div>
+      </div>
+      <div class="tracker-progress-bar">
+        <div class="tracker-progress-fill" id="hygieneProgressFill"></div>
+      </div>
+      <div id="hygieneList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Gym -->
+<div class="modal-overlay" id="overlay-gym">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-gym')"><i class="ti ti-x"></i></button>
+    <div class="gm-card" id="gymCard" style="margin-bottom:0">
+      <div class="gm-card-header">
+        <div class="gm-card-header-left">
+          <div class="gm-eyebrow">GYM</div>
+        </div>
+        <div class="tracker-counter" id="gymWeekCounter">0 / 7</div>
+      </div>
+      <div class="gym-split-btns" id="gymSplitBtns">
+        <button class="gym-split-btn" data-split="anterior">Anterior</button>
+        <button class="gym-split-btn" data-split="posterior">Posterior</button>
+        <button class="gym-split-btn" data-split="rest">Rest</button>
+      </div>
+      <label class="gym-check-wrap" id="gymCheckWrap">
+        <input type="checkbox" id="gymDoneCheck">
+        <span class="gym-check-box"></span>
+        <span class="gym-check-label">Trained today</span>
+      </label>
+      <div class="gym-week-dots" id="gymWeekDots"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Sleep -->
+<div class="modal-overlay" id="overlay-sleep">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-sleep')"><i class="ti ti-x"></i></button>
+    <div class="gm-card" id="sleepCard" style="margin-bottom:0">
+      <div class="gm-card-header">
+        <div class="gm-card-header-left">
+          <div class="gm-eyebrow">SLEEP</div>
         </div>
       </div>
-      <div class="gm-streak" id="gmStreak">
-        <i class="ti ti-bolt"></i>
-        <span class="gm-streak-num" id="gmStreakNum">0</span>
-        <span>day streak</span>
+      <div class="sleep-times-row">
+        <div class="sleep-field">
+          <span class="sleep-field-label">Bed time</span>
+          <input type="time" class="sleep-time-input" id="sleepBedTime">
+        </div>
+        <div class="sleep-hours-display" id="sleepHoursDisplay">--</div>
+        <div class="sleep-field">
+          <span class="sleep-field-label">Wake time</span>
+          <input type="time" class="sleep-time-input" id="sleepWakeTime">
+        </div>
       </div>
     </div>
-    <div class="gm-bar" id="gmBar"></div>
-    <div id="emptyState" class="empty-state">No tasks yet -- add one below.</div>
-    <ul id="goalList" class="goal-list gm-list"></ul>
-    <div id="doneSectionWrap" style="display:none">
-      <div class="done-section-hdr" id="doneSectionToggle">
-        <span class="done-section-label" id="doneSectionCount">Done (0)</span>
-        <button class="done-clear-btn" id="clearDoneBtn">Clear all</button>
+  </div>
+</div>
+
+<!-- Streaks + Consistency -->
+<div class="modal-overlay" id="overlay-streaks">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-streaks')"><i class="ti ti-x"></i></button>
+    <div class="overview-row">
+      <div class="gm-card" id="streaksCard">
+        <div class="gm-card-header" style="margin-bottom:12px">
+          <div class="gm-eyebrow">STREAKS</div>
+        </div>
+        <div class="streaks-row" id="streaksRow"></div>
       </div>
-      <ul id="doneList" class="goal-list" style="display:none"></ul>
+      <div class="gm-card" id="consistencyCard">
+        <div class="gm-card-header" style="margin-bottom:12px">
+          <div class="gm-eyebrow">CONSISTENCY</div>
+          <div class="tracker-counter" id="consistencyStats"></div>
+        </div>
+        <div class="consistency-wrap">
+          <div class="consistency-grid" id="consistencyGrid"></div>
+        </div>
+        <div class="consistency-footer">
+          <div class="consistency-legend">
+            <span>Less</span>
+            <div class="legend-cell" style="background:rgba(20,20,40,0.6);margin:0 2px"></div>
+            <div class="legend-cell" style="background:rgba(50,40,120,0.5);margin:0 2px"></div>
+            <div class="legend-cell" style="background:rgba(80,70,180,0.55);margin:0 2px"></div>
+            <div class="legend-cell" style="background:#f97316;margin:0 2px"></div>
+            <span>More</span>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="gm-input-wrap">
-      <input type="text" id="goalInput" placeholder="Add a task...">
-      <button class="goal-add-btn"    id="goalAddBtn">+ Add</button>
-      <button class="goal-polish-btn" id="goalPolishBtn">Polish</button>
+  </div>
+</div>
+<div class="graph-tooltip" id="graphTooltip"></div>
+
+<!-- To Do -->
+<div class="modal-overlay" id="overlay-todos">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-todos')"><i class="ti ti-x"></i></button>
+    <div class="gm-card" id="todayCard" style="margin-bottom:0">
+      <div class="gm-card-header">
+        <div class="gm-card-header-left">
+          <div class="gm-eyebrow">TO DO</div>
+          <div class="gm-progress-row">
+            <div class="gm-progress-num"   id="gmProgressNum">0</div>
+            <div class="gm-progress-total" id="gmProgressTotal">/ 0</div>
+            <div class="gm-progress-label" id="gmProgressLabel">nothing here yet</div>
+          </div>
+        </div>
+        <div class="gm-streak" id="gmStreak">
+          <i class="ti ti-bolt"></i>
+          <span class="gm-streak-num" id="gmStreakNum">0</span>
+          <span>day streak</span>
+        </div>
+      </div>
+      <div class="gm-bar" id="gmBar"></div>
+      <div id="emptyState" class="empty-state">No tasks yet -- add one below.</div>
+      <ul id="goalList" class="goal-list gm-list"></ul>
+      <div id="doneSectionWrap" style="display:none">
+        <div class="done-section-hdr" id="doneSectionToggle">
+          <span class="done-section-label" id="doneSectionCount">Done (0)</span>
+          <button class="done-clear-btn" id="clearDoneBtn">Clear all</button>
+        </div>
+        <ul id="doneList" class="goal-list" style="display:none"></ul>
+      </div>
+      <div class="gm-input-wrap">
+        <input type="text" id="goalInput" placeholder="Add a task...">
+        <button class="goal-add-btn"    id="goalAddBtn">+ Add</button>
+        <button class="goal-polish-btn" id="goalPolishBtn">Polish</button>
+      </div>
+      <div class="polish-status" id="polishStatus"></div>
     </div>
-    <div class="polish-status" id="polishStatus"></div>
   </div>
 </div>
 
 <!-- Money -->
-<div class="dash-overlay" id="overlay-money">
-  <div class="overlay-hdr">
-    <span class="overlay-title">Money</span>
-    <button class="overlay-close" data-overlay="overlay-money"><i class="ti ti-x"></i></button>
-  </div>
-  <div class="gm-card" id="moneyCard" style="margin-bottom:0">
-    <div class="gm-eyebrow" style="margin-bottom:12px">LOG EXPENSE</div>
-    <div class="money-expense-form">
-      <div class="money-form-row">
-        <input type="number" class="money-amount-input" id="moneyAmount" placeholder="£0.00" min="0" step="0.01">
-        <select class="money-select" id="moneyCategory">
-          <option value="Food">Food</option>
-          <option value="Transport">Transport</option>
-          <option value="Going Out">Going Out</option>
-          <option value="Subscriptions">Subscriptions</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
-      <input type="text" class="money-note-input" id="moneyNote" placeholder="Note (optional)...">
-      <button class="money-add-btn" id="moneyAddBtn">Add Expense</button>
-    </div>
-    <div class="money-divider"></div>
-    <div class="money-section-label">Today's Expenses</div>
-    <div id="moneyExpenseList"><div class="empty-state">No expenses logged today.</div></div>
-    <div class="money-divider"></div>
-    <div class="money-stats-block">
-      <div class="money-stat-row">
-        <span class="money-stat-label">Today's total</span>
-        <span class="money-stat-value" id="moneyTodayTotal">£0.00</span>
-      </div>
-      <div class="money-stat-row">
-        <span class="money-stat-label">This week</span>
-        <span class="money-stat-value" id="moneyWeekTotal">£0.00</span>
+<div class="modal-overlay" id="overlay-money">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-money')"><i class="ti ti-x"></i></button>
+    <div class="gm-card" id="moneyCard" style="margin-bottom:0">
+      <div class="gm-eyebrow" style="margin-bottom:12px">LOG EXPENSE</div>
+      <div class="money-expense-form">
+        <div class="money-form-row">
+          <input type="number" class="money-amount-input" id="moneyAmount" placeholder="£0.00" min="0" step="0.01">
+          <select class="money-select" id="moneyCategory">
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Going Out">Going Out</option>
+            <option value="Subscriptions">Subscriptions</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <input type="text" class="money-note-input" id="moneyNote" placeholder="Note (optional)...">
+        <button class="money-add-btn" id="moneyAddBtn">Add Expense</button>
       </div>
       <div class="money-divider"></div>
-      <div class="money-section-label">Monthly Budget</div>
-      <div class="money-stat-row">
-        <span class="money-stat-label" id="moneyBudgetLabel">£0 / £800</span>
-        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary)" id="moneyBudgetPct">0%</span>
-      </div>
-      <div class="money-budget-bar"><div class="money-budget-fill" id="moneyBudgetFill"></div></div>
-      <div class="money-edit-row">
-        <span class="money-edit-label">Budget £</span>
-        <input type="number" class="money-edit-input" id="moneyBudgetInput" placeholder="800" min="0">
-        <button class="money-save-btn" id="moneyBudgetSave">Save</button>
-      </div>
+      <div class="money-section-label">Today's Expenses</div>
+      <div id="moneyExpenseList"><div class="empty-state">No expenses logged today.</div></div>
       <div class="money-divider"></div>
-      <div class="money-section-label">Savings Goal</div>
-      <div class="money-stat-row">
-        <span class="money-stat-label" id="moneySavingsLabel">£0 / £1,000</span>
-        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary)" id="moneySavingsPct">0%</span>
-      </div>
-      <div class="money-budget-bar"><div class="money-budget-fill" id="moneySavingsFill"></div></div>
-      <div class="money-edit-row">
-        <span class="money-edit-label">Goal £</span>
-        <input type="number" class="money-edit-input" id="moneySavingsGoalInput" placeholder="1000" min="0">
-        <span class="money-edit-label">Saved £</span>
-        <input type="number" class="money-edit-input" id="moneySavedInput" placeholder="0" min="0">
-        <button class="money-save-btn" id="moneySavingsSave">Save</button>
+      <div class="money-stats-block">
+        <div class="money-stat-row">
+          <span class="money-stat-label">Today's total</span>
+          <span class="money-stat-value" id="moneyTodayTotal">£0.00</span>
+        </div>
+        <div class="money-stat-row">
+          <span class="money-stat-label">This week</span>
+          <span class="money-stat-value" id="moneyWeekTotal">£0.00</span>
+        </div>
+        <div class="money-divider"></div>
+        <div class="money-section-label">Monthly Budget</div>
+        <div class="money-stat-row">
+          <span class="money-stat-label" id="moneyBudgetLabel">£0 / £800</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary)" id="moneyBudgetPct">0%</span>
+        </div>
+        <div class="money-budget-bar"><div class="money-budget-fill" id="moneyBudgetFill"></div></div>
+        <div class="money-edit-row">
+          <span class="money-edit-label">Budget £</span>
+          <input type="number" class="money-edit-input" id="moneyBudgetInput" placeholder="800" min="0">
+          <button class="money-save-btn" id="moneyBudgetSave">Save</button>
+        </div>
+        <div class="money-divider"></div>
+        <div class="money-section-label">Savings Goal</div>
+        <div class="money-stat-row">
+          <span class="money-stat-label" id="moneySavingsLabel">£0 / £1,000</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary)" id="moneySavingsPct">0%</span>
+        </div>
+        <div class="money-budget-bar"><div class="money-budget-fill" id="moneySavingsFill"></div></div>
+        <div class="money-edit-row">
+          <span class="money-edit-label">Goal £</span>
+          <input type="number" class="money-edit-input" id="moneySavingsGoalInput" placeholder="1000" min="0">
+          <span class="money-edit-label">Saved £</span>
+          <input type="number" class="money-edit-input" id="moneySavedInput" placeholder="0" min="0">
+          <button class="money-save-btn" id="moneySavingsSave">Save</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Daily Log -->
-<div class="dash-overlay" id="overlay-log">
-  <div class="overlay-hdr">
-    <span class="overlay-title">Daily Log</span>
-    <button class="overlay-close" data-overlay="overlay-log"><i class="ti ti-x"></i></button>
-  </div>
-  <div class="gm-card" id="logCard" style="margin-bottom:0">
-    <div class="gm-eyebrow">LOG</div>
-    <div class="log-sub-header"><i class="ti ti-bolt"></i> Wins</div>
-    <div class="win-input-row">
-      <input type="text" class="win-input" id="winInput" placeholder="Add a win...">
-      <button class="win-add-btn" id="winAddBtn">+ Add</button>
-    </div>
-    <ul class="win-list" id="winList"></ul>
-    <div class="log-sub-header">Brain dump</div>
-    <textarea class="auto-textarea" id="brainDump" placeholder="Dump everything here..."></textarea>
-    <div class="log-sub-header">Night</div>
-    <div class="night-fields-row">
-      <div class="night-field">
-        <label class="night-field-label" for="nightStrain">Strain</label>
-        <input type="text" class="night-input" id="nightStrain" placeholder="e.g. 18.3">
+<div class="modal-overlay" id="overlay-log">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-log')"><i class="ti ti-x"></i></button>
+    <div class="gm-card" id="logCard" style="margin-bottom:0">
+      <div class="gm-eyebrow">LOG</div>
+      <div class="log-sub-header"><i class="ti ti-bolt"></i> Wins</div>
+      <div class="win-input-row">
+        <input type="text" class="win-input" id="winInput" placeholder="Add a win...">
+        <button class="win-add-btn" id="winAddBtn">+ Add</button>
       </div>
-      <div class="night-field">
-        <label class="night-field-label" for="nightVibe">Vibe</label>
-        <input type="text" class="night-input" id="nightVibe" placeholder="e.g. focused">
+      <ul class="win-list" id="winList"></ul>
+      <div class="log-sub-header">Brain dump</div>
+      <textarea class="auto-textarea" id="brainDump" placeholder="Dump everything here..."></textarea>
+      <div class="log-sub-header">Night</div>
+      <div class="night-fields-row">
+        <div class="night-field">
+          <label class="night-field-label" for="nightStrain">Strain</label>
+          <input type="text" class="night-input" id="nightStrain" placeholder="e.g. 18.3">
+        </div>
+        <div class="night-field">
+          <label class="night-field-label" for="nightVibe">Vibe</label>
+          <input type="text" class="night-input" id="nightVibe" placeholder="e.g. focused">
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Countdowns -->
-<div class="dash-overlay" id="overlay-countdowns">
-  <div class="overlay-hdr">
-    <span class="overlay-title">Countdowns</span>
-    <button class="overlay-close" data-overlay="overlay-countdowns"><i class="ti ti-x"></i></button>
-  </div>
-  <div class="countdown-bar" id="countdownBar" style="flex-wrap:wrap;margin-bottom:10px">
-    <div class="countdown-items" id="countdownItems" style="flex:1;min-width:100%"></div>
-  </div>
-  <button class="countdown-add-btn" id="countdownAddBtn">+ Add Countdown</button>
-</div>
-
-<!-- Uni Prep -->
-<div class="dash-overlay" id="overlay-uni">
-  <div class="overlay-hdr">
-    <span class="overlay-title">Uni Prep</span>
-    <button class="overlay-close" data-overlay="overlay-uni"><i class="ti ti-x"></i></button>
-  </div>
-  <div class="gm-card" id="uniCard" style="margin-bottom:0">
-    <div class="gm-card-header" style="margin-bottom:0">
-      <div class="gm-card-header-left">
-        <div class="gm-eyebrow">UNI PREP <i class="ti ti-school"></i></div>
-        <div class="uni-header-sub" id="uniCountdown">Loading...</div>
-      </div>
-      <div class="tracker-counter" id="uniProgressLabel">0 / 0 ready</div>
+<div class="modal-overlay" id="overlay-countdowns">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-countdowns')"><i class="ti ti-x"></i></button>
+    <div class="countdown-bar" id="countdownBar" style="flex-wrap:wrap;margin-bottom:10px">
+      <div class="countdown-items" id="countdownItems" style="flex:1;min-width:100%"></div>
     </div>
-    <div class="uni-progress-bar"><div class="uni-progress-fill" id="uniProgressFill"></div></div>
-    <div class="uni-progress-text" id="uniProgressText">0 / 0 modules ready</div>
-    <div class="uni-add-row">
-      <input type="text" class="uni-module-input" id="uniModuleInput" placeholder="Module name...">
-      <button class="uni-add-btn" id="uniAddBtn">+ Add Module</button>
-    </div>
-    <div id="uniModuleList">
-      <div class="empty-state">No modules added yet -- click "+ Add Module" to start.</div>
-    </div>
+    <button class="countdown-add-btn" id="countdownAddBtn">+ Add Countdown</button>
   </div>
 </div>
 
 <!-- Weekly Review -->
-<div class="dash-overlay" id="overlay-weekly">
-  <div class="overlay-hdr">
-    <span class="overlay-title">Weekly Review</span>
-    <button class="overlay-close" data-overlay="overlay-weekly"><i class="ti ti-x"></i></button>
-  </div>
-  <div class="gm-card" id="weeklyCard" style="margin-bottom:0">
-    <div class="gm-eyebrow" style="margin-bottom:14px">LAST 7 DAYS</div>
-    <div class="weekly-grid" id="weeklyGrid"></div>
+<div class="modal-overlay" id="overlay-weekly">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-weekly')"><i class="ti ti-x"></i></button>
+    <div class="gm-card" id="weeklyCard" style="margin-bottom:0">
+      <div class="gm-eyebrow" style="margin-bottom:14px">LAST 7 DAYS</div>
+      <div class="weekly-grid" id="weeklyGrid"></div>
+    </div>
   </div>
 </div>
 
 <!-- Shopping List -->
-<div class="shop-overlay dash-overlay" id="overlay-shopping">
-  <div class="shop-header">
-    <div class="shop-title">
-      Shopping List
-      <span class="shop-count" id="shopCount"></span>
-    </div>
-    <div class="shop-header-right">
-      <button class="shop-clear-btn" id="shopClearChecked">Clear checked</button>
-      <button class="shop-close-btn" id="shopClose">&times;</button>
-    </div>
-  </div>
-  <div class="shop-body" id="shopBody"></div>
-  <div class="shop-add-wrap">
-    <input type="text" class="shop-add-input" id="shopAddInput" placeholder="Add item...">
-    <select class="shop-store-select" id="shopStoreSelect">
-      <option value="Tesco">Tesco</option>
-      <option value="Amazon">Amazon</option>
-      <option value="General">General</option>
-    </select>
-    <button class="shop-add-btn" id="shopAddBtn">+ Add</button>
-  </div>
-</div>
-
-<!-- Goals / Ticker -->
-<div class="dash-overlay" id="overlay-goals">
-  <div class="overlay-hdr">
-    <span class="overlay-title">Goals</span>
-    <button class="overlay-close" data-overlay="overlay-goals"><i class="ti ti-x"></i></button>
-  </div>
-  <div class="ticker-row">
-    <div class="goal-ticker" id="goalTicker" aria-live="polite" aria-atomic="true">
-      <div class="goal-ticker-led"><span class="goal-ticker-led-dot"></span></div>
-      <div class="goal-ticker-label">GOALS</div>
-      <div class="goal-ticker-stage" id="goalTickerStage">
-        <div class="goal-ticker-row">
-          <span class="goal-ticker-status" data-status="">.</span>
-          <span class="goal-ticker-text">Loading...</span>
-        </div>
+<div class="modal-overlay" id="overlay-shopping">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('overlay-shopping')"><i class="ti ti-x"></i></button>
+    <div class="shop-header">
+      <div class="shop-title">
+        Shopping List
+        <span class="shop-count" id="shopCount"></span>
       </div>
-      <div class="goal-ticker-meta" id="goalTickerMeta">0/0</div>
+      <div class="shop-header-right">
+        <button class="shop-clear-btn" id="shopClearChecked">Clear checked</button>
+      </div>
+    </div>
+    <div class="shop-body" id="shopBody"></div>
+    <div class="shop-add-wrap">
+      <input type="text" class="shop-add-input" id="shopAddInput" placeholder="Add item...">
+      <select class="shop-store-select" id="shopStoreSelect">
+        <option value="Tesco">Tesco</option>
+        <option value="Amazon">Amazon</option>
+        <option value="General">General</option>
+      </select>
+      <button class="shop-add-btn" id="shopAddBtn">+ Add</button>
     </div>
   </div>
 </div>
@@ -2841,8 +2287,8 @@ function setSyncState(state) {
   const label = document.getElementById('syncLabel');
   if (!dot) return;
   const cfg = {
-    synced:  { bg: '#6366f1', sh: 'rgba(99,102,241,0.7)',  txt: 'synced'  },
-    syncing: { bg: '#818cf8', sh: 'rgba(129,140,248,0.7)', txt: 'syncing' },
+    synced:  { bg: '#f97316', sh: 'rgba(249,115,22,0.7)',  txt: 'synced'  },
+    syncing: { bg: '#fb923c', sh: 'rgba(129,140,248,0.7)', txt: 'syncing' },
     offline: { bg: 'rgba(120,100,180,0.8)', sh: 'rgba(120,100,180,0.5)', txt: 'offline' },
   };
   const s = cfg[state] || cfg.offline;
@@ -2896,8 +2342,7 @@ function storeGet(key) {
 }
 function storeSet(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
-  if (key.startsWith('goals:')) window.dispatchEvent(new CustomEvent('goals-changed'));
-  if (key.startsWith('supps:') || key.startsWith('training:') || key.startsWith('strength:') || key.startsWith('fuel:') || key.startsWith('sleep:'))
+  if (key.startsWith('supps:') || key.startsWith('training:') || key.startsWith('strength:') || key.startsWith('sleep:'))
     window.dispatchEvent(new CustomEvent('score-changed'));
   sbUpsert(key, value);
 }
@@ -3124,7 +2569,6 @@ function loadTodos() {
   }
 
   renderTodosHeader();
-  tickerRefresh();
 }
 
 function wireDragReorderPersistent(listEl, key, reloadFn) {
@@ -3329,18 +2773,10 @@ function loadShoppingList() {
 }
 
 function initShoppingList() {
-  const overlay  = document.getElementById('overlay-shopping');
-  const closeBtn = document.getElementById('shopClose');
   const addBtn   = document.getElementById('shopAddBtn');
   const input    = document.getElementById('shopAddInput');
   const select   = document.getElementById('shopStoreSelect');
   const clearBtn = document.getElementById('shopClearChecked');
-
-  closeBtn.addEventListener('click', () => {
-    overlay.classList.remove('overlay-open');
-    const tbBtn = document.querySelector('[data-overlay="overlay-shopping"]');
-    if (tbBtn) tbBtn.classList.remove('tb-active');
-  });
 
   function addItem() {
     const text  = input.value.trim();
@@ -3366,65 +2802,6 @@ function initShoppingList() {
 }
 
 initShoppingList();
-
-// -- Goal Ticker ---------------------------------------------------------------
-let cycleIdx = 0;
-
-function buildTickerItems() {
-  const todos  = storeGet('todos:persistent') || [];
-  const total  = todos.length;
-  const done   = todos.filter(g => g.done).length;
-
-  document.getElementById('goalTickerMeta').textContent = done + '/' + total;
-
-  if (total === 0)    return [{ status: 'empty',   text: 'No tasks yet -- add one to get rolling.' }];
-  if (done === total) return [{ status: 'done',    text: '[done] All tasks done.' }];
-  return todos.filter(g => !g.done).map(g => ({ status: 'pending', text: g.text }));
-}
-
-function statusGlyph(s) {
-  if (s === 'done') return '[done]';
-  if (s === 'pending') return 'o';
-  return '.';
-}
-
-function tick(first) {
-  const items = buildTickerItems();
-  if (!items.length) return;
-
-  const stage = document.getElementById('goalTickerStage');
-  const cur   = stage.querySelector('.goal-ticker-row');
-  const item  = items[cycleIdx % items.length];
-  cycleIdx    = (cycleIdx + 1) % items.length;
-
-  const row = document.createElement('div');
-  row.className = 'goal-ticker-row';
-
-  const statusSpan = document.createElement('span');
-  statusSpan.className = 'goal-ticker-status';
-  statusSpan.dataset.status = item.status;
-  statusSpan.textContent = statusGlyph(item.status);
-
-  const textSpan = document.createElement('span');
-  textSpan.className = 'goal-ticker-text';
-  textSpan.textContent = item.text;
-
-  row.appendChild(statusSpan);
-  row.appendChild(textSpan);
-
-  if (first) {
-    stage.innerHTML = '';
-    stage.appendChild(row);
-  } else {
-    if (cur) { cur.classList.add('is-leaving'); setTimeout(() => cur.remove(), 460); }
-    row.classList.add('is-entering');
-    stage.appendChild(row);
-  }
-}
-
-function tickerRefresh() { cycleIdx = 0; tick(true); }
-
-window.addEventListener('goals-changed', () => { cycleIdx = 0; tick(false); });
 
 // -- Clock phase color helper (used by updateClock) ---------------------------
 const SUN_PALETTE = [
@@ -3638,69 +3015,7 @@ function isHygieneDone(date) {
   return HYGIENE_ALL_IDS.every(id => !!data[id]);
 }
 
-// -- Fuel Tracker --------------------------------------------------------------
-const FUEL_ITEMS = [
-  '800ml milk iced coffee',
-  '800ml OJ',
-  'Post-gym meal',
-  'Evening meal',
-  '800ml milk pre-bed',
-];
-
-function loadFuel() {
-  const key = 'fuel:' + getActiveDateString();
-  const data = storeGet(key) || {};
-  const list = document.getElementById('fuelList');
-  list.innerHTML = '';
-
-  FUEL_ITEMS.forEach((name, i) => {
-    const checked = !!data[i];
-    const div = document.createElement('div');
-    div.className = 'supp-item' + (checked ? ' is-done' : '');
-
-    const cbWrap = document.createElement('label');
-    cbWrap.className = 'goal-cb-wrap';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = checked;
-    const cbBox = document.createElement('span');
-    cbBox.className = 'goal-cb-box';
-    cbWrap.appendChild(cb);
-    cbWrap.appendChild(cbBox);
-
-    const txt = document.createElement('span');
-    txt.className = 'supp-text';
-    txt.textContent = name;
-
-    div.appendChild(cbWrap);
-    div.appendChild(txt);
-    list.appendChild(div);
-
-    cb.addEventListener('change', () => {
-      const d = storeGet(key) || {};
-      d[i] = cb.checked;
-      storeSet(key, d);
-      loadFuel();
-    });
-  });
-
-  const done = FUEL_ITEMS.filter((_, i) => !!data[i]).length;
-  const counter = document.getElementById('fuelCounter');
-  counter.textContent = done + ' / 5';
-  counter.classList.toggle('all-done', done === 5);
-  document.getElementById('fuelProgressFill').style.width = (done / 5 * 100) + '%';
-  document.getElementById('fuelCard').classList.toggle('gm-all-done', done === 5);
-}
-
 // -- Sleep & Recovery ----------------------------------------------------------
-const ENERGY_COLORS = [
-  'rgb(40,35,90)',
-  'rgb(74,63,138)',
-  'rgb(124,92,191)',
-  'rgb(155,127,212)',
-  'rgb(190,170,230)',
-];
-
 function updateSleepHours() {
   const bed  = document.getElementById('sleepBedTime').value;
   const wake = document.getElementById('sleepWakeTime').value;
@@ -3716,30 +3031,11 @@ function updateSleepHours() {
   disp.textContent = h + 'h' + (m ? ' ' + m + 'm' : '');
 }
 
-function renderEnergyCircles(val) {
-  document.querySelectorAll('.energy-circle').forEach(c => {
-    const v = parseInt(c.dataset.val);
-    const filled = v <= val && val > 0;
-    c.classList.toggle('is-filled', filled);
-    if (filled) {
-      const col = ENERGY_COLORS[v - 1];
-      c.style.background  = col;
-      c.style.boxShadow   = col.replace('rgb(', 'rgba(').replace(')', ',0.5)').replace('rgba(', '0 0 10px rgba(');
-      c.style.color       = '#0d0d0d';
-    } else {
-      c.style.background = '';
-      c.style.boxShadow  = '';
-      c.style.color      = '';
-    }
-  });
-}
-
 function loadSleep() {
   const data = storeGet('sleep:' + getActiveDateString()) || {};
   document.getElementById('sleepBedTime').value  = data.bed  || '';
   document.getElementById('sleepWakeTime').value = data.wake || '';
   updateSleepHours();
-  renderEnergyCircles(data.energy || 0);
 }
 
 function initSleep() {
@@ -3751,16 +3047,6 @@ function initSleep() {
       data.wake = document.getElementById('sleepWakeTime').value;
       storeSet(key, data);
       updateSleepHours();
-    });
-  });
-  document.querySelectorAll('.energy-circle').forEach(c => {
-    c.addEventListener('click', () => {
-      const val  = parseInt(c.dataset.val);
-      const key  = 'sleep:' + getActiveDateString();
-      const data = storeGet(key) || {};
-      data.energy = (data.energy === val) ? 0 : val;
-      storeSet(key, data);
-      renderEnergyCircles(data.energy);
     });
   });
 }
@@ -3927,16 +3213,12 @@ function isSuppsDone(date) {
   return n === SUPPS_TOTAL;
 }
 function isSleepGood(date) { return getSleepHoursForDate(date) >= 7; }
-function isFuelDone(date)  {
-  const d = storeGet('fuel:' + date) || {};
-  return FUEL_ITEMS.filter((_, i) => !!d[i]).length === FUEL_ITEMS.length;
-}
 function hasLogContent(date) {
   const d = storeGet('log:' + date) || {};
   return (d.wins && d.wins.length > 0) || !!(d.brainDump && d.brainDump.trim());
 }
 function getDayScore(date) {
-  const base = [isGymDone, isSuppsDone, isFuelDone, isSleepGood, hasLogContent]
+  const base = [isGymDone, isSuppsDone, isSleepGood, hasLogContent]
     .filter(fn => fn(date)).length;
   const hygData2 = storeGet('hygiene:' + date) || {};
   const hygScore2 = HYGIENE_ALL_IDS.filter(id => hygData2[id]).length / HYGIENE_TOTAL;
@@ -3993,9 +3275,9 @@ function renderStreaks() {
 // -- Consistency Graph ---------------------------------------------------------
 function cellColor(score) {
   if (score === 0) return 'rgba(20,10,15,0.6)';
-  if (score <= 2)  return 'rgba(80,0,30,0.5)';
-  if (score <= 5)  return 'rgba(160,0,60,0.55)';
-  return '#6366f1';
+  if (score <= 1)  return 'rgba(80,0,30,0.5)';
+  if (score <= 3)  return 'rgba(160,0,60,0.55)';
+  return '#f97316';
 }
 
 function renderConsistencyGraph() {
@@ -4016,7 +3298,7 @@ function renderConsistencyGraph() {
     cell.className = 'graph-cell';
     cell.style.background = cellColor(score);
     cell.addEventListener('mouseenter', e => {
-      tt.textContent = date + ' -- ' + (Math.round(score * 10) / 10) + '/7';
+      tt.textContent = date + ' -- ' + (Math.round(score * 10) / 10) + '/5';
       tt.style.display = 'block';
       tt.style.left = (e.clientX + 10) + 'px';
       tt.style.top  = (e.clientY - 32) + 'px';
@@ -4044,7 +3326,6 @@ function renderWeeklyReview() {
 
   const gymDays   = days.filter(isGymDone).length;
   const suppDays  = days.filter(isSuppsDone).length;
-  const fuelDays  = days.filter(isFuelDone).length;
   const sleepHrs  = days.map(getSleepHoursForDate).filter(h => h > 0);
   const avgSleep  = sleepHrs.length ? (sleepHrs.reduce((a,b) => a+b,0) / sleepHrs.length) : 0;
   let totalWins   = 0;
@@ -4062,10 +3343,9 @@ function renderWeeklyReview() {
     { label: 'Gym',        value: gymDays + '/7',                     sub: Math.round(gymDays/7*100) + '% days' },
     { label: 'Avg sleep',  value: avgSleep > 0 ? avgSleep.toFixed(1) + 'h' : '--', sub: avgSleep >= 7 ? '[done] target' : 'target 7h' },
     { label: 'Supps',      value: Math.round(suppDays/7*100) + '%',   sub: suppDays + '/7 days' },
-    { label: 'Fuel',       value: Math.round(fuelDays/7*100) + '%',   sub: fuelDays + '/7 days' },
     { label: 'Hygiene',    value: Math.round(hygDays/7*100) + '%',    sub: hygDays + '/7 days' },
     { label: 'Wins',       value: totalWins,                          sub: 'logged this week' },
-    { label: 'Best day',   value: bestDay.score > 0 ? formatDate(bestDay.date) : '--', sub: bestDay.score > 0 ? (Math.round(bestDay.score * 10) / 10) + '/7 sections' : 'no data' },
+    { label: 'Best day',   value: bestDay.score > 0 ? formatDate(bestDay.date) : '--', sub: bestDay.score > 0 ? (Math.round(bestDay.score * 10) / 10) + '/5 sections' : 'no data' },
   ];
   grid.innerHTML = stats.map(s => `
     <div class="weekly-stat">
@@ -4128,9 +3408,9 @@ const SCORE_C = 2 * Math.PI * 35;
 
 function scoreColor(pct) {
   if (pct >= 80) return '#ff8c00';
-  if (pct >= 50) return '#6366f1';
-  if (pct >= 25) return '#4f46e5';
-  return 'rgba(99,102,241,0.45)';
+  if (pct >= 50) return '#f97316';
+  if (pct >= 25) return '#ea580c';
+  return 'rgba(249,115,22,0.45)';
 }
 
 function calcTodayScore() {
@@ -4146,10 +3426,6 @@ function calcTodayScore() {
   const gymData  = storeGet('gym:' + date) || {};
   const gymScore = gymData.done ? 1 : 0;
 
-  // Fuel 20%
-  const fuelData  = storeGet('fuel:' + date) || {};
-  const fuelScore = FUEL_ITEMS.some((_, i) => !!fuelData[i]) ? 1 : 0;
-
   // Sleep 15%
   const sleepData  = storeGet('sleep:' + date) || {};
   const sleepScore = (sleepData.bed || sleepData.wake) ? 1 : 0;
@@ -4159,7 +3435,7 @@ function calcTodayScore() {
   const hygDone = HYGIENE_ALL_IDS.filter(id => hygData[id]).length;
   const hygPct  = HYGIENE_TOTAL > 0 ? hygDone / HYGIENE_TOTAL : 0;
 
-  return Math.round((suppsPct * 0.35 + gymScore * 0.25 + fuelScore * 0.20 + sleepScore * 0.15 + hygPct * 0.05) * 100);
+  return Math.round((suppsPct * 0.35 + gymScore * 0.25 + sleepScore * 0.15 + hygPct * 0.05) * 100);
 }
 
 function updateScoreRing() {
@@ -4187,54 +3463,6 @@ function tickCountdowns() {
     const m   = String(Math.floor((rem % 3600000) / 60000)).padStart(2, '0');
     const s   = String(Math.floor((rem % 60000) / 1000)).padStart(2, '0');
     el.textContent = d + 'd ' + h + ':' + m + ':' + s;
-  });
-}
-
-// -- Step Counter --------------------------------------------------------------
-const STEP_TARGET = 15000;
-const STEP_C      = 2 * Math.PI * 52;
-
-function stepsColor(n) {
-  if (n >= STEP_TARGET) return '#818cf8';
-  if (n >= 10000)       return '#6366f1';
-  if (n >= 5000)        return '#4f46e5';
-  return 'rgba(99,102,241,0.5)';
-}
-
-function loadSteps() {
-  const steps = storeGet('steps:' + getActiveDateString()) || 0;
-  const pct   = Math.min(steps / STEP_TARGET, 1);
-  const col   = stepsColor(steps);
-  const fill  = document.getElementById('stepsFill');
-  const count = document.getElementById('stepsCount');
-  const ctr   = document.getElementById('stepsCounter');
-  if (!fill) return;
-  fill.setAttribute('stroke-dasharray',  STEP_C.toFixed(2));
-  fill.setAttribute('stroke-dashoffset', (STEP_C * (1 - pct)).toFixed(2));
-  fill.setAttribute('stroke', col);
-  count.textContent = steps.toLocaleString();
-  count.style.color = col;
-  ctr.textContent   = steps.toLocaleString() + ' / 15,000';
-  ctr.classList.toggle('all-done', steps >= STEP_TARGET);
-  document.getElementById('stepsCard').classList.toggle('gm-all-done', steps >= STEP_TARGET);
-}
-
-function addSteps(n) {
-  const key   = 'steps:' + getActiveDateString();
-  const steps = (storeGet(key) || 0) + n;
-  storeSet(key, steps);
-  loadSteps();
-}
-
-function initSteps() {
-  document.getElementById('stepsAdd1k').addEventListener('click', () => addSteps(1000));
-  document.getElementById('stepsAdd5k').addEventListener('click', () => addSteps(5000));
-  document.getElementById('stepsAddCustom').addEventListener('click', () => {
-    const val = parseInt(document.getElementById('stepsCustomInput').value);
-    if (!isNaN(val) && val > 0) { addSteps(val); document.getElementById('stepsCustomInput').value = ''; }
-  });
-  document.getElementById('stepsCustomInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('stepsAddCustom').click();
   });
 }
 
@@ -4434,14 +3662,14 @@ function renderMoney() {
   document.getElementById('moneyBudgetPct').textContent   = Math.round(budPct * 100) + '%';
   const budFill = document.getElementById('moneyBudgetFill');
   budFill.style.width      = (budPct * 100) + '%';
-  budFill.style.background = budPct >= 1 ? 'rgba(180,100,120,0.7)' : budPct >= 0.75 ? 'rgba(190,170,230,0.6)' : 'linear-gradient(90deg,#4f46e5,#6366f1)';
+  budFill.style.background = budPct >= 1 ? 'rgba(180,100,120,0.7)' : budPct >= 0.75 ? 'rgba(190,170,230,0.6)' : 'linear-gradient(90deg,#ea580c,#f97316)';
 
   const savPct = Math.min(saved / savGoal, 1);
   document.getElementById('moneySavingsLabel').textContent = '£' + saved + ' / £' + savGoal;
   document.getElementById('moneySavingsPct').textContent   = Math.round(savPct * 100) + '%';
   const savFill = document.getElementById('moneySavingsFill');
   savFill.style.width      = (savPct * 100) + '%';
-  savFill.style.background = savPct >= 1 ? '#818cf8' : 'linear-gradient(90deg,#4f46e5,#6366f1)';
+  savFill.style.background = savPct >= 1 ? '#fb923c' : 'linear-gradient(90deg,#ea580c,#f97316)';
 
   document.getElementById('moneyBudgetInput').value      = budget;
   document.getElementById('moneySavingsGoalInput').value = savGoal;
@@ -4486,208 +3714,65 @@ function initMoney() {
   });
 }
 
-// -- Uni Prep ------------------------------------------------------------------
-const UNI_TARGET_DATE = '2026-09-22';
-const UNI_STATUS_CYCLE = ['Not Started', 'In Progress', 'Ready'];
-const UNI_STATUS_CLASS = {
-  'Not Started': 'uni-status-not-started',
-  'In Progress': 'uni-status-in-progress',
-  'Ready':       'uni-status-ready',
-};
+// -- Day-Triggered Tasks ------------------------------------------------------
+const DAY_TASKS = [
+  { day: 0, icon: 'ti ti-washing-machine', text: 'Do laundry — strip bed, wash, remake', id: 'laundry' },
+  { day: 2, icon: 'ti ti-trash', text: 'Put bins out tonight', id: 'bins' },
+];
 
-function updateUniCountdown() {
-  const el = document.getElementById('uniCountdown');
-  if (!el) return;
-  const target = new Date(UNI_TARGET_DATE + 'T00:00:00');
-  const diff   = target - new Date();
-  if (diff <= 0) { el.textContent = 'Year 2 has started!'; return; }
-  const days = Math.ceil(diff / 86400000);
-  el.textContent = days + ' days until September 22, 2026';
+function getDayTaskDismissKey(taskId) {
+  return '_dayTask:' + getActiveDateString() + ':' + taskId;
 }
 
-function renderUniModules() {
-  const modules = storeGet('uni-modules') || [];
-  const listEl  = document.getElementById('uniModuleList');
-  const fillEl  = document.getElementById('uniProgressFill');
-  const textEl  = document.getElementById('uniProgressText');
-  const labelEl = document.getElementById('uniProgressLabel');
-  if (!listEl) return;
+function renderDayTasks() {
+  const wrap = document.getElementById('dayTasksWrap');
+  if (!wrap) return;
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const todayTasks = DAY_TASKS.filter(t => t.day === dayOfWeek);
 
-  const total = modules.length;
-  const ready = modules.filter(m => m.status === 'Ready').length;
-  const pct   = total > 0 ? ready / total : 0;
-  fillEl.style.width  = (pct * 100) + '%';
-  textEl.textContent  = ready + ' / ' + total + ' modules ready';
-  labelEl.textContent = ready + ' / ' + total + ' ready';
+  wrap.innerHTML = '';
+  if (todayTasks.length === 0) { wrap.style.display = 'none'; return; }
 
-  if (total === 0) {
-    listEl.innerHTML = '<div class="empty-state">No modules added yet -- click "+ Add Module" to start.</div>';
-    return;
-  }
-  listEl.innerHTML = '';
+  let anyVisible = false;
+  todayTasks.forEach(task => {
+    const dismissKey = getDayTaskDismissKey(task.id);
+    const dismissed = sessionStorage.getItem(dismissKey) === '1';
+    if (dismissed) return;
 
-  modules.forEach((mod, idx) => {
-    const item = document.createElement('div');
-    item.className = 'uni-module-item';
+    anyVisible = true;
+    const el = document.createElement('div');
+    el.className = 'day-task';
 
-    // Header row
-    const header = document.createElement('div');
-    header.className = 'uni-module-header';
+    const icon = document.createElement('span');
+    icon.className = 'day-task-icon';
+    icon.innerHTML = '<i class="' + task.icon + '"></i>';
 
-    const toggle = document.createElement('span');
-    toggle.className   = 'uni-module-toggle';
-    toggle.textContent = '>';
+    const text = document.createElement('span');
+    text.className = 'day-task-text';
+    text.textContent = task.text;
 
-    const name = document.createElement('span');
-    name.className   = 'uni-module-name';
-    name.textContent = mod.name;
+    const hint = document.createElement('span');
+    hint.className = 'day-task-hint';
+    hint.textContent = 'tap to dismiss';
 
-    const status = mod.status || 'Not Started';
-    const badge  = document.createElement('span');
-    badge.className   = 'uni-status-badge ' + (UNI_STATUS_CLASS[status] || 'uni-status-not-started');
-    badge.textContent = status;
-    badge.title       = 'Click to cycle status';
-    badge.addEventListener('click', e => {
-      e.stopPropagation();
-      const mods = storeGet('uni-modules') || [];
-      const cur  = UNI_STATUS_CYCLE.indexOf(mods[idx] ? (mods[idx].status || 'Not Started') : 'Not Started');
-      mods[idx].status = UNI_STATUS_CYCLE[(cur + 1) % UNI_STATUS_CYCLE.length];
-      storeSet('uni-modules', mods);
-      renderUniModules();
+    el.appendChild(icon);
+    el.appendChild(text);
+    el.appendChild(hint);
+
+    el.addEventListener('click', () => {
+      el.classList.add('is-dismissed');
+      sessionStorage.setItem(dismissKey, '1');
+      setTimeout(() => {
+        el.remove();
+        if (!wrap.querySelector('.day-task')) wrap.style.display = 'none';
+      }, 350);
     });
 
-    const del = document.createElement('button');
-    del.className   = 'uni-module-del';
-    del.textContent = 'x';
-    del.title       = 'Remove module';
-    del.addEventListener('click', e => {
-      e.stopPropagation();
-      if (!confirm('Remove module "' + mod.name + '"?')) return;
-      const mods = storeGet('uni-modules') || [];
-      mods.splice(idx, 1);
-      storeSet('uni-modules', mods);
-      renderUniModules();
-    });
-
-    header.appendChild(toggle);
-    header.appendChild(name);
-    header.appendChild(badge);
-    header.appendChild(del);
-
-    // Collapsible body
-    const body = document.createElement('div');
-    body.className = 'uni-module-body';
-
-    header.addEventListener('click', () => {
-      const open = !body.classList.contains('is-open');
-      body.classList.toggle('is-open', open);
-      toggle.classList.toggle('is-open', open);
-    });
-
-    // Notes textarea
-    const notesLabel = document.createElement('div');
-    notesLabel.className   = 'uni-body-label';
-    notesLabel.textContent = 'Notes';
-
-    const notesTA = document.createElement('textarea');
-    notesTA.className   = 'uni-notes-textarea';
-    notesTA.placeholder = 'Add notes for this module...';
-    notesTA.value       = mod.notes || '';
-    notesTA.addEventListener('input', () => {
-      notesTA.style.height = 'auto';
-      notesTA.style.height = notesTA.scrollHeight + 'px';
-    });
-    notesTA.addEventListener('blur', () => {
-      const mods = storeGet('uni-modules') || [];
-      if (mods[idx]) { mods[idx].notes = notesTA.value; storeSet('uni-modules', mods); }
-    });
-
-    // Reading list
-    const readLabel = document.createElement('div');
-    readLabel.className   = 'uni-body-label';
-    readLabel.textContent = 'Reading List';
-
-    const readAddRow = document.createElement('div');
-    readAddRow.className = 'uni-reading-add-row';
-    const readInput = document.createElement('input');
-    readInput.type        = 'text';
-    readInput.className   = 'uni-reading-input';
-    readInput.placeholder = 'Add a reading item...';
-    const readAddBtn = document.createElement('button');
-    readAddBtn.className   = 'uni-reading-add-btn';
-    readAddBtn.textContent = '+ Add';
-    readAddRow.appendChild(readInput);
-    readAddRow.appendChild(readAddBtn);
-
-    const readListEl = document.createElement('div');
-
-    function renderReadings() {
-      const mods     = storeGet('uni-modules') || [];
-      const readings = (mods[idx] || {}).readings || [];
-      readListEl.innerHTML = '';
-      readings.forEach((r, ri) => {
-        const row = document.createElement('div');
-        row.className = 'uni-reading-item';
-        const txt = document.createElement('span');
-        txt.className   = 'uni-reading-text';
-        txt.textContent = r;
-        const del2 = document.createElement('button');
-        del2.className   = 'uni-reading-del';
-        del2.textContent = 'x';
-        del2.addEventListener('click', () => {
-          const m2 = storeGet('uni-modules') || [];
-          if (m2[idx]) { (m2[idx].readings = m2[idx].readings || []).splice(ri, 1); storeSet('uni-modules', m2); renderReadings(); }
-        });
-        row.appendChild(txt);
-        row.appendChild(del2);
-        readListEl.appendChild(row);
-      });
-    }
-
-    function addReading() {
-      const val = readInput.value.trim();
-      if (!val) return;
-      const mods = storeGet('uni-modules') || [];
-      if (mods[idx]) {
-        mods[idx].readings = mods[idx].readings || [];
-        mods[idx].readings.push(val);
-        storeSet('uni-modules', mods);
-        readInput.value = '';
-        renderReadings();
-      }
-    }
-    readAddBtn.addEventListener('click', addReading);
-    readInput.addEventListener('keydown', e => { if (e.key === 'Enter') addReading(); });
-    renderReadings();
-
-    body.appendChild(notesLabel);
-    body.appendChild(notesTA);
-    body.appendChild(readLabel);
-    body.appendChild(readAddRow);
-    body.appendChild(readListEl);
-
-    item.appendChild(header);
-    item.appendChild(body);
-    listEl.appendChild(item);
+    wrap.appendChild(el);
   });
-}
 
-function initUni() {
-  updateUniCountdown();
-  setInterval(updateUniCountdown, 60000);
-  document.getElementById('uniAddBtn').addEventListener('click', () => {
-    const input = document.getElementById('uniModuleInput');
-    const name  = input.value.trim();
-    if (!name) return;
-    const mods = storeGet('uni-modules') || [];
-    mods.push({ name, status: 'Not Started', notes: '', readings: [] });
-    storeSet('uni-modules', mods);
-    input.value = '';
-    renderUniModules();
-  });
-  document.getElementById('uniModuleInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('uniAddBtn').click();
-  });
+  wrap.style.display = anyVisible ? 'flex' : 'none';
 }
 
 // -- Init ----------------------------------------------------------------------
@@ -4696,8 +3781,6 @@ async function initDashboard() {
   await syncFromSupabase();
   renderStreak();
   loadTodos();
-  tick(true);
-  setInterval(() => tick(false), 5000);
   updateClock();
   setInterval(updateClock, 1000);
   setInterval(tickCountdowns, 1000);
@@ -4706,7 +3789,6 @@ async function initDashboard() {
   loadHygiene();
   initGym();
   loadGym();
-  loadFuel();
   initSleep();
   loadSleep();
   initLog();
@@ -4717,52 +3799,26 @@ async function initDashboard() {
   window.addEventListener('score-changed', updateScoreRing);
   renderStreaks();
   renderConsistencyGraph();
-  loadSteps();
-  initSteps();
   initMoney();
   renderMoney();
-  initUni();
-  renderUniModules();
   renderWeeklyReview();
+  renderDayTasks();
 }
 initDashboard();
 
-// ── Toolbar overlay system ───────────────────────────────────────────────────
-function overlayCloseAll() {
-  document.querySelectorAll('.dash-overlay.overlay-open').forEach(function(el) {
-    el.classList.remove('overlay-open');
-  });
-  document.querySelectorAll('.tb-btn.tb-active').forEach(function(el) {
-    el.classList.remove('tb-active');
-  });
+// ── Modal system ─────────────────────────────────────────────────────────────
+function openModal(id) {
+  var overlay = document.getElementById(id);
+  if (overlay) overlay.classList.add('is-open');
 }
-
-document.querySelectorAll('.tb-btn').forEach(function(btn) {
-  btn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    var id = btn.dataset.overlay;
-    var overlay = document.getElementById(id);
-    if (!overlay) return;
-    var isOpen = overlay.classList.contains('overlay-open');
-    overlayCloseAll();
-    if (!isOpen) {
-      overlay.classList.add('overlay-open');
-      btn.classList.add('tb-active');
-    }
+function closeModal(id) {
+  var overlay = document.getElementById(id);
+  if (overlay) overlay.classList.remove('is-open');
+}
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeModal(overlay.id);
   });
-});
-
-document.querySelectorAll('.overlay-close').forEach(function(btn) {
-  btn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    overlayCloseAll();
-  });
-});
-
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.dash-overlay') && !e.target.closest('#dashToolbar')) {
-    overlayCloseAll();
-  }
 });
 </script>
 </body>
