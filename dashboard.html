@@ -2012,6 +2012,7 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
         <button class="gym-split-btn" data-split="anterior">Anterior</button>
         <button class="gym-split-btn" data-split="posterior">Posterior</button>
         <button class="gym-split-btn" data-split="rest">Rest</button>
+        <button class="gym-split-btn" data-split="football">Football</button>
       </div>
       <label class="gym-check-wrap" id="gymCheckWrap">
         <input type="checkbox" id="gymDoneCheck">
@@ -2926,6 +2927,8 @@ const HYGIENE_GROUPS = [
     id: 'am',
     label: 'AM - MORNING',
     items: [
+      { id: 'am_sunlight',   label: 'Go outside — morning sunlight' },
+      { id: 'am_drinks',     label: 'Make morning drinks'     },
       { id: 'am_facewash',   label: 'Warm water face wash'    },
       { id: 'am_moisturise', label: 'Moisturiser (face)'      },
       { id: 'am_teeth',      label: 'Brush teeth'             },
@@ -3472,7 +3475,7 @@ function gymGetSplit() {
   for (let i = 1; i <= 30; i++) {
     const d = dateAddDays(today, -i);
     const g = storeGet('gym:' + d) || {};
-    if (g.done && g.split) {
+    if (g.done && (g.split === 'anterior' || g.split === 'posterior')) {
       return g.split === 'anterior' ? 'posterior' : 'anterior';
     }
   }
@@ -3716,7 +3719,7 @@ function initMoney() {
 
 // -- Day-Triggered Tasks ------------------------------------------------------
 const DAY_TASKS = [
-  { day: 0, icon: 'ti ti-washing-machine', text: 'Do laundry — strip bed, wash, remake', id: 'laundry' },
+  { day: 0, icon: 'ti ti-refresh', text: 'Reset Day — laundry, hoover, wipe everything, room back to zero', id: 'reset' },
   { day: 2, icon: 'ti ti-trash', text: 'Put bins out tonight', id: 'bins' },
 ];
 
