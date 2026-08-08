@@ -1987,7 +1987,7 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
         <div class="gm-card-header-left">
           <div class="gm-eyebrow">HYGIENE</div>
         </div>
-        <div class="tracker-counter" id="hygieneCounter">0 / 15</div>
+        <div class="tracker-counter" id="hygieneCounter">0 / 13</div>
       </div>
       <div class="tracker-progress-bar">
         <div class="tracker-progress-fill" id="hygieneProgressFill"></div>
@@ -2941,9 +2941,7 @@ const HYGIENE_GROUPS = [
     label: 'PM - EVENING (10--11PM)',
     items: [
       { id: 'pm_shower',        label: 'Shower + body wash'       },
-      { id: 'pm_oilcleanser',   label: 'Oil cleanser (face)'      },
       { id: 'pm_watercleanser', label: 'Water-based cleanser (face)' },
-      { id: 'pm_serum',         label: 'Serum (nose)'             },
       { id: 'pm_moisturise',    label: 'Moisturiser (face)'       },
       { id: 'pm_bodymoisterise',label: 'Body moisturiser'         },
       { id: 'pm_conditioner',   label: 'Leave-in conditioner'     },
@@ -3148,9 +3146,7 @@ function dateAddDays(ds, n) {
 
 // -- Countdown Timers ----------------------------------------------------------
 const DEFAULT_COUNTDOWNS = [
-  { label: 'Amsterdam',  date: '2026-06-25' },
-  { label: 'House move', date: '2026-07-01' },
-  { label: 'Year 2',     date: '2026-09-22' },
+  { label: 'Year 2', date: '2026-09-22' },
 ];
 
 function loadCountdowns() {
@@ -3419,26 +3415,26 @@ function scoreColor(pct) {
 function calcTodayScore() {
   const date = getActiveDateString();
 
-  // Supps 35%
+  // Supps 40%
   const suppsData = storeGet('supps:' + date) || {};
   let suppsTaken = 0;
   SUPPS_GROUPS.forEach(g => g.items.forEach((_, i) => { if (suppsData[g.id + ':' + i]) suppsTaken++; }));
   const suppsPct = SUPPS_TOTAL > 0 ? suppsTaken / SUPPS_TOTAL : 0;
 
-  // Gym 25%
+  // Gym 30%
   const gymData  = storeGet('gym:' + date) || {};
   const gymScore = gymData.done ? 1 : 0;
 
-  // Sleep 15%
+  // Sleep 20%
   const sleepData  = storeGet('sleep:' + date) || {};
   const sleepScore = (sleepData.bed || sleepData.wake) ? 1 : 0;
 
-  // Hygiene 5%
+  // Hygiene 10%
   const hygData = storeGet('hygiene:' + date) || {};
   const hygDone = HYGIENE_ALL_IDS.filter(id => hygData[id]).length;
   const hygPct  = HYGIENE_TOTAL > 0 ? hygDone / HYGIENE_TOTAL : 0;
 
-  return Math.round((suppsPct * 0.35 + gymScore * 0.25 + sleepScore * 0.15 + hygPct * 0.05) * 100);
+  return Math.round((suppsPct * 0.40 + gymScore * 0.30 + sleepScore * 0.20 + hygPct * 0.10) * 100);
 }
 
 function updateScoreRing() {
@@ -3720,6 +3716,7 @@ function initMoney() {
 // -- Day-Triggered Tasks ------------------------------------------------------
 const DAY_TASKS = [
   { day: 0, icon: 'ti ti-refresh', text: 'Reset Day — laundry, hoover, wipe everything, room back to zero', id: 'reset' },
+  { day: 0, icon: 'ti ti-refresh', text: 'Sunday Reset — full room tidy, plan the week, review dashboard', id: 'reset2' },
   { day: 2, icon: 'ti ti-trash', text: 'Put bins out tonight', id: 'bins' },
 ];
 
