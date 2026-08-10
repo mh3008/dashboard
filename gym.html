@@ -138,10 +138,13 @@ function pad2(n){ return String(n).padStart(2,'0'); }
 function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
 function num(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
 function e1rm(w,r){ return w>0&&r>0 ? w*(1+r/30) : 0; }
-var SPLITS = ['Push','Pull','Legs','Upper','Lower','Full','Arms'];
-var SEED_EX = ['Bench Press','Incline DB Press','Overhead Press','Squat','Deadlift','Romanian Deadlift',
-  'Barbell Row','Lat Pulldown','Pull-up','Bicep Curl','Tricep Pushdown','Lateral Raise',
-  'Leg Press','Leg Curl','Leg Extension','Face Pull'];
+var SPLITS = ['Anterior','Posterior'];
+var SPLIT_TEMPLATES = {
+  'Anterior': ['Chest Fly','Incline Chest Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor'],
+  'Posterior': ['Seated Row','Lat Pulldown','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise']
+};
+var SETS_PER = 2;
+var SEED_EX = ['Chest Fly','Incline Chest Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor','Seated Row','Lat Pulldown','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise'];
 function KEY(){ return 'gym:'+getActiveDateString(); }
 function load(){
   var s = storeGet(KEY()) || {};
@@ -202,7 +205,20 @@ function render(){
     var c=document.createElement('span');
     c.className='split-chip'+(s.split===sp?' on':'');
     c.textContent=sp;
-    c.addEventListener('click', function(){ var st=load(); st.split = (st.split===sp?'':sp); save(st); render(); });
+    c.addEventListener('click', function(){
+      var st=load();
+      if (st.split===sp){ st.split=''; }
+      else {
+        st.split=sp;
+        if (!st.exercises.length && SPLIT_TEMPLATES[sp]){
+          st.exercises = SPLIT_TEMPLATES[sp].map(function(nm){
+            var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false});
+            return { name:nm, sets:sets };
+          });
+        }
+      }
+      save(st); render();
+    });
     sr.appendChild(c);
   });
   var list=document.getElementById('exList'); list.innerHTML='';
