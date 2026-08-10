@@ -1801,6 +1801,39 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
 .icon-tile.tile-red i { color: #ef4444; }
 .icon-tile.tile-red:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.35); }
 
+/* -- Stat menu (character sheet) -- */
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 20px 16px 8px; }
+.stat-tile { position: relative; border-radius: 16px; padding: 18px 14px; cursor: pointer;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  transition: background .2s, border-color .2s, transform .12s;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.stat-tile:hover { background: rgba(255,255,255,0.06); border-color: rgba(249,115,22,0.3); }
+.stat-tile:active { transform: scale(0.97); }
+.stat-tile .stat-name { font-size: 12px; font-weight: 600; letter-spacing: .04em;
+  color: rgba(255,255,255,0.85); text-transform: uppercase; }
+.stat-ring-wrap { position: relative; width: 64px; height: 64px; }
+.stat-ring-wrap svg { width: 64px; height: 64px; }
+.stat-ring-bg { fill: none; stroke: rgba(249,115,22,0.12); stroke-width: 6; }
+.stat-ring-fill { fill: none; stroke-width: 6; stroke-linecap: round;
+  transform: rotate(-90deg); transform-origin: 32px 32px;
+  transition: stroke-dashoffset .7s cubic-bezier(0.22,1,0.36,1); }
+.stat-ring-overlay { position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; }
+.stat-ring-overlay .stat-ring-icon { font-size: 20px; color: #f97316; line-height: 1; }
+.stat-ring-overlay .stat-ring-pct { font-size: 11px; font-weight: 700; color: #fff; margin-top: 2px; }
+.stat-icon { color: #f97316; }
+.stat-drill { display: none; padding: 4px 16px 16px; }
+.stat-drill.is-open { display: block; }
+.stat-drill-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.stat-drill-back { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 8px 12px; color: #fff; cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; gap: 6px; }
+.stat-drill-back:hover { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.35); }
+.stat-drill-title { font-size: 16px; font-weight: 600; color: #fff; }
+.stat-drill-empty { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.35); font-size: 13px; }
+.global-row-label { font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(255,255,255,0.3); padding: 10px 16px 4px; }
+
 /* -- Modal system -- */
 @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
 .modal-overlay {
@@ -1940,19 +1973,23 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
 
   <div class="day-tasks-wrap" id="dayTasksWrap"></div>
 
-  <!-- Home screen icon grid -->
-  <div class="icon-grid">
-    <div class="icon-tile tile-orange" onclick="openModal('overlay-supps')"><i class="ti ti-pill"></i><span>Supps</span></div>
-    <div class="icon-tile tile-pink" onclick="openModal('overlay-hygiene')"><i class="ti ti-droplet"></i><span>Hygiene</span></div>
-    <div class="icon-tile tile-deep" onclick="openModal('overlay-sleep')"><i class="ti ti-moon"></i><span>Sleep</span></div>
-    <div class="icon-tile tile-red" onclick="openModal('overlay-gym')"><i class="ti ti-barbell"></i><span>Gym</span></div>
-    <div class="icon-tile tile-orange" onclick="openModal('overlay-streaks')"><i class="ti ti-flame"></i><span>Streaks</span></div>
-    <div class="icon-tile tile-pink" onclick="openModal('overlay-todos')"><i class="ti ti-checkbox"></i><span>Todos</span></div>
-    <div class="icon-tile tile-deep" onclick="openModal('overlay-money')"><i class="ti ti-currency-pound"></i><span>Money</span></div>
-    <div class="icon-tile tile-red" onclick="openModal('overlay-log')"><i class="ti ti-notebook"></i><span>Daily log</span></div>
-    <div class="icon-tile tile-orange" onclick="openModal('overlay-countdowns')"><i class="ti ti-hourglass"></i><span>Countdowns</span></div>
-    <div class="icon-tile tile-pink" onclick="openModal('overlay-weekly')"><i class="ti ti-calendar-week"></i><span>Weekly</span></div>
-    <div class="icon-tile tile-deep" onclick="openModal('overlay-shopping')"><i class="ti ti-shopping-cart"></i><span>Shopping</span></div>
+  <!-- Stat menu (character sheet) -->
+  <div id="statHome">
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="global-row-label">System</div>
+    <div class="icon-grid" id="globalGrid">
+      <div class="icon-tile tile-pink" onclick="openModal('overlay-todos')"><i class="ti ti-checkbox"></i><span>Todos</span></div>
+      <div class="icon-tile tile-orange" onclick="openModal('overlay-streaks')"><i class="ti ti-flame"></i><span>Streaks</span></div>
+      <div class="icon-tile tile-orange" onclick="openModal('overlay-countdowns')"><i class="ti ti-hourglass"></i><span>Countdowns</span></div>
+      <div class="icon-tile tile-pink" onclick="openModal('overlay-weekly')"><i class="ti ti-calendar-week"></i><span>Weekly</span></div>
+    </div>
+  </div>
+  <div class="stat-drill" id="statDrill">
+    <div class="stat-drill-head">
+      <button class="stat-drill-back" onclick="backToStats()"><i class="ti ti-arrow-left"></i> Back</button>
+      <div class="stat-drill-title" id="statDrillTitle">Stat</div>
+    </div>
+    <div class="icon-grid" id="statDrillGrid"></div>
   </div>
 
 </div><!-- /page-wrap -->
@@ -2995,6 +3032,7 @@ function loadHygiene() {
         storeSet(key, d);
         loadHygiene();
         updateScoreRing();
+        renderStatGrid();
         window.dispatchEvent(new Event('score-changed'));
       });
     });
@@ -3437,6 +3475,79 @@ function calcTodayScore() {
   return Math.round((suppsPct * 0.40 + gymScore * 0.30 + sleepScore * 0.20 + hygPct * 0.10) * 100);
 }
 
+// -- Stat menu (character sheet) ------------------------------------------------
+const STAT_DEFS = [
+  { id:'physical', name:'Physical', icon:'ti ti-activity', ring:true, apps:[
+      { label:'Supps', icon:'ti ti-pill',    overlay:'overlay-supps', cls:'tile-orange' },
+      { label:'Gym',   icon:'ti ti-barbell', overlay:'overlay-gym',   cls:'tile-red' },
+      { label:'Sleep', icon:'ti ti-moon',    overlay:'overlay-sleep', cls:'tile-deep' } ] },
+  { id:'appearance', name:'Appearance', icon:'ti ti-sparkles', ring:true, apps:[
+      { label:'Grooming', icon:'ti ti-droplet', overlay:'overlay-hygiene', cls:'tile-pink' } ] },
+  { id:'cognition', name:'Cognition', icon:'ti ti-brain', ring:false, apps:[
+      { label:'Daily log', icon:'ti ti-notebook', overlay:'overlay-log', cls:'tile-red' } ] },
+  { id:'social', name:'Social', icon:'ti ti-users', ring:false, apps:[] },
+  { id:'money', name:'Money', icon:'ti ti-currency-pound', ring:false, apps:[
+      { label:'Money',    icon:'ti ti-currency-pound', overlay:'overlay-money',    cls:'tile-deep' },
+      { label:'Shopping', icon:'ti ti-shopping-cart',  overlay:'overlay-shopping', cls:'tile-orange' } ] },
+];
+const STAT_RING_C = 2 * Math.PI * 29;
+function calcStatPct(statId){
+  const date = getActiveDateString();
+  if (statId === 'physical'){
+    const s = storeGet('supps:'+date)||{}; let taken=0;
+    SUPPS_GROUPS.forEach(g=>g.items.forEach((_,i)=>{ if(s[g.id+':'+i]) taken++; }));
+    const suppsPct = SUPPS_TOTAL>0 ? taken/SUPPS_TOTAL : 0;
+    const gym = (storeGet('gym:'+date)||{}).done ? 1 : 0;
+    const sl = storeGet('sleep:'+date)||{}; const sleep = (sl.bed||sl.wake) ? 1 : 0;
+    return Math.round((suppsPct+gym+sleep)/3*100);
+  }
+  if (statId === 'appearance'){
+    const h = storeGet('hygiene:'+date)||{};
+    const done = HYGIENE_ALL_IDS.filter(id=>h[id]).length;
+    return HYGIENE_TOTAL>0 ? Math.round(done/HYGIENE_TOTAL*100) : 0;
+  }
+  return 0;
+}
+function renderStatGrid(){
+  const grid = document.getElementById('statGrid'); if(!grid) return;
+  grid.innerHTML='';
+  STAT_DEFS.forEach(stat=>{
+    const tile=document.createElement('div'); tile.className='stat-tile';
+    tile.onclick=()=>openStat(stat.id);
+    if(stat.ring){
+      const pct=calcStatPct(stat.id), col=scoreColor(pct), off=STAT_RING_C*(1-pct/100);
+      tile.innerHTML=`<div class="stat-ring-wrap"><svg viewBox="0 0 64 64">
+        <circle class="stat-ring-bg" cx="32" cy="32" r="29"/>
+        <circle class="stat-ring-fill" cx="32" cy="32" r="29" stroke="${col}"
+          stroke-dasharray="${STAT_RING_C}" stroke-dashoffset="${off}"/></svg>
+        <div class="stat-ring-overlay"><i class="${stat.icon} stat-ring-icon"></i>
+        <div class="stat-ring-pct">${pct}%</div></div></div>
+        <div class="stat-name">${stat.name}</div>`;
+    } else {
+      tile.innerHTML=`<div class="stat-ring-wrap" style="display:flex;align-items:center;justify-content:center;">
+        <i class="${stat.icon} stat-icon" style="font-size:30px;"></i></div>
+        <div class="stat-name">${stat.name}</div>`;
+    }
+    grid.appendChild(tile);
+  });
+}
+function openStat(statId){
+  const stat=STAT_DEFS.find(s=>s.id===statId); if(!stat) return;
+  document.getElementById('statHome').style.display='none';
+  document.getElementById('statDrillTitle').textContent=stat.name;
+  const g=document.getElementById('statDrillGrid'); g.innerHTML='';
+  if(!stat.apps.length){ g.innerHTML='<div class="stat-drill-empty">No apps here yet — coming soon.</div>'; }
+  else { stat.apps.forEach(a=>{ const t=document.createElement('div');
+    t.className='icon-tile '+a.cls; t.onclick=()=>openModal(a.overlay);
+    t.innerHTML=`<i class="${a.icon}"></i><span>${a.label}</span>`; g.appendChild(t); }); }
+  document.getElementById('statDrill').classList.add('is-open');
+}
+function backToStats(){
+  document.getElementById('statDrill').classList.remove('is-open');
+  document.getElementById('statHome').style.display='';
+  renderStatGrid();
+}
+
 function updateScoreRing() {
   const fill  = document.getElementById('scoreFill');
   const pctEl = document.getElementById('scorePct');
@@ -3536,6 +3647,7 @@ function initGym() {
       storeSet(key, { done: split === 'rest' ? false : (data.done || false), split });
       loadGym();
       updateScoreRing();
+      renderStatGrid();
       window.dispatchEvent(new Event('score-changed'));
     });
   });
@@ -3546,6 +3658,7 @@ function initGym() {
     storeSet(key, { done: cb.checked, split });
     loadGym();
     updateScoreRing();
+    renderStatGrid();
     window.dispatchEvent(new Event('score-changed'));
   });
 }
@@ -3796,6 +3909,7 @@ async function initDashboard() {
   renderCountdowns();
   initCountdownAdd();
   updateScoreRing();
+  renderStatGrid();
   window.addEventListener('score-changed', updateScoreRing);
   renderStreaks();
   renderConsistencyGraph();
