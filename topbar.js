@@ -12,7 +12,7 @@
   var NAV = [
     { id: 'home',      label: 'Home',    icon: 'ti-layout-grid',      href: 'index.html' },
     { id: 'physical',  label: 'Body',    icon: 'ti-activity',         href: 'physical.html' },
-    { id: 'appearance',label: 'Look',    icon: 'ti-sparkles',         href: 'appearance.html', soon: true },
+    { id: 'appearance',label: 'Look',    icon: 'ti-sparkles',         href: 'appearance.html' },
     { id: 'cognition', label: 'Mind',    icon: 'ti-brain',            href: 'cognition.html',  soon: true },
     { id: 'social',    label: 'Social',  icon: 'ti-users',            href: 'social.html',     soon: true },
     { id: 'money',     label: 'Money',   icon: 'ti-currency-pound',   href: 'money.html',      soon: true },
