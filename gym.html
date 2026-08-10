@@ -7,10 +7,18 @@
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="theme.css" rel="stylesheet">
 <style>
-  .gym-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .gym-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
   .gym-title { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; }
   .gym-title i { color:var(--accent); font-size:22px; }
-  .gym-date { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .date-nav { display:flex; align-items:center; gap:8px; }
+  .date-arrow { width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; border:1px solid var(--hair); background:rgba(255,255,255,0.04); color:var(--text-1); font-size:15px; transition:background .15s; }
+  .date-arrow:hover { background:var(--card-2); }
+  .date-arrow.disabled { opacity:0.25; pointer-events:none; }
+  .date-lbl { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--text-1); min-width:96px; text-align:center; }
+  .date-lbl .today-tag { display:block; font-size:8px; letter-spacing:0.14em; color:var(--accent-lt); font-weight:800; margin-top:1px; }
+  .date-lbl .jump { display:block; font-size:8px; letter-spacing:0.06em; color:var(--text-3); font-weight:700; margin-top:1px; cursor:pointer; }
+  .date-lbl .jump:hover { color:var(--accent-lt); }
   .split-row { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:4px; }
   .split-chip { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:0.04em;
     padding:7px 12px; border-radius:999px; cursor:pointer; user-select:none;
@@ -18,6 +26,8 @@
     transition:background .16s, color .16s, border-color .16s; }
   .split-chip:hover { background:var(--card-2); }
   .split-chip.on { background:rgba(249,115,22,0.14); border-color:rgba(249,115,22,0.45); color:var(--accent-lt); }
+  .split-chip .chip-dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--success); margin-left:6px; vertical-align:middle; opacity:0; }
+  .split-chip.has-data .chip-dot { opacity:1; }
   .sess-meta { display:flex; gap:14px; margin-top:14px; padding-top:14px; border-top:1px solid var(--hair);
     font-family:var(--mono); font-size:12px; color:var(--text-2); }
   .sess-meta b { color:var(--text-1); font-weight:800; }
@@ -39,6 +49,7 @@
     color:var(--text-1); font-family:var(--mono); font-size:14px; font-weight:700; text-align:center;
     padding:9px 4px; -moz-appearance:textfield; transition:border-color .16s, background .16s; }
   .set-in:focus { outline:none; border-color:rgba(249,115,22,0.5); background:rgba(0,0,0,0.32); }
+  .set-in::placeholder { color:var(--text-3); opacity:0.5; font-weight:600; }
   .set-in::-webkit-outer-spin-button, .set-in::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
   .set-cell { display:flex; flex-direction:column; align-items:stretch; flex:1; }
   .set-cell .unit { font-family:var(--mono); font-size:8.5px; color:var(--text-3); text-align:center; margin-top:3px; letter-spacing:0.1em; text-transform:uppercase; }
@@ -103,7 +114,11 @@
   <div class="card" id="gymCard">
     <div class="gym-head">
       <div class="gym-title"><i class="ti ti-barbell"></i> Gym</div>
-      <div class="gym-date" id="gymDate">—</div>
+      <div class="date-nav">
+        <span class="date-arrow" id="datePrev"><i class="ti ti-chevron-left"></i></span>
+        <span class="date-lbl" id="dateLbl">—</span>
+        <span class="date-arrow" id="dateNext"><i class="ti ti-chevron-right"></i></span>
+      </div>
     </div>
     <div class="split-row" id="splitRow"></div>
     <div class="sess-meta">
@@ -145,33 +160,49 @@ var SPLIT_TEMPLATES = {
 };
 var SETS_PER = 2;
 var SEED_EX = ['Chest Fly','Incline Chest Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor','Seated Row','Lat Pulldown','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise'];
-function KEY(){ return 'gym:'+getActiveDateString(); }
-function load(){
-  var s = storeGet(KEY()) || {};
-  if (!Array.isArray(s.exercises)) s.exercises = [];
-  if (typeof s.split !== 'string') s.split = '';
-  if (typeof s.finished !== 'boolean') s.finished = false;
+var viewDate = getActiveDateString();
+function KEY(){ return 'gym:'+viewDate; }
+function isToday(){ return viewDate===getActiveDateString(); }
+function mkEx(nm){ var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false}); return { name:nm, sets:sets }; }
+function normalize(s){
+  s = s || {};
+  if (!s.bySplit || typeof s.bySplit!=='object'){
+    var bs={};
+    if (Array.isArray(s.exercises) && s.exercises.length){
+      var into = (s.split && SPLIT_TEMPLATES[s.split]) ? s.split : (s.split || 'Anterior');
+      bs[into] = s.exercises;
+    }
+    s.bySplit = bs;
+    delete s.exercises;
+  }
+  if (typeof s.split!=='string' || !s.split) s.split='Anterior';
+  if (typeof s.finished!=='boolean') s.finished=false;
   return s;
 }
+function load(){ return normalize(storeGet(KEY())); }
+function curEx(s){ if(!s.bySplit[s.split]) s.bySplit[s.split]=[]; return s.bySplit[s.split]; }
 function computeDone(s){
-  var anyComplete = s.exercises.some(function(e){ return (e.sets||[]).some(function(st){ return st.done; }); });
-  return s.finished || anyComplete;
-}
-function save(s){ s.done = computeDone(s); storeSet(KEY(), s); }
-function isUntouched(st){
-  return (st.exercises||[]).every(function(e){
-    return (e.sets||[]).every(function(x){ return !x.weight && !x.reps && !x.done; });
+  if (s.finished) return true;
+  return Object.keys(s.bySplit||{}).some(function(k){
+    return (s.bySplit[k]||[]).some(function(e){ return (e.sets||[]).some(function(x){ return x.done; }); });
   });
 }
+function save(s){ s.done = computeDone(s); storeSet(KEY(), s); }
+function sessExercises(sess){
+  if(!sess) return [];
+  if(Array.isArray(sess.exercises)) return sess.exercises;
+  if(sess.bySplit){ var out=[]; Object.keys(sess.bySplit).forEach(function(k){ (sess.bySplit[k]||[]).forEach(function(e){ out.push(e); }); }); return out; }
+  return [];
+}
 function lastTimeFor(name){
-  var today = getActiveDateString(), best=null, bestDate=null;
+  var best=null, bestDate=null;
   for (var i=0;i<localStorage.length;i++){
     var k = localStorage.key(i);
     if (!k || k.indexOf('gym:')!==0) continue;
     var date = k.slice(4);
-    if (date >= today) continue;
-    var sess = storeGet(k); if (!sess || !Array.isArray(sess.exercises)) continue;
-    var ex = sess.exercises.filter(function(e){ return (e.name||'').toLowerCase()===name.toLowerCase(); })[0];
+    if (date >= viewDate) continue;
+    var exs = sessExercises(storeGet(k));
+    var ex = exs.filter(function(e){ return (e.name||'').toLowerCase()===name.toLowerCase(); })[0];
     if (!ex || !Array.isArray(ex.sets)) continue;
     var top=null;
     ex.sets.forEach(function(st){
@@ -196,42 +227,49 @@ function historyNames(){
   for (var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k&&k.indexOf('gym:')===0) keys.push(k); }
   keys.sort().reverse();
   keys.forEach(function(k){
-    var sess=storeGet(k); if(!sess||!Array.isArray(sess.exercises)) return;
-    sess.exercises.forEach(function(e){ var n=e.name; if(n&&!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; ordered.push(n); } });
+    sessExercises(storeGet(k)).forEach(function(e){ var n=e.name; if(n&&!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; ordered.push(n); } });
   });
   SEED_EX.forEach(function(n){ if(!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; ordered.push(n); } });
   return ordered;
 }
+function splitHasData(s, sp){
+  return (s.bySplit[sp]||[]).some(function(e){ return (e.sets||[]).some(function(x){ return x.weight||x.reps||x.done; }); });
+}
+function renderDateNav(){
+  var d=new Date(viewDate+'T12:00');
+  var lbl=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  var el=document.getElementById('dateLbl');
+  if (isToday()){ el.innerHTML=lbl+'<span class="today-tag">TODAY</span>'; }
+  else { el.innerHTML=lbl+'<span class="jump" id="jumpToday">→ today</span>'; }
+  document.getElementById('dateNext').classList.toggle('disabled', isToday());
+  var jt=document.getElementById('jumpToday');
+  if(jt) jt.addEventListener('click', function(){ viewDate=getActiveDateString(); render(); });
+}
 function render(){
   var s = load();
-  document.getElementById('gymDate').textContent = getActiveDateString();
+  renderDateNav();
   var sr = document.getElementById('splitRow'); sr.innerHTML='';
   SPLITS.forEach(function(sp){
     var c=document.createElement('span');
-    c.className='split-chip'+(s.split===sp?' on':'');
-    c.textContent=sp;
+    c.className='split-chip'+(s.split===sp?' on':'')+(splitHasData(s,sp)?' has-data':'');
+    c.innerHTML=sp+'<span class="chip-dot"></span>';
     c.addEventListener('click', function(){
       var st=load();
-      if (st.split===sp){ st.split=''; save(st); render(); return; }
-      var canAuto = (st.exercises.length===0 || isUntouched(st));
-      if (!canAuto && !confirm('Switch to '+sp+'? This clears the current logged session.')) return;
       st.split=sp;
-      if (SPLIT_TEMPLATES[sp]){
-        st.exercises = SPLIT_TEMPLATES[sp].map(function(nm){
-          var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false});
-          return { name:nm, sets:sets };
-        });
+      if(!st.bySplit[sp] || !st.bySplit[sp].length){
+        st.bySplit[sp] = SPLIT_TEMPLATES[sp] ? SPLIT_TEMPLATES[sp].map(mkEx) : [];
       }
       save(st); render();
     });
     sr.appendChild(c);
   });
+  var exs = curEx(s);
   var list=document.getElementById('exList'); list.innerHTML='';
-  if (!s.exercises.length){
-    var em=document.createElement('div'); em.className='empty'; em.textContent='No exercises yet — add your first lift.';
+  if (!exs.length){
+    var em=document.createElement('div'); em.className='empty'; em.textContent='No exercises — tap a day above or add a lift.';
     list.appendChild(em);
   }
-  s.exercises.forEach(function(ex, ei){
+  exs.forEach(function(ex, ei){
     var card=document.createElement('div'); card.className='card ex';
     var head=document.createElement('div'); head.className='ex-head';
     var nm=document.createElement('div'); nm.className='ex-name'; nm.textContent=ex.name;
@@ -251,38 +289,39 @@ function render(){
       head.appendChild(nb);
     }
     var del=document.createElement('span'); del.className='ex-del'; del.innerHTML='<i class="ti ti-x"></i>';
-    del.addEventListener('click', function(){ var st=load(); st.exercises.splice(ei,1); save(st); render(); });
+    del.addEventListener('click', function(){ var st=load(); curEx(st).splice(ei,1); save(st); render(); });
     head.appendChild(del);
     card.appendChild(head);
+    var lastPH = lastTimeFor(ex.name);
     (ex.sets||[]).forEach(function(set, si){
       var row=document.createElement('div'); row.className='set-row'+(set.done?' done':'');
       var n=document.createElement('span'); n.className='set-n'; n.textContent=(si+1); row.appendChild(n);
       var wCell=document.createElement('div'); wCell.className='set-cell';
       var w=document.createElement('input'); w.className='set-in'; w.type='number'; w.inputMode='decimal';
-      w.step='0.5'; w.placeholder='0'; w.value=(set.weight!=null?set.weight:'');
-      w.addEventListener('input', function(){ var st=load(); st.exercises[ei].sets[si].weight=w.value; save(st); refreshMeta(); refreshBadges(); });
+      w.step='0.5'; w.placeholder=(lastPH? String(+lastPH.weight.toFixed(1)) : '0'); w.value=(set.weight!=null?set.weight:'');
+      w.addEventListener('input', function(){ var st=load(); curEx(st)[ei].sets[si].weight=w.value; save(st); refreshMeta(); refreshBadges(); });
       var wu=document.createElement('span'); wu.className='unit'; wu.textContent='kg';
       wCell.appendChild(w); wCell.appendChild(wu); row.appendChild(wCell);
       var x=document.createElement('span'); x.className='set-x'; x.textContent='×'; row.appendChild(x);
       var rCell=document.createElement('div'); rCell.className='set-cell';
       var r=document.createElement('input'); r.className='set-in'; r.type='number'; r.inputMode='numeric';
-      r.step='1'; r.placeholder='0'; r.value=(set.reps!=null?set.reps:'');
-      r.addEventListener('input', function(){ var st=load(); st.exercises[ei].sets[si].reps=r.value; save(st); refreshMeta(); refreshBadges(); });
+      r.step='1'; r.placeholder=(lastPH? String(lastPH.reps) : '0'); r.value=(set.reps!=null?set.reps:'');
+      r.addEventListener('input', function(){ var st=load(); curEx(st)[ei].sets[si].reps=r.value; save(st); refreshMeta(); refreshBadges(); });
       var ru=document.createElement('span'); ru.className='unit'; ru.textContent='reps';
       rCell.appendChild(r); rCell.appendChild(ru); row.appendChild(rCell);
       var cb=document.createElement('span'); cb.className='set-cb';
-      cb.addEventListener('click', function(){ var st=load(); st.exercises[ei].sets[si].done=!st.exercises[ei].sets[si].done; save(st); render(); });
+      cb.addEventListener('click', function(){ var st=load(); var xx=curEx(st)[ei].sets[si]; xx.done=!xx.done; save(st); render(); });
       row.appendChild(cb);
       var rm=document.createElement('span'); rm.className='set-rm'; rm.innerHTML='<i class="ti ti-minus"></i>';
-      rm.addEventListener('click', function(){ var st=load(); st.exercises[ei].sets.splice(si,1); save(st); render(); });
+      rm.addEventListener('click', function(){ var st=load(); curEx(st)[ei].sets.splice(si,1); save(st); render(); });
       row.appendChild(rm);
       card.appendChild(row);
     });
     var addSet=document.createElement('div'); addSet.className='add-set'; addSet.innerHTML='<i class="ti ti-plus"></i> Set';
     addSet.addEventListener('click', function(){
-      var st=load(); var sets=st.exercises[ei].sets||[]; var prev=sets[sets.length-1]||{};
+      var st=load(); var sets=curEx(st)[ei].sets||[]; var prev=sets[sets.length-1]||{};
       sets.push({ weight:(prev.weight!=null?prev.weight:''), reps:(prev.reps!=null?prev.reps:''), done:false });
-      st.exercises[ei].sets=sets; save(st); render();
+      curEx(st)[ei].sets=sets; save(st); render();
     });
     card.appendChild(addSet);
     list.appendChild(card);
@@ -293,8 +332,8 @@ function render(){
   fb.querySelector('span').textContent = s.finished ? 'Session finished ✓' : 'Finish session';
 }
 function refreshMeta(){
-  var s=load(), sets=0, vol=0, completed=0;
-  s.exercises.forEach(function(ex){ (ex.sets||[]).forEach(function(st){
+  var s=load(), exs=curEx(s), sets=0, vol=0, completed=0;
+  exs.forEach(function(ex){ (ex.sets||[]).forEach(function(st){
     sets++; if(st.done) completed++;
     vol += num(st.weight)*num(st.reps);
   }); });
@@ -305,9 +344,9 @@ function refreshMeta(){
   document.getElementById('gymCard').classList.toggle('is-done', s.finished);
 }
 function refreshBadges(){
-  var s=load();
+  var s=load(), exs=curEx(s);
   document.querySelectorAll('.ex').forEach(function(card, ei){
-    var ex=s.exercises[ei]; if(!ex) return;
+    var ex=exs[ei]; if(!ex) return;
     var head=card.querySelector('.ex-head');
     var old=head.querySelector('.ex-pr'); if(old) old.remove();
     var last=lastTimeFor(ex.name), cur=currentTop(ex);
@@ -328,7 +367,7 @@ function togglePicker(){
   var go=document.createElement('button'); go.className='picker-go'; go.textContent='Add';
   function commit(name){
     name=(name||'').trim(); if(!name) return;
-    var st=load(); st.exercises.push({ name:name, sets:[{weight:'',reps:'',done:false}] }); save(st);
+    var st=load(); curEx(st).push({ name:name, sets:[{weight:'',reps:'',done:false}] }); save(st);
     pickerOpen=false; document.getElementById('pickerHost').innerHTML=''; render();
   }
   go.addEventListener('click', function(){ commit(input.value); });
@@ -351,32 +390,31 @@ document.getElementById('addExBtn').addEventListener('click', togglePicker);
 document.getElementById('finishBtn').addEventListener('click', function(){
   var s=load(); s.finished=!s.finished; save(s); render();
 });
+document.getElementById('datePrev').addEventListener('click', function(){
+  var d=new Date(viewDate+'T12:00'); d.setDate(d.getDate()-1);
+  viewDate=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); render();
+});
+document.getElementById('dateNext').addEventListener('click', function(){
+  if(isToday()) return;
+  var d=new Date(viewDate+'T12:00'); d.setDate(d.getDate()+1);
+  var ns=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  if(ns>getActiveDateString()) ns=getActiveDateString();
+  viewDate=ns; render();
+});
 var restT=null, restEnd=0;
 function fmt(sec){ sec=Math.max(0,Math.ceil(sec)); return Math.floor(sec/60)+':'+pad2(sec%60); }
 function tickRest(){
   var left=(restEnd-Date.now())/1000;
   var d=document.getElementById('restDisp');
   d.textContent=fmt(left);
-  if(left<=0){
-    clearInterval(restT); restT=null; d.classList.remove('run');
-    if(navigator.vibrate) navigator.vibrate([120,60,120]);
-    d.textContent='done';
-  }
+  if(left<=0){ clearInterval(restT); restT=null; d.classList.remove('run'); if(navigator.vibrate) navigator.vibrate([120,60,120]); d.textContent='done'; }
 }
-function startRest(sec){
-  restEnd=Date.now()+sec*1000;
-  document.getElementById('restDisp').classList.add('run');
-  clearInterval(restT); restT=setInterval(tickRest,250); tickRest();
-}
-Array.prototype.forEach.call(document.querySelectorAll('.rest-preset'), function(b){
-  b.addEventListener('click', function(){ startRest(parseInt(b.getAttribute('data-s'),10)); });
-});
-document.getElementById('restStop').addEventListener('click', function(){
-  clearInterval(restT); restT=null; var d=document.getElementById('restDisp'); d.classList.remove('run'); d.textContent='0:00';
-});
+function startRest(sec){ restEnd=Date.now()+sec*1000; document.getElementById('restDisp').classList.add('run'); clearInterval(restT); restT=setInterval(tickRest,250); tickRest(); }
+Array.prototype.forEach.call(document.querySelectorAll('.rest-preset'), function(b){ b.addEventListener('click', function(){ startRest(parseInt(b.getAttribute('data-s'),10)); }); });
+document.getElementById('restStop').addEventListener('click', function(){ clearInterval(restT); restT=null; var d=document.getElementById('restDisp'); d.classList.remove('run'); d.textContent='0:00'; });
 render();
 window.addEventListener('lo-sync-applied', render);
-window.addEventListener('focus', render);
+window.addEventListener('focus', function(){ if(isToday()) render(); });
 </script>
 </body>
 </html>
