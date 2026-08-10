@@ -213,8 +213,10 @@ function render(){
     c.addEventListener('click', function(){
       var st=load();
       if (st.split===sp){ st.split=''; save(st); render(); return; }
+      var canAuto = (st.exercises.length===0 || isUntouched(st));
+      if (!canAuto && !confirm('Switch to '+sp+'? This clears the current logged session.')) return;
       st.split=sp;
-      if (SPLIT_TEMPLATES[sp] && (st.exercises.length===0 || isUntouched(st))){
+      if (SPLIT_TEMPLATES[sp]){
         st.exercises = SPLIT_TEMPLATES[sp].map(function(nm){
           var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false});
           return { name:nm, sets:sets };
