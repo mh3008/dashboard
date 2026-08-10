@@ -1,6 +1,4 @@
 {
   "framework": null,
-  "outputDirectory": ".",
-"rewrites": [
-    { "source": "/", "destination": "/dashboard.html" }
-  ]}
+  "outputDirectory": "."
+}

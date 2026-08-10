@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Supps · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .supp-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; }
+  .supp-title { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; }
+  .supp-title i { color:var(--accent); font-size:22px; }
+  .supp-count { font-family:var(--mono); font-size:13px; color:var(--text-2); }
+  .supp-count.all-done { color:var(--success); }
+  .supp-bar { height:6px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; margin-bottom:6px; }
+  .supp-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent-2),var(--accent-lt)); width:0; transition:width .4s cubic-bezier(.22,1,.36,1); border-radius:999px; }
+
+  .grp { margin-top:16px; }
+  .grp-head { display:flex; align-items:center; gap:8px; cursor:pointer; padding:4px 0; }
+  .grp-caret { font-family:var(--mono); font-size:11px; color:var(--text-3); transition:transform .2s; }
+  .grp-caret.open { transform:rotate(90deg); }
+  .grp-name { font-family:var(--mono); font-size:10.5px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-2); }
+  .grp-body { margin-top:8px; display:flex; flex-direction:column; gap:8px; }
+  .grp-body.collapsed { display:none; }
+
+  .item { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); transition:background .18s, opacity .18s; cursor:pointer; }
+  .item:hover { background:var(--card-2); }
+  .item.done { opacity:0.5; background:rgba(107,227,164,0.05); }
+  .item.done .item-txt { text-decoration:line-through; text-decoration-color:rgba(255,255,255,0.4); }
+  .cb { width:22px; height:22px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.18);
+    background:rgba(0,0,0,0.2); flex-shrink:0; position:relative; transition:background .18s, box-shadow .18s, border-color .18s; }
+  .item.done .cb { background:var(--success); border-color:var(--success); box-shadow:0 0 12px rgba(107,227,164,0.4); }
+  .item.done .cb::after { content:''; position:absolute; left:7px; top:3px; width:5px; height:10px;
+    border:solid #0a0a0b; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  .item-txt { font-size:14px; }
+
+  .alldone-glow.is-done { box-shadow:0 0 0 1px rgba(107,227,164,0.25), 0 12px 40px rgba(0,0,0,0.45); }
+  .alldone-glow.is-done .supp-title i { color:var(--success); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="card alldone-glow" id="suppsCard">
+    <div class="supp-head">
+      <div class="supp-title"><i class="ti ti-pill"></i> Supps</div>
+      <div class="supp-count" id="suppCount">0 / 16</div>
+    </div>
+    <div class="supp-bar"><div class="supp-bar-fill" id="suppFill"></div></div>
+    <div id="suppGroups"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+
+var GROUPS = [
+  { id:'WakeUp',    label:'Wake Up',                             items:['L-Theanine + Caffeine'] },
+  { id:'FatSupps',  label:'Fat Supps — morning with milk',       items:['D3 + K2','Boron','Beta Carotene','Fish Oil','Multivitamin'] },
+  { id:'PreGym',    label:'Pre-Gym',                             items:['Taurine','Electrolyte Powder'] },
+  { id:'VitCSupps', label:'Vit C Supps — dinner with OJ + meat', items:['NAC','Vitamin C','Zinc','Copper'] },
+  { id:'PreSleep',  label:'Pre-Sleep',                           items:['Taurine','Glycine','Mag Glycinate','L-Theanine'] }
+];
+var TOTAL = GROUPS.reduce(function(n,g){ return n+g.items.length; },0); // 16
+
+function key(){ return 'supps:'+getActiveDateString(); }
+
+function render(){
+  var data = storeGet(key()) || {};
+  var box = document.getElementById('suppGroups');
+  box.innerHTML = '';
+  GROUPS.forEach(function(g){
+    var grp = document.createElement('div'); grp.className='grp';
+    var head = document.createElement('div'); head.className='grp-head';
+    head.innerHTML = '<span class="grp-caret open">&gt;</span><span class="grp-name">'+g.label+'</span>';
+    var body = document.createElement('div'); body.className='grp-body';
+    head.addEventListener('click', function(){
+      var open = body.classList.toggle('collapsed');
+      head.querySelector('.grp-caret').classList.toggle('open', !open);
+    });
+    g.items.forEach(function(name, i){
+      var ik = g.id+':'+i, done = !!data[ik];
+      var row = document.createElement('div'); row.className='item'+(done?' done':'');
+      row.innerHTML = '<span class="cb"></span><span class="item-txt">'+name+'</span>';
+      row.addEventListener('click', function(){
+        var d = storeGet(key()) || {};
+        d[ik] = !d[ik];
+        storeSet(key(), d);
+        render();
+      });
+      body.appendChild(row);
+    });
+    grp.appendChild(head); grp.appendChild(body);
+    box.appendChild(grp);
+  });
+
+  var done = 0;
+  GROUPS.forEach(function(g){ g.items.forEach(function(_,i){ if(data[g.id+':'+i]) done++; }); });
+  var cnt = document.getElementById('suppCount');
+  cnt.textContent = done+' / '+TOTAL;
+  cnt.classList.toggle('all-done', done===TOTAL);
+  document.getElementById('suppFill').style.width = (done/TOTAL*100)+'%';
+  document.getElementById('suppsCard').classList.toggle('is-done', done===TOTAL);
+}
+
+render();
+window.addEventListener('lo-sync-applied', render);
+window.addEventListener('focus', render);
+</script>
+</body>
+</html>

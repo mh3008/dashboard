@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Life OS</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO: day ring -->
+  <div class="card">
+    <div class="hero">
+      <div class="day-ring">
+        <svg viewBox="0 0 200 200">
+          <circle class="ring-track" cx="100" cy="100" r="92"></circle>
+          <circle class="ring-fill" id="dayFill" cx="100" cy="100" r="92"></circle>
+        </svg>
+        <div class="ring-overlay">
+          <div class="ring-pct" id="dayPct">—</div>
+          <div class="ring-phase" id="dayPhase">--</div>
+          <div class="ring-clock" id="dayClock">--:--</div>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="hero-status" id="dayStatus">Booting…</div>
+        <div class="hero-remain" id="dayRemain">—</div>
+        <div class="hero-range">8:00 AM – 12:00 AM awake window</div>
+      </div>
+    </div>
+
+    <!-- goal ticker -->
+    <div class="ticker">
+      <span class="ticker-dot"></span>
+      <span class="ticker-label">GOALS</span>
+      <div class="ticker-stage"><div class="ticker-txt" id="tickTxt">Loading…</div></div>
+      <span class="ticker-meta" id="tickMeta">0/0</span>
+    </div>
+  </div>
+
+  <!-- STAT MENU -->
+  <div class="section-title">Stats</div>
+  <div class="stat-grid" id="statGrid"></div>
+
+  <!-- SYSTEM -->
+  <div class="section-title">System</div>
+  <div class="sys-grid">
+    <a class="sys-tile" href="javascript:void(0)" onclick="loToast('Todos — coming soon')"><i class="ti ti-checkbox"></i><span>Todos</span></a>
+    <a class="sys-tile" href="javascript:void(0)" onclick="loToast('Streaks — coming soon')"><i class="ti ti-flame"></i><span>Streaks</span></a>
+    <a class="sys-tile" href="javascript:void(0)" onclick="loToast('Countdowns — coming soon')"><i class="ti ti-hourglass"></i><span>Countdowns</span></a>
+    <a class="sys-tile" href="javascript:void(0)" onclick="loToast('Weekly — coming soon')"><i class="ti ti-calendar-week"></i><span>Weekly</span></a>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+/* ---------- helpers ---------- */
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function getActiveDateString(){
+  var d = new Date();
+  if (d.getHours() < 6) d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+}
+
+/* ---------- DAY RING (sun-cycle) ---------- */
+var WAKE_HOUR = 8, SLEEP_HOUR = 24;
+var DAY_C = 2 * Math.PI * 92;
+var SUN = [
+  [0,   [255,216,158]], [12.5,[255,205,121]], [25,  [255,227,143]],
+  [37.5,[255,183,106]], [50,  [255,149, 89]], [62.5,[243,111, 79]],
+  [75,  [226, 93,122]], [87.5,[123, 91,176]], [100, [ 47, 58,102]]
+];
+function sunColor(pct){
+  for (var i=0;i<SUN.length-1;i++){
+    var a=SUN[i], b=SUN[i+1];
+    if (pct>=a[0] && pct<=b[0]){
+      var t=(pct-a[0])/(b[0]-a[0]);
+      var r=Math.round(a[1][0]+(b[1][0]-a[1][0])*t);
+      var g=Math.round(a[1][1]+(b[1][1]-a[1][1])*t);
+      var bl=Math.round(a[1][2]+(b[1][2]-a[1][2])*t);
+      return 'rgb('+r+','+g+','+bl+')';
+    }
+  }
+  return 'rgb(47,58,102)';
+}
+function updateDayRing(){
+  var now=new Date();
+  var hrs=now.getHours()+now.getMinutes()/60+now.getSeconds()/3600;
+  var fill=document.getElementById('dayFill');
+  var pctEl=document.getElementById('dayPct'), phaseEl=document.getElementById('dayPhase');
+  var statusEl=document.getElementById('dayStatus'), remainEl=document.getElementById('dayRemain');
+
+  fill.setAttribute('stroke-dasharray', DAY_C);
+
+  if (hrs < WAKE_HOUR){
+    fill.setAttribute('stroke-dashoffset', DAY_C);
+    fill.setAttribute('stroke', '#4d4b47');
+    pctEl.textContent='—'; phaseEl.textContent='SLEEPING';
+    statusEl.textContent='😴 Still sleeping';
+    var toWake=WAKE_HOUR-hrs;
+    remainEl.textContent=Math.floor(toWake)+'h '+Math.round((toWake%1)*60)+'m until wake-up';
+    return;
+  }
+  var pct=Math.min(100,(hrs-WAKE_HOUR)/(SLEEP_HOUR-WAKE_HOUR)*100);
+  var col=sunColor(pct);
+  fill.setAttribute('stroke-dashoffset', DAY_C*(1-pct/100));
+  fill.setAttribute('stroke', col);
+  pctEl.textContent=Math.round(pct)+'%';
+  pctEl.style.color=col;
+
+  var phase,status;
+  if (pct<25){ phase='MORNING'; status='☀️ Morning — fresh start'; }
+  else if (pct<50){ phase='MIDDAY'; status='⚡ Midday — keep moving'; }
+  else if (pct<75){ phase='AFTERNOON'; status='🔥 Afternoon — push it'; }
+  else if (pct<90){ phase='EVENING'; status='⏳ Evening — wrap up'; }
+  else { phase='BEDTIME'; status='🌙 Bedtime soon'; }
+  phaseEl.textContent=phase; statusEl.textContent=status;
+  var left=SLEEP_HOUR-hrs;
+  remainEl.textContent=Math.floor(left)+'h '+Math.round((left%1)*60)+'m awake time left';
+}
+function updateClock(){
+  var d=new Date(), h=d.getHours(), m=pad2(d.getMinutes());
+  var ap=h>=12?'PM':'AM'; var h12=h%12; if(h12===0)h12=12;
+  document.getElementById('dayClock').textContent=h12+':'+m+' '+ap;
+}
+
+/* ---------- STAT MENU ---------- */
+/* rings read the same localStorage keys each app will write.
+   Empty now → 0%; they light up as Phase-1 apps land. */
+var STATS = [
+  { id:'physical',   name:'Physical',   icon:'ti-activity',       href:'physical.html',   ring:true,  live:true  },
+  { id:'appearance', name:'Appearance', icon:'ti-sparkles',       href:'appearance.html', ring:true  },
+  { id:'cognition',  name:'Cognition',  icon:'ti-brain',          href:'cognition.html',  ring:false },
+  { id:'social',     name:'Social',     icon:'ti-users',          href:'social.html',     ring:false },
+  { id:'money',      name:'Money',      icon:'ti-currency-pound', href:'money.html',      ring:false }
+];
+var SR_C = 2 * Math.PI * 33;
+var SUPPS_TOTAL = 16, HYG_TOTAL = 15;
+function calcStatPct(id){
+  var date=getActiveDateString();
+  if (id==='physical'){
+    var s=storeGet('supps:'+date)||{}, taken=Object.keys(s).filter(function(k){return s[k];}).length;
+    var suppsPct = taken/SUPPS_TOTAL;
+    var gym=(storeGet('gym:'+date)||{}).done?1:0;
+    var sl=storeGet('sleep:'+date)||{}; var sleep=(sl.bed||sl.wake)?1:0;
+    return Math.round((suppsPct+gym+sleep)/3*100);
+  }
+  if (id==='appearance'){
+    var h=storeGet('hygiene:'+date)||{}, done=Object.keys(h).filter(function(k){return h[k];}).length;
+    return Math.round(done/HYG_TOTAL*100);
+  }
+  return 0;
+}
+function statColor(pct){
+  if (pct>=80) return '#ff8c00';
+  if (pct>=50) return '#f97316';
+  if (pct>=25) return '#ea580c';
+  return 'rgba(249,115,22,0.45)';
+}
+function renderStats(){
+  var grid=document.getElementById('statGrid'); grid.innerHTML='';
+  STATS.forEach(function(st){
+    var a=document.createElement('a');
+    a.className='stat-tile'+(st.ring?'':' is-launcher');
+    if (st.live) {
+      a.href = st.href;
+    } else {
+      a.href='javascript:void(0)';
+      a.addEventListener('click',function(){ loToast(st.name+' — coming soon'); });
+    }
+    if (st.ring){
+      var pct=calcStatPct(st.id), col=statColor(pct), off=SR_C*(1-pct/100);
+      a.innerHTML =
+        '<div class="stat-ring"><svg viewBox="0 0 76 76">'+
+        '<circle class="srt" cx="38" cy="38" r="33"></circle>'+
+        '<circle class="srf" cx="38" cy="38" r="33" stroke="'+col+'" stroke-dasharray="'+SR_C+'" stroke-dashoffset="'+off+'"></circle>'+
+        '</svg><div class="sr-inner"><i class="ti '+st.icon+' sr-icon"></i><div class="sr-pct">'+pct+'%</div></div></div>'+
+        '<div class="stat-name">'+st.name+'</div>';
+    } else {
+      a.innerHTML =
+        '<div class="stat-ring"><div class="sr-inner"><i class="ti '+st.icon+' sr-icon"></i></div></div>'+
+        '<div class="stat-name">'+st.name+'</div>';
+    }
+    grid.appendChild(a);
+  });
+}
+
+/* ---------- GOAL TICKER ---------- */
+var tickItems=[], tickIdx=0, tickTimer=null;
+function buildTick(){
+  var date=getActiveDateString();
+  var goals=storeGet('goals:'+date)||[];
+  var total=goals.length, done=goals.filter(function(g){return g.done;}).length;
+  document.getElementById('tickMeta').textContent=done+'/'+total;
+  if (total===0){ tickItems=[{t:'No goals set — add one in Todos.'}]; }
+  else if (done===total){ tickItems=[{t:'✓ All goals done — solid day.'}]; }
+  else { tickItems=goals.filter(function(g){return !g.done;}).map(function(g){return {t:g.text};}); }
+}
+function tick(){
+  buildTick();
+  if (tickIdx>=tickItems.length) tickIdx=0;
+  document.getElementById('tickTxt').textContent=tickItems[tickIdx].t;
+  tickIdx++;
+}
+
+/* ---------- boot ---------- */
+updateClock(); updateDayRing(); renderStats(); tick();
+setInterval(updateClock, 1000);
+setInterval(updateDayRing, 60*1000);
+setInterval(tick, 5000);
+window.addEventListener('focus', function(){ renderStats(); updateDayRing(); });
+window.addEventListener('lo-sync-applied', function(){ renderStats(); tick(); });
+</script>
+</body>
+</html>
