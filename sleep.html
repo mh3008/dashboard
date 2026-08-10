@@ -48,6 +48,11 @@
     display:flex; align-items:center; justify-content:center; transition:background .16s; }
   .tgt-btn:hover { background:var(--card-2); }
   .tgt-val { font-family:var(--mono); font-size:16px; font-weight:800; min-width:44px; text-align:center; }
+  .trend-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .trend-wrap { width:100%; margin-top:4px; }
+  .trend-wrap svg { width:100%; height:auto; display:block; }
+  .trend-read { font-family:var(--mono); font-size:11px; color:var(--text-2); text-align:center; margin-top:12px; min-height:14px; }
+  .trend-read b { color:var(--text-1); font-weight:800; }
 </style>
 </head>
 <body>
@@ -87,6 +92,11 @@
         <span class="tgt-btn" id="tgtUp">+</span>
       </div>
     </div>
+  </div>
+  <div class="card">
+    <div class="trend-head"><span class="block-lbl" style="margin:0;">Last 7 nights</span></div>
+    <div class="trend-wrap" id="trendWrap"></div>
+    <div class="trend-read" id="trendRead"></div>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -156,6 +166,69 @@ function render(){
     })(i);
   }
   document.getElementById('qualLabel').textContent = s.quality>0 ? QUAL[s.quality] : 'Not rated';
+  renderTrend();
+}
+var trendSel = -1;
+function lastNDates(n){
+  var base=new Date(); if(base.getHours()<6) base.setDate(base.getDate()-1);
+  var out=[];
+  for(var i=n-1;i>=0;i--){ var d=new Date(base.getFullYear(),base.getMonth(),base.getDate()-i);
+    out.push(d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())); }
+  return out;
+}
+function nightData(date){
+  var s=storeGet('sleep:'+date)||{};
+  var m=durMins(s.bed, s.wake);
+  return { date:date, mins:m, hours:(m==null?null:m/60), quality:s.quality||0 };
+}
+function renderTrend(){
+  var tgt=getTarget();
+  var nights=lastNDates(7).map(nightData);
+  var logged=nights.filter(function(n){ return n.hours!=null; });
+  var maxH=Math.max(tgt+1, 9);
+  nights.forEach(function(n){ if(n.hours!=null && n.hours>maxH) maxH=n.hours; });
+  var W=320,H=170, padL=6,padR=6,padT=10,padB=24;
+  var innerW=W-padL-padR, innerH=H-padT-padB;
+  var slot=innerW/nights.length, bw=slot*0.56;
+  function yFor(h){ return padT + innerH*(1-h/maxH); }
+  var svg='<svg viewBox="0 0 '+W+' '+H+'"><defs>';
+  ['success','warning','danger'].forEach(function(c){
+    svg+='<linearGradient id="bg-'+c+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--'+c+')" stop-opacity="0.95"/><stop offset="1" stop-color="var(--'+c+')" stop-opacity="0.42"/></linearGradient>';
+  });
+  svg+='</defs>';
+  var ty=yFor(tgt);
+  svg+='<line x1="'+padL+'" y1="'+ty.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+ty.toFixed(1)+'" stroke="rgba(255,255,255,0.18)" stroke-dasharray="3 3"/>';
+  svg+='<text x="'+(W-padR)+'" y="'+(ty-4).toFixed(1)+'" text-anchor="end" fill="var(--text-3)" font-family="monospace" font-size="8">'+(+tgt.toFixed(1))+'h</text>';
+  nights.forEach(function(n,i){
+    var cx=padL+slot*i+slot/2;
+    var lbl=new Date(n.date+'T12:00').toLocaleDateString('en-GB',{weekday:'short'}).slice(0,2);
+    var x=(cx-bw/2);
+    if(n.hours==null){
+      svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+innerH-3).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>';
+    } else {
+      var by=yFor(n.hours), bh=Math.max(2,(padT+innerH-by));
+      var gid = n.hours>=tgt?'bg-success':(n.hours>=tgt-1?'bg-warning':'bg-danger');
+      var sel = (i===trendSel)?' stroke="var(--text-1)" stroke-width="1.5"':'';
+      svg+='<rect class="tbar" data-idx="'+i+'" x="'+x.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="4" fill="url(#'+gid+')"'+sel+' style="cursor:pointer"/>';
+    }
+    svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-9)+'" text-anchor="middle" fill="'+(i===trendSel?'var(--text-1)':'var(--text-3)')+'" font-family="monospace" font-size="8.5">'+lbl+'</text>';
+  });
+  svg+='</svg>';
+  document.getElementById('trendWrap').innerHTML=svg;
+  var read=document.getElementById('trendRead');
+  if(trendSel>=0 && nights[trendSel] && nights[trendSel].hours!=null){
+    var sn=nights[trendSel];
+    var full=new Date(sn.date+'T12:00').toLocaleDateString('en-GB',{weekday:'long'});
+    read.innerHTML='<b>'+full+'</b> · '+fmtDur(sn.mins)+(sn.quality?' · '+QUAL[sn.quality]:'');
+  } else if(logged.length){
+    var avg=logged.reduce(function(a,b){ return a+b.mins; },0)/logged.length;
+    read.innerHTML='Avg <b>'+fmtDur(Math.round(avg))+'</b> over '+logged.length+' night'+(logged.length===1?'':'s')+' · tap a bar';
+  } else {
+    read.textContent='Log a few nights to see your trend.';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.tbar'), function(b){
+    b.addEventListener('click', function(){ var i=+b.getAttribute('data-idx'); trendSel=(trendSel===i?-1:i); renderTrend(); });
+  });
 }
 document.getElementById('bedIn').addEventListener('input', function(e){ var s=load(); s.bed=e.target.value; save(s); render(); });
 document.getElementById('wakeIn').addEventListener('input', function(e){ var s=load(); s.wake=e.target.value; save(s); render(); });

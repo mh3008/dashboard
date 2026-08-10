@@ -158,6 +158,11 @@ function computeDone(s){
   return s.finished || anyComplete;
 }
 function save(s){ s.done = computeDone(s); storeSet(KEY(), s); }
+function isUntouched(st){
+  return (st.exercises||[]).every(function(e){
+    return (e.sets||[]).every(function(x){ return !x.weight && !x.reps && !x.done; });
+  });
+}
 function lastTimeFor(name){
   var today = getActiveDateString(), best=null, bestDate=null;
   for (var i=0;i<localStorage.length;i++){
@@ -207,15 +212,13 @@ function render(){
     c.textContent=sp;
     c.addEventListener('click', function(){
       var st=load();
-      if (st.split===sp){ st.split=''; }
-      else {
-        st.split=sp;
-        if (!st.exercises.length && SPLIT_TEMPLATES[sp]){
-          st.exercises = SPLIT_TEMPLATES[sp].map(function(nm){
-            var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false});
-            return { name:nm, sets:sets };
-          });
-        }
+      if (st.split===sp){ st.split=''; save(st); render(); return; }
+      st.split=sp;
+      if (SPLIT_TEMPLATES[sp] && (st.exercises.length===0 || isUntouched(st))){
+        st.exercises = SPLIT_TEMPLATES[sp].map(function(nm){
+          var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false});
+          return { name:nm, sets:sets };
+        });
       }
       save(st); render();
     });

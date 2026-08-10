@@ -15,7 +15,7 @@
     { id: 'appearance',label: 'Look',    icon: 'ti-sparkles',         href: 'appearance.html' },
     { id: 'cognition', label: 'Mind',    icon: 'ti-brain',            href: 'cognition.html',  soon: true },
     { id: 'social',    label: 'Social',  icon: 'ti-users',            href: 'social.html',     soon: true },
-    { id: 'money',     label: 'Money',   icon: 'ti-currency-pound',   href: 'money.html',      soon: true },
+    { id: 'money',     label: 'Money',   icon: 'ti-currency-pound',   href: 'money.html' },
     { id: 'system',    label: 'System',  icon: 'ti-adjustments',      href: 'system.html',     soon: true }
   ];
 
