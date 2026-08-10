@@ -137,13 +137,13 @@ function updateClock(){
    Empty now → 0%; they light up as Phase-1 apps land. */
 var STATS = [
   { id:'physical',   name:'Physical',   icon:'ti-activity',       href:'physical.html',   ring:true,  live:true  },
-  { id:'appearance', name:'Appearance', icon:'ti-sparkles',       href:'appearance.html', ring:true  },
+  { id:'appearance', name:'Appearance', icon:'ti-sparkles',       href:'appearance.html', ring:true,  live:true  },
   { id:'cognition',  name:'Cognition',  icon:'ti-brain',          href:'cognition.html',  ring:false },
   { id:'social',     name:'Social',     icon:'ti-users',          href:'social.html',     ring:false },
   { id:'money',      name:'Money',      icon:'ti-currency-pound', href:'money.html',      ring:false }
 ];
 var SR_C = 2 * Math.PI * 33;
-var SUPPS_TOTAL = 16, HYG_TOTAL = 15;
+var SUPPS_TOTAL = 16, HYG_TOTAL = 11;
 function calcStatPct(id){
   var date=getActiveDateString();
   if (id==='physical'){
