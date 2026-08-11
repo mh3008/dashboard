@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Todos · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .td-head { display:flex; align-items:center; gap:12px; margin-bottom:4px; }
+  .td-head i { font-size:26px; color:var(--accent); }
+  .td-name { font-size:22px; font-weight:800; letter-spacing:-0.02em; }
+  .td-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
+  .block-lbl { font-family:var(--mono); font-size:9.5px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); margin-bottom:12px; }
+  .add-in { width:100%; background:rgba(0,0,0,0.22); border:1px solid var(--hair); border-radius:11px;
+    color:var(--text-1); font-size:15px; padding:12px 13px; transition:border-color .16s; }
+  .add-in:focus { outline:none; border-color:rgba(249,115,22,0.5); }
+  .wd-row { display:flex; gap:7px; margin:14px 0; }
+  .wd-chip { flex:1; height:42px; border-radius:11px; cursor:pointer; user-select:none;
+    background:rgba(255,255,255,0.04); border:1px solid var(--hair); color:var(--text-3);
+    display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:14px; font-weight:800;
+    transition:background .16s, color .16s, border-color .16s; }
+  .wd-chip.on { background:rgba(249,115,22,0.16); border-color:rgba(249,115,22,0.5); color:var(--accent-lt); }
+  .add-btn { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; cursor:pointer;
+    padding:13px; border-radius:12px; border:1px solid rgba(249,115,22,0.4); background:rgba(249,115,22,0.08);
+    color:var(--accent-lt); font-size:14px; font-weight:800; transition:background .16s; }
+  .add-btn:hover { background:rgba(249,115,22,0.14); }
+  .preset-lbl { font-family:var(--mono); font-size:9.5px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); margin:16px 0 9px; }
+  .preset-wrap { display:flex; flex-wrap:wrap; gap:7px; }
+  .preset-chip { font-size:12px; font-weight:600; padding:8px 12px; border-radius:999px; cursor:pointer;
+    background:rgba(255,255,255,0.04); border:1px solid var(--hair); color:var(--text-1); transition:background .16s, border-color .16s; }
+  .preset-chip:hover { background:var(--card-2); border-color:rgba(249,115,22,0.35); }
+  .task-item { display:flex; align-items:center; gap:12px; padding:14px 15px; border-radius:var(--radius);
+    background:var(--card); border:1px solid var(--hair); margin-bottom:8px; }
+  .ti-body { flex:1; min-width:0; }
+  .ti-name { font-size:14px; font-weight:800; color:var(--text-1); }
+  .ti-days { font-family:var(--mono); font-size:10.5px; color:var(--text-3); margin-top:4px; letter-spacing:0.06em; }
+  .ti-del { color:var(--text-3); cursor:pointer; font-size:20px; line-height:1; padding:2px 4px; transition:color .16s; }
+  .ti-del:hover { color:var(--danger); }
+  .td-empty { text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px; padding:20px 0 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="td-head"><i class="ti ti-checkbox"></i><div class="td-name">Recurring Tasks</div></div>
+  <div class="td-sub">Set once — they surface on Home on their days.</div>
+
+  <div class="card">
+    <div class="block-lbl">Add task</div>
+    <input class="add-in" id="addIn" placeholder="e.g. Take bins out">
+    <div class="wd-row" id="wdRow"></div>
+    <div class="add-btn" id="addBtn"><i class="ti ti-plus"></i> Add task</div>
+    <div class="preset-lbl">Quick add</div>
+    <div class="preset-wrap" id="presetWrap"></div>
+  </div>
+
+  <div class="card">
+    <div class="block-lbl">Your tasks</div>
+    <div id="taskList"></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+var DEFS='todos:defs';
+var WD=[{v:1,l:'M'},{v:2,l:'T'},{v:3,l:'W'},{v:4,l:'T'},{v:5,l:'F'},{v:6,l:'S'},{v:0,l:'S'}];
+var WDABBR={0:'Sun',1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat'};
+var PRESETS=[
+  { name:'Take bins out', days:[2] },
+  { name:'Laundry', days:[0] },
+  { name:'Water plants', days:[3,6] },
+  { name:'Change bedsheets', days:[0] },
+  { name:'Meal prep', days:[0] }
+];
+function getDefs(){ var d=storeGet(DEFS); return Array.isArray(d)?d:[]; }
+function saveDefs(d){ storeSet(DEFS, d); }
+function newId(){ return 't'+Date.now()+Math.floor(Math.random()*1000); }
+var draft={};
+function daysLabel(days){
+  if(!days||!days.length) return 'No days set';
+  var order=[1,2,3,4,5,6,0];
+  return order.filter(function(v){ return days.indexOf(v)!==-1; }).map(function(v){ return WDABBR[v]; }).join(' · ');
+}
+function renderPicker(){
+  var row=document.getElementById('wdRow'); row.innerHTML='';
+  WD.forEach(function(d){
+    var c=document.createElement('div'); c.className='wd-chip'+(draft[d.v]?' on':''); c.textContent=d.l;
+    c.addEventListener('click', function(){ if(draft[d.v]) delete draft[d.v]; else draft[d.v]=true; renderPicker(); });
+    row.appendChild(c);
+  });
+}
+function addTask(name, days){
+  name=(name||'').trim(); if(!name) return;
+  if(!days || !days.length){ return; }
+  var defs=getDefs();
+  defs.push({ id:newId(), name:name, days:days.slice().sort() });
+  saveDefs(defs);
+  document.getElementById('addIn').value='';
+  draft={}; renderPicker(); renderList();
+}
+function renderList(){
+  var list=document.getElementById('taskList'); list.innerHTML='';
+  var defs=getDefs();
+  if(!defs.length){
+    var e=document.createElement('div'); e.className='td-empty'; e.textContent='No recurring tasks yet — add one above.';
+    list.appendChild(e); return;
+  }
+  defs.forEach(function(t){
+    var item=document.createElement('div'); item.className='task-item';
+    var body=document.createElement('div'); body.className='ti-body';
+    var nm=document.createElement('div'); nm.className='ti-name'; nm.textContent=t.name;
+    var dy=document.createElement('div'); dy.className='ti-days'; dy.textContent=daysLabel(t.days);
+    body.appendChild(nm); body.appendChild(dy);
+    var del=document.createElement('span'); del.className='ti-del'; del.innerHTML='<i class="ti ti-trash"></i>';
+    del.addEventListener('click', function(){
+      var d=getDefs().filter(function(x){ return x.id!==t.id; }); saveDefs(d); renderList();
+    });
+    item.appendChild(body); item.appendChild(del);
+    list.appendChild(item);
+  });
+}
+function renderPresets(){
+  var wrap=document.getElementById('presetWrap'); wrap.innerHTML='';
+  PRESETS.forEach(function(p){
+    var c=document.createElement('span'); c.className='preset-chip';
+    c.textContent=p.name+' · '+daysLabel(p.days);
+    c.addEventListener('click', function(){
+      document.getElementById('addIn').value=p.name;
+      draft={}; p.days.forEach(function(v){ draft[v]=true; }); renderPicker();
+    });
+    wrap.appendChild(c);
+  });
+}
+document.getElementById('addBtn').addEventListener('click', function(){
+  var days=Object.keys(draft).map(function(k){ return +k; });
+  addTask(document.getElementById('addIn').value, days);
+});
+document.getElementById('addIn').addEventListener('keydown', function(e){
+  if(e.key==='Enter'){ var days=Object.keys(draft).map(function(k){ return +k; }); addTask(e.target.value, days); }
+});
+renderPicker(); renderPresets(); renderList();
+window.addEventListener('lo-sync-applied', renderList);
+window.addEventListener('focus', renderList);
+</script>
+</body>
+</html>
