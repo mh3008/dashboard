@@ -163,29 +163,28 @@ var SEED_EX = ['Chest Fly','Incline Chest Press','Lateral Raise','Triceps Extens
 var viewDate = getActiveDateString();
 function KEY(){ return 'gym:'+viewDate; }
 function isToday(){ return viewDate===getActiveDateString(); }
-function mkEx(nm){ var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false}); return { name:nm, sets:sets }; }
-function normalize(s){
-  s = s || {};
-  if (!s.bySplit || typeof s.bySplit!=='object'){
-    var bs={};
+function load(){
+  var s = storeGet(KEY()) || {};
+  if (s.bySplit == null || typeof s.bySplit !== 'object'){
+    var by = { 'Anterior':[], 'Posterior':[] };
     if (Array.isArray(s.exercises) && s.exercises.length){
-      var into = (s.split && SPLIT_TEMPLATES[s.split]) ? s.split : (s.split || 'Anterior');
-      bs[into] = s.exercises;
+      var tgt = (typeof s.split === 'string' && by[s.split]) ? s.split : 'Anterior';
+      by[tgt] = s.exercises;
     }
-    s.bySplit = bs;
-    delete s.exercises;
+    s.bySplit = by;
   }
-  if (typeof s.split!=='string' || !s.split) s.split='Anterior';
-  if (typeof s.finished!=='boolean') s.finished=false;
+  if (typeof s.split !== 'string') s.split = '';
+  if (typeof s.finished !== 'boolean') s.finished = false;
+  delete s.exercises;
   return s;
 }
-function load(){ return normalize(storeGet(KEY())); }
-function curEx(s){ if(!s.bySplit[s.split]) s.bySplit[s.split]=[]; return s.bySplit[s.split]; }
+function activeEx(s){
+  if (!s.split || !s.bySplit[s.split]) return [];
+  return s.bySplit[s.split];
+}
 function computeDone(s){
   if (s.finished) return true;
-  return Object.keys(s.bySplit||{}).some(function(k){
-    return (s.bySplit[k]||[]).some(function(e){ return (e.sets||[]).some(function(x){ return x.done; }); });
-  });
+  return activeEx(s).some(function(e){ return (e.sets||[]).some(function(x){ return x.done; }); });
 }
 function save(s){ s.done = computeDone(s); storeSet(KEY(), s); }
 function sessExercises(sess){
@@ -255,15 +254,22 @@ function render(){
     c.innerHTML=sp+'<span class="chip-dot"></span>';
     c.addEventListener('click', function(){
       var st=load();
-      st.split=sp;
-      if(!st.bySplit[sp] || !st.bySplit[sp].length){
-        st.bySplit[sp] = SPLIT_TEMPLATES[sp] ? SPLIT_TEMPLATES[sp].map(mkEx) : [];
+      if (st.split===sp){ st.split=''; }
+      else {
+        st.split=sp;
+        if (!st.bySplit[sp]) st.bySplit[sp]=[];
+        if (!st.bySplit[sp].length && SPLIT_TEMPLATES[sp]){
+          st.bySplit[sp] = SPLIT_TEMPLATES[sp].map(function(nm){
+            var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false});
+            return { name:nm, sets:sets };
+          });
+        }
       }
       save(st); render();
     });
     sr.appendChild(c);
   });
-  var exs = curEx(s);
+  var exs = activeEx(s);
   var list=document.getElementById('exList'); list.innerHTML='';
   if (!exs.length){
     var em=document.createElement('div'); em.className='empty'; em.textContent='No exercises — tap a day above or add a lift.';
@@ -289,7 +295,7 @@ function render(){
       head.appendChild(nb);
     }
     var del=document.createElement('span'); del.className='ex-del'; del.innerHTML='<i class="ti ti-x"></i>';
-    del.addEventListener('click', function(){ var st=load(); curEx(st).splice(ei,1); save(st); render(); });
+    del.addEventListener('click', function(){ var st=load(); if(!st.split) return; activeEx(st).splice(ei,1); save(st); render(); });
     head.appendChild(del);
     card.appendChild(head);
     var lastPH = lastTimeFor(ex.name);
@@ -299,29 +305,30 @@ function render(){
       var wCell=document.createElement('div'); wCell.className='set-cell';
       var w=document.createElement('input'); w.className='set-in'; w.type='number'; w.inputMode='decimal';
       w.step='0.5'; w.placeholder=(lastPH? String(+lastPH.weight.toFixed(1)) : '0'); w.value=(set.weight!=null?set.weight:'');
-      w.addEventListener('input', function(){ var st=load(); curEx(st)[ei].sets[si].weight=w.value; save(st); refreshMeta(); refreshBadges(); });
+      w.addEventListener('input', function(){ var st=load(); if(!st.split) return; activeEx(st)[ei].sets[si].weight=w.value; save(st); refreshMeta(); refreshBadges(); });
       var wu=document.createElement('span'); wu.className='unit'; wu.textContent='kg';
       wCell.appendChild(w); wCell.appendChild(wu); row.appendChild(wCell);
       var x=document.createElement('span'); x.className='set-x'; x.textContent='×'; row.appendChild(x);
       var rCell=document.createElement('div'); rCell.className='set-cell';
       var r=document.createElement('input'); r.className='set-in'; r.type='number'; r.inputMode='numeric';
       r.step='1'; r.placeholder=(lastPH? String(lastPH.reps) : '0'); r.value=(set.reps!=null?set.reps:'');
-      r.addEventListener('input', function(){ var st=load(); curEx(st)[ei].sets[si].reps=r.value; save(st); refreshMeta(); refreshBadges(); });
+      r.addEventListener('input', function(){ var st=load(); if(!st.split) return; activeEx(st)[ei].sets[si].reps=r.value; save(st); refreshMeta(); refreshBadges(); });
       var ru=document.createElement('span'); ru.className='unit'; ru.textContent='reps';
       rCell.appendChild(r); rCell.appendChild(ru); row.appendChild(rCell);
       var cb=document.createElement('span'); cb.className='set-cb';
-      cb.addEventListener('click', function(){ var st=load(); var xx=curEx(st)[ei].sets[si]; xx.done=!xx.done; save(st); render(); });
+      cb.addEventListener('click', function(){ var st=load(); if(!st.split) return; var xx=activeEx(st)[ei].sets[si]; xx.done=!xx.done; save(st); render(); });
       row.appendChild(cb);
       var rm=document.createElement('span'); rm.className='set-rm'; rm.innerHTML='<i class="ti ti-minus"></i>';
-      rm.addEventListener('click', function(){ var st=load(); curEx(st)[ei].sets.splice(si,1); save(st); render(); });
+      rm.addEventListener('click', function(){ var st=load(); if(!st.split) return; activeEx(st)[ei].sets.splice(si,1); save(st); render(); });
       row.appendChild(rm);
       card.appendChild(row);
     });
     var addSet=document.createElement('div'); addSet.className='add-set'; addSet.innerHTML='<i class="ti ti-plus"></i> Set';
     addSet.addEventListener('click', function(){
-      var st=load(); var sets=curEx(st)[ei].sets||[]; var prev=sets[sets.length-1]||{};
+      var st=load(); if(!st.split) return;
+      var sets=activeEx(st)[ei].sets||[]; var prev=sets[sets.length-1]||{};
       sets.push({ weight:(prev.weight!=null?prev.weight:''), reps:(prev.reps!=null?prev.reps:''), done:false });
-      curEx(st)[ei].sets=sets; save(st); render();
+      activeEx(st)[ei].sets=sets; save(st); render();
     });
     card.appendChild(addSet);
     list.appendChild(card);
@@ -332,7 +339,7 @@ function render(){
   fb.querySelector('span').textContent = s.finished ? 'Session finished ✓' : 'Finish session';
 }
 function refreshMeta(){
-  var s=load(), exs=curEx(s), sets=0, vol=0, completed=0;
+  var s=load(), exs=activeEx(s), sets=0, vol=0, completed=0;
   exs.forEach(function(ex){ (ex.sets||[]).forEach(function(st){
     sets++; if(st.done) completed++;
     vol += num(st.weight)*num(st.reps);
@@ -344,7 +351,7 @@ function refreshMeta(){
   document.getElementById('gymCard').classList.toggle('is-done', s.finished);
 }
 function refreshBadges(){
-  var s=load(), exs=curEx(s);
+  var s=load(), exs=activeEx(s);
   document.querySelectorAll('.ex').forEach(function(card, ei){
     var ex=exs[ei]; if(!ex) return;
     var head=card.querySelector('.ex-head');
@@ -358,6 +365,7 @@ function refreshBadges(){
 }
 var pickerOpen=false;
 function togglePicker(){
+  if (!pickerOpen && !load().split) return;
   pickerOpen=!pickerOpen;
   var host=document.getElementById('pickerHost'); host.innerHTML='';
   if(!pickerOpen) return;
@@ -367,7 +375,8 @@ function togglePicker(){
   var go=document.createElement('button'); go.className='picker-go'; go.textContent='Add';
   function commit(name){
     name=(name||'').trim(); if(!name) return;
-    var st=load(); curEx(st).push({ name:name, sets:[{weight:'',reps:'',done:false}] }); save(st);
+    var st=load(); if(!st.split) return;
+    activeEx(st).push({ name:name, sets:[{weight:'',reps:'',done:false}] }); save(st);
     pickerOpen=false; document.getElementById('pickerHost').innerHTML=''; render();
   }
   go.addEventListener('click', function(){ commit(input.value); });
