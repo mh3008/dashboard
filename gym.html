@@ -236,41 +236,6 @@ function historyNames(){
   SEED_EX.forEach(function(n){ if(!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; ordered.push(n); } });
   return ordered;
 }
-function repairToday(){
-  var raw = storeGet(KEY());
-  if (!raw) return;
-  var needsFix = false;
-  // Case 1: old single-list format still present
-  if (Array.isArray(raw.exercises) && raw.exercises.length) needsFix = true;
-  // Case 2: migration dumped everything into Anterior (Anterior holds Posterior lifts, Posterior empty)
-  if (raw.bySplit && Array.isArray(raw.bySplit['Anterior']) && Array.isArray(raw.bySplit['Posterior'])){
-    var ant = raw.bySplit['Anterior'];
-    var antHasPosterior = ant.some(function(e){
-      return SPLIT_TEMPLATES['Posterior'].indexOf(e.name) !== -1;
-    });
-    if (antHasPosterior && !raw.bySplit['Posterior'].length) needsFix = true;
-  }
-  if (!needsFix) return;
-  // Collect every logged exercise from whatever shape the data is in
-  var all = [];
-  if (raw.bySplit){
-    ['Anterior','Posterior'].forEach(function(sp){
-      if (Array.isArray(raw.bySplit[sp])) all = all.concat(raw.bySplit[sp]);
-    });
-  }
-  if (Array.isArray(raw.exercises)) all = all.concat(raw.exercises);
-  // Re-bucket each exercise by which template it belongs to; keep your logged sets
-  var fixed = { 'Anterior':[], 'Posterior':[] };
-  all.forEach(function(ex){
-    var target = SPLIT_TEMPLATES['Posterior'].indexOf(ex.name) !== -1 ? 'Posterior'
-               : SPLIT_TEMPLATES['Anterior'].indexOf(ex.name) !== -1 ? 'Anterior'
-               : 'Anterior';
-    fixed[target].push(ex);
-  });
-  var out = { split:'', bySplit:fixed, finished:!!raw.finished };
-  out.done = false;
-  storeSet(KEY(), out);
-}
 function render(){
   var s = load();
   document.getElementById('dateLbl').textContent = getActiveDateString();
@@ -450,7 +415,6 @@ Array.prototype.forEach.call(document.querySelectorAll('.rest-preset'), function
 document.getElementById('restStop').addEventListener('click', function(){
   clearInterval(restT); restT=null; var d=document.getElementById('restDisp'); d.classList.remove('run'); d.textContent='0:00';
 });
-repairToday();
 render();
 window.addEventListener('lo-sync-applied', render);
 window.addEventListener('focus', render);

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Steps · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .stp-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:20px; }
+  .stp-title { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; }
+  .stp-title i { color:var(--accent); font-size:22px; }
+  .stp-date { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .count-block { text-align:center; }
+  .count-in { background:transparent; border:none; color:var(--text-1); width:100%;
+    font-family:var(--mono); font-size:52px; font-weight:800; letter-spacing:-0.03em; text-align:center;
+    line-height:1; padding:4px 0; -moz-appearance:textfield; }
+  .count-in:focus { outline:none; }
+  .count-in::-webkit-outer-spin-button, .count-in::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  .count-in::placeholder { color:var(--text-3); }
+  .count-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:8px; }
+  .stp-bar { height:8px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; margin:16px 0 8px; }
+  .stp-fill { height:100%; width:0; border-radius:999px; transition:width .5s cubic-bezier(.22,1,.36,1), background .3s; }
+  .stp-status { font-family:var(--mono); font-size:12px; font-weight:700; min-height:15px; }
+  .goal-row { margin-top:22px; padding-top:20px; border-top:1px solid var(--hair); display:flex; align-items:center; gap:12px; }
+  .goal-name { font-family:var(--mono); font-size:9.5px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); }
+  .goal-ctrl { margin-left:auto; display:flex; align-items:center; gap:12px; }
+  .goal-btn { width:34px; height:34px; border-radius:10px; cursor:pointer; border:1px solid var(--hair);
+    background:rgba(255,255,255,0.04); color:var(--text-1); font-size:20px; font-weight:700; line-height:1;
+    display:flex; align-items:center; justify-content:center; transition:background .16s; }
+  .goal-btn:hover { background:var(--card-2); }
+  .goal-val { font-family:var(--mono); font-size:16px; font-weight:800; min-width:66px; text-align:center; }
+  .block-lbl { font-family:var(--mono); font-size:9.5px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); }
+  .trend-wrap { width:100%; margin-top:4px; }
+  .trend-wrap svg { width:100%; height:auto; display:block; }
+  .trend-read { font-family:var(--mono); font-size:11px; color:var(--text-2); text-align:center; margin-top:12px; min-height:14px; }
+  .trend-read b { color:var(--text-1); font-weight:800; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="stepsCard">
+    <div class="stp-head">
+      <div class="stp-title"><i class="ti ti-walk"></i> Steps</div>
+      <div class="stp-date" id="stpDate">—</div>
+    </div>
+    <div class="count-block">
+      <input class="count-in" type="number" inputmode="numeric" id="countIn" placeholder="0">
+      <div class="count-sub">of <span id="goalTxt">15,000</span> goal</div>
+      <div class="stp-bar"><div class="stp-fill" id="stpFill"></div></div>
+      <div class="stp-status" id="stpStatus"></div>
+    </div>
+    <div class="goal-row">
+      <span class="goal-name">Daily goal</span>
+      <div class="goal-ctrl">
+        <span class="goal-btn" id="goalDown">−</span>
+        <span class="goal-val" id="goalVal">15,000</span>
+        <span class="goal-btn" id="goalUp">+</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="block-lbl" style="margin-bottom:6px;">Last 7 days</div>
+    <div class="trend-wrap" id="trendWrap"></div>
+    <div class="trend-read" id="trendRead"></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function KEY(){ return 'steps:'+getActiveDateString(); }
+var GOAL_KEY = 'steps:goal';
+function fmtNum(n){ return Number(n||0).toLocaleString('en-GB'); }
+function load(){ var s = storeGet(KEY()) || {}; if (typeof s.count !== 'number') s.count = 0; return s; }
+function getGoal(){ var g=storeGet(GOAL_KEY); return (typeof g==='number' && g>0) ? g : 15000; }
+function save(s){ s.done = s.count > 0; storeSet(KEY(), s); }
+function render(){
+  var s = load(), goal = getGoal();
+  document.getElementById('stpDate').textContent = getActiveDateString();
+  var inp = document.getElementById('countIn');
+  if (document.activeElement !== inp) inp.value = (s.count > 0 ? s.count : '');
+  document.getElementById('goalTxt').textContent = fmtNum(goal);
+  document.getElementById('goalVal').textContent = fmtNum(goal);
+  var fill = document.getElementById('stpFill'), status = document.getElementById('stpStatus');
+  var pct = Math.min(100, goal>0 ? s.count/goal*100 : 0);
+  fill.style.width = pct + '%';
+  var col, msg;
+  if (s.count <= 0){ col='var(--text-3)'; msg=''; fill.style.width='0'; }
+  else if (s.count >= goal){ col='var(--success)'; msg='✓ goal hit (+'+fmtNum(s.count-goal)+')'; }
+  else if (s.count >= goal*0.8){ col='var(--warning)'; msg=fmtNum(goal-s.count)+' to go'; }
+  else { col='var(--danger)'; msg=fmtNum(goal-s.count)+' to go'; }
+  fill.style.background=col; status.style.color=col; status.textContent=msg;
+  document.getElementById('stepsCard').classList.toggle('is-done', s.count>=goal);
+  renderTrend();
+}
+var trendSel = -1;
+function lastNDates(n){
+  var base=new Date(); if(base.getHours()<6) base.setDate(base.getDate()-1);
+  var out=[];
+  for(var i=n-1;i>=0;i--){ var d=new Date(base.getFullYear(),base.getMonth(),base.getDate()-i);
+    out.push(d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())); }
+  return out;
+}
+function dayData(date){ var s=storeGet('steps:'+date)||{}; var c=(typeof s.count==='number')?s.count:null; return { date:date, count:c }; }
+function renderTrend(){
+  var goal=getGoal();
+  var days=lastNDates(7).map(dayData);
+  var logged=days.filter(function(d){ return d.count!=null && d.count>0; });
+  var maxV=goal;
+  days.forEach(function(d){ if(d.count!=null && d.count>maxV) maxV=d.count; });
+  if(maxV<=0) maxV=goal;
+  var W=320,H=170, padL=6,padR=6,padT=10,padB=24;
+  var innerW=W-padL-padR, innerH=H-padT-padB;
+  var slot=innerW/days.length, bw=slot*0.56;
+  function yFor(v){ return padT + innerH*(1-v/maxV); }
+  var svg='<svg viewBox="0 0 '+W+' '+H+'"><defs>';
+  ['success','warning','danger'].forEach(function(c){
+    svg+='<linearGradient id="bg-'+c+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--'+c+')" stop-opacity="0.95"/><stop offset="1" stop-color="var(--'+c+')" stop-opacity="0.42"/></linearGradient>';
+  });
+  svg+='</defs>';
+  var gy=yFor(goal);
+  svg+='<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+gy.toFixed(1)+'" stroke="rgba(255,255,255,0.18)" stroke-dasharray="3 3"/>';
+  svg+='<text x="'+(W-padR)+'" y="'+(gy-4).toFixed(1)+'" text-anchor="end" fill="var(--text-3)" font-family="monospace" font-size="8">'+(Math.round(goal/1000))+'k</text>';
+  days.forEach(function(d,i){
+    var cx=padL+slot*i+slot/2;
+    var lbl=new Date(d.date+'T12:00').toLocaleDateString('en-GB',{weekday:'short'}).slice(0,2);
+    var x=(cx-bw/2);
+    if(d.count==null || d.count<=0){
+      svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+innerH-3).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>';
+    } else {
+      var by=yFor(d.count), bh=Math.max(2,(padT+innerH-by));
+      var gid = d.count>=goal?'bg-success':(d.count>=goal*0.8?'bg-warning':'bg-danger');
+      var sel = (i===trendSel)?' stroke="var(--text-1)" stroke-width="1.5"':'';
+      svg+='<rect class="tbar" data-idx="'+i+'" x="'+x.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="4" fill="url(#'+gid+')"'+sel+' style="cursor:pointer"/>';
+    }
+    svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-9)+'" text-anchor="middle" fill="'+(i===trendSel?'var(--text-1)':'var(--text-3)')+'" font-family="monospace" font-size="8.5">'+lbl+'</text>';
+  });
+  svg+='</svg>';
+  document.getElementById('trendWrap').innerHTML=svg;
+  var read=document.getElementById('trendRead');
+  if(trendSel>=0 && days[trendSel] && days[trendSel].count!=null && days[trendSel].count>0){
+    var dn=days[trendSel];
+    var full=new Date(dn.date+'T12:00').toLocaleDateString('en-GB',{weekday:'long'});
+    read.innerHTML='<b>'+full+'</b> · '+fmtNum(dn.count)+' steps';
+  } else if(logged.length){
+    var avg=logged.reduce(function(a,b){ return a+b.count; },0)/logged.length;
+    read.innerHTML='Avg <b>'+fmtNum(Math.round(avg))+'</b> over '+logged.length+' day'+(logged.length===1?'':'s')+' · tap a bar';
+  } else {
+    read.textContent='Log a few days to see your trend.';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.tbar'), function(b){
+    b.addEventListener('click', function(){ var i=+b.getAttribute('data-idx'); trendSel=(trendSel===i?-1:i); renderTrend(); });
+  });
+}
+document.getElementById('countIn').addEventListener('input', function(e){
+  var v=parseInt(e.target.value,10); if(!isFinite(v)||v<0) v=0;
+  var s=load(); s.count=v; save(s);
+  var goal=getGoal(), fill=document.getElementById('stpFill'), status=document.getElementById('stpStatus');
+  var pct=Math.min(100, goal>0? v/goal*100:0); fill.style.width=pct+'%';
+  var col,msg;
+  if(v<=0){ col='var(--text-3)'; msg=''; fill.style.width='0'; }
+  else if(v>=goal){ col='var(--success)'; msg='✓ goal hit (+'+fmtNum(v-goal)+')'; }
+  else if(v>=goal*0.8){ col='var(--warning)'; msg=fmtNum(goal-v)+' to go'; }
+  else { col='var(--danger)'; msg=fmtNum(goal-v)+' to go'; }
+  fill.style.background=col; status.style.color=col; status.textContent=msg;
+  renderTrend();
+});
+document.getElementById('countIn').addEventListener('blur', render);
+document.getElementById('goalDown').addEventListener('click', function(){ var g=Math.max(2000, getGoal()-500); storeSet(GOAL_KEY, g); render(); });
+document.getElementById('goalUp').addEventListener('click', function(){ var g=Math.min(40000, getGoal()+500); storeSet(GOAL_KEY, g); render(); });
+render();
+window.addEventListener('lo-sync-applied', render);
+window.addEventListener('focus', render);
+</script>
+</body>
+</html>
