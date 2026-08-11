@@ -160,9 +160,7 @@ var SPLIT_TEMPLATES = {
 };
 var SETS_PER = 2;
 var SEED_EX = ['Chest Fly','Incline Chest Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor','Seated Row','Lat Pulldown','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise'];
-var viewDate = getActiveDateString();
-function KEY(){ return 'gym:'+viewDate; }
-function isToday(){ return viewDate===getActiveDateString(); }
+function KEY(){ return 'gym:'+getActiveDateString(); }
 function load(){
   var s = storeGet(KEY()) || {};
   if (s.bySplit == null || typeof s.bySplit !== 'object'){
@@ -173,35 +171,41 @@ function load(){
     }
     s.bySplit = by;
   }
+  if (!Array.isArray(s.bySplit['Anterior'])) s.bySplit['Anterior'] = [];
+  if (!Array.isArray(s.bySplit['Posterior'])) s.bySplit['Posterior'] = [];
   if (typeof s.split !== 'string') s.split = '';
   if (typeof s.finished !== 'boolean') s.finished = false;
-  delete s.exercises;
+  if ('exercises' in s) delete s.exercises;
   return s;
 }
 function activeEx(s){
-  if (!s.split || !s.bySplit[s.split]) return [];
+  if (!s.split || !s.bySplit || !Array.isArray(s.bySplit[s.split])) return [];
   return s.bySplit[s.split];
 }
+function sessAllEx(sess){
+  var out = [];
+  if (sess && sess.bySplit && typeof sess.bySplit === 'object'){
+    Object.keys(sess.bySplit).forEach(function(k){
+      if (Array.isArray(sess.bySplit[k])) out = out.concat(sess.bySplit[k]);
+    });
+  }
+  if (sess && Array.isArray(sess.exercises)) out = out.concat(sess.exercises);
+  return out;
+}
 function computeDone(s){
-  if (s.finished) return true;
-  return activeEx(s).some(function(e){ return (e.sets||[]).some(function(x){ return x.done; }); });
+  var anyComplete = activeEx(s).some(function(e){ return (e.sets||[]).some(function(st){ return st.done; }); });
+  return s.finished || anyComplete;
 }
 function save(s){ s.done = computeDone(s); storeSet(KEY(), s); }
-function sessExercises(sess){
-  if(!sess) return [];
-  if(Array.isArray(sess.exercises)) return sess.exercises;
-  if(sess.bySplit){ var out=[]; Object.keys(sess.bySplit).forEach(function(k){ (sess.bySplit[k]||[]).forEach(function(e){ out.push(e); }); }); return out; }
-  return [];
-}
 function lastTimeFor(name){
-  var best=null, bestDate=null;
+  var today = getActiveDateString(), best=null, bestDate=null;
   for (var i=0;i<localStorage.length;i++){
     var k = localStorage.key(i);
     if (!k || k.indexOf('gym:')!==0) continue;
     var date = k.slice(4);
-    if (date >= viewDate) continue;
-    var exs = sessExercises(storeGet(k));
-    var ex = exs.filter(function(e){ return (e.name||'').toLowerCase()===name.toLowerCase(); })[0];
+    if (date >= today) continue;
+    var sess = storeGet(k); if (!sess) continue;
+    var ex = sessAllEx(sess).filter(function(e){ return (e.name||'').toLowerCase()===name.toLowerCase(); })[0];
     if (!ex || !Array.isArray(ex.sets)) continue;
     var top=null;
     ex.sets.forEach(function(st){
@@ -226,38 +230,26 @@ function historyNames(){
   for (var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k&&k.indexOf('gym:')===0) keys.push(k); }
   keys.sort().reverse();
   keys.forEach(function(k){
-    sessExercises(storeGet(k)).forEach(function(e){ var n=e.name; if(n&&!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; ordered.push(n); } });
+    var sess=storeGet(k); if(!sess) return;
+    sessAllEx(sess).forEach(function(e){ var n=e.name; if(n&&!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; ordered.push(n); } });
   });
   SEED_EX.forEach(function(n){ if(!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; ordered.push(n); } });
   return ordered;
 }
-function splitHasData(s, sp){
-  return (s.bySplit[sp]||[]).some(function(e){ return (e.sets||[]).some(function(x){ return x.weight||x.reps||x.done; }); });
-}
-function renderDateNav(){
-  var d=new Date(viewDate+'T12:00');
-  var lbl=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-  var el=document.getElementById('dateLbl');
-  if (isToday()){ el.innerHTML=lbl+'<span class="today-tag">TODAY</span>'; }
-  else { el.innerHTML=lbl+'<span class="jump" id="jumpToday">→ today</span>'; }
-  document.getElementById('dateNext').classList.toggle('disabled', isToday());
-  var jt=document.getElementById('jumpToday');
-  if(jt) jt.addEventListener('click', function(){ viewDate=getActiveDateString(); render(); });
-}
 function render(){
   var s = load();
-  renderDateNav();
+  document.getElementById('dateLbl').textContent = getActiveDateString();
   var sr = document.getElementById('splitRow'); sr.innerHTML='';
   SPLITS.forEach(function(sp){
     var c=document.createElement('span');
-    c.className='split-chip'+(s.split===sp?' on':'')+(splitHasData(s,sp)?' has-data':'');
-    c.innerHTML=sp+'<span class="chip-dot"></span>';
+    c.className='split-chip'+(s.split===sp?' on':'');
+    c.textContent=sp;
     c.addEventListener('click', function(){
       var st=load();
       if (st.split===sp){ st.split=''; }
       else {
         st.split=sp;
-        if (!st.bySplit[sp]) st.bySplit[sp]=[];
+        if (!Array.isArray(st.bySplit[sp])) st.bySplit[sp]=[];
         if (!st.bySplit[sp].length && SPLIT_TEMPLATES[sp]){
           st.bySplit[sp] = SPLIT_TEMPLATES[sp].map(function(nm){
             var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false});
@@ -269,10 +261,13 @@ function render(){
     });
     sr.appendChild(c);
   });
-  var exs = activeEx(s);
   var list=document.getElementById('exList'); list.innerHTML='';
-  if (!exs.length){
-    var em=document.createElement('div'); em.className='empty'; em.textContent='No exercises — tap a day above or add a lift.';
+  var exs = activeEx(s);
+  if (!s.split){
+    var pk=document.createElement('div'); pk.className='empty'; pk.textContent='Pick a split to start.';
+    list.appendChild(pk);
+  } else if (!exs.length){
+    var em=document.createElement('div'); em.className='empty'; em.textContent='No exercises yet — add your first lift.';
     list.appendChild(em);
   }
   exs.forEach(function(ex, ei){
@@ -295,38 +290,36 @@ function render(){
       head.appendChild(nb);
     }
     var del=document.createElement('span'); del.className='ex-del'; del.innerHTML='<i class="ti ti-x"></i>';
-    del.addEventListener('click', function(){ var st=load(); if(!st.split) return; activeEx(st).splice(ei,1); save(st); render(); });
+    del.addEventListener('click', function(){ var st=load(); activeEx(st).splice(ei,1); save(st); render(); });
     head.appendChild(del);
     card.appendChild(head);
-    var lastPH = lastTimeFor(ex.name);
     (ex.sets||[]).forEach(function(set, si){
       var row=document.createElement('div'); row.className='set-row'+(set.done?' done':'');
       var n=document.createElement('span'); n.className='set-n'; n.textContent=(si+1); row.appendChild(n);
       var wCell=document.createElement('div'); wCell.className='set-cell';
       var w=document.createElement('input'); w.className='set-in'; w.type='number'; w.inputMode='decimal';
-      w.step='0.5'; w.placeholder=(lastPH? String(+lastPH.weight.toFixed(1)) : '0'); w.value=(set.weight!=null?set.weight:'');
-      w.addEventListener('input', function(){ var st=load(); if(!st.split) return; activeEx(st)[ei].sets[si].weight=w.value; save(st); refreshMeta(); refreshBadges(); });
+      w.step='0.5'; w.placeholder='0'; w.value=(set.weight!=null?set.weight:'');
+      w.addEventListener('input', function(){ var st=load(); activeEx(st)[ei].sets[si].weight=w.value; save(st); refreshMeta(); refreshBadges(); });
       var wu=document.createElement('span'); wu.className='unit'; wu.textContent='kg';
       wCell.appendChild(w); wCell.appendChild(wu); row.appendChild(wCell);
       var x=document.createElement('span'); x.className='set-x'; x.textContent='×'; row.appendChild(x);
       var rCell=document.createElement('div'); rCell.className='set-cell';
       var r=document.createElement('input'); r.className='set-in'; r.type='number'; r.inputMode='numeric';
-      r.step='1'; r.placeholder=(lastPH? String(lastPH.reps) : '0'); r.value=(set.reps!=null?set.reps:'');
-      r.addEventListener('input', function(){ var st=load(); if(!st.split) return; activeEx(st)[ei].sets[si].reps=r.value; save(st); refreshMeta(); refreshBadges(); });
+      r.step='1'; r.placeholder='0'; r.value=(set.reps!=null?set.reps:'');
+      r.addEventListener('input', function(){ var st=load(); activeEx(st)[ei].sets[si].reps=r.value; save(st); refreshMeta(); refreshBadges(); });
       var ru=document.createElement('span'); ru.className='unit'; ru.textContent='reps';
       rCell.appendChild(r); rCell.appendChild(ru); row.appendChild(rCell);
       var cb=document.createElement('span'); cb.className='set-cb';
-      cb.addEventListener('click', function(){ var st=load(); if(!st.split) return; var xx=activeEx(st)[ei].sets[si]; xx.done=!xx.done; save(st); render(); });
+      cb.addEventListener('click', function(){ var st=load(); activeEx(st)[ei].sets[si].done=!activeEx(st)[ei].sets[si].done; save(st); render(); });
       row.appendChild(cb);
       var rm=document.createElement('span'); rm.className='set-rm'; rm.innerHTML='<i class="ti ti-minus"></i>';
-      rm.addEventListener('click', function(){ var st=load(); if(!st.split) return; activeEx(st)[ei].sets.splice(si,1); save(st); render(); });
+      rm.addEventListener('click', function(){ var st=load(); activeEx(st)[ei].sets.splice(si,1); save(st); render(); });
       row.appendChild(rm);
       card.appendChild(row);
     });
     var addSet=document.createElement('div'); addSet.className='add-set'; addSet.innerHTML='<i class="ti ti-plus"></i> Set';
     addSet.addEventListener('click', function(){
-      var st=load(); if(!st.split) return;
-      var sets=activeEx(st)[ei].sets||[]; var prev=sets[sets.length-1]||{};
+      var st=load(); var sets=activeEx(st)[ei].sets||[]; var prev=sets[sets.length-1]||{};
       sets.push({ weight:(prev.weight!=null?prev.weight:''), reps:(prev.reps!=null?prev.reps:''), done:false });
       activeEx(st)[ei].sets=sets; save(st); render();
     });
@@ -339,8 +332,8 @@ function render(){
   fb.querySelector('span').textContent = s.finished ? 'Session finished ✓' : 'Finish session';
 }
 function refreshMeta(){
-  var s=load(), exs=activeEx(s), sets=0, vol=0, completed=0;
-  exs.forEach(function(ex){ (ex.sets||[]).forEach(function(st){
+  var s=load(), sets=0, vol=0, completed=0;
+  activeEx(s).forEach(function(ex){ (ex.sets||[]).forEach(function(st){
     sets++; if(st.done) completed++;
     vol += num(st.weight)*num(st.reps);
   }); });
@@ -365,7 +358,7 @@ function refreshBadges(){
 }
 var pickerOpen=false;
 function togglePicker(){
-  if (!pickerOpen && !load().split) return;
+  var s0=load(); if(!s0.split){ return; }
   pickerOpen=!pickerOpen;
   var host=document.getElementById('pickerHost'); host.innerHTML='';
   if(!pickerOpen) return;
@@ -376,7 +369,7 @@ function togglePicker(){
   function commit(name){
     name=(name||'').trim(); if(!name) return;
     var st=load(); if(!st.split) return;
-    activeEx(st).push({ name:name, sets:[{weight:'',reps:'',done:false}] }); save(st);
+    st.bySplit[st.split].push({ name:name, sets:[{weight:'',reps:'',done:false}] }); save(st);
     pickerOpen=false; document.getElementById('pickerHost').innerHTML=''; render();
   }
   go.addEventListener('click', function(){ commit(input.value); });
@@ -399,31 +392,32 @@ document.getElementById('addExBtn').addEventListener('click', togglePicker);
 document.getElementById('finishBtn').addEventListener('click', function(){
   var s=load(); s.finished=!s.finished; save(s); render();
 });
-document.getElementById('datePrev').addEventListener('click', function(){
-  var d=new Date(viewDate+'T12:00'); d.setDate(d.getDate()-1);
-  viewDate=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); render();
-});
-document.getElementById('dateNext').addEventListener('click', function(){
-  if(isToday()) return;
-  var d=new Date(viewDate+'T12:00'); d.setDate(d.getDate()+1);
-  var ns=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
-  if(ns>getActiveDateString()) ns=getActiveDateString();
-  viewDate=ns; render();
-});
 var restT=null, restEnd=0;
 function fmt(sec){ sec=Math.max(0,Math.ceil(sec)); return Math.floor(sec/60)+':'+pad2(sec%60); }
 function tickRest(){
   var left=(restEnd-Date.now())/1000;
   var d=document.getElementById('restDisp');
   d.textContent=fmt(left);
-  if(left<=0){ clearInterval(restT); restT=null; d.classList.remove('run'); if(navigator.vibrate) navigator.vibrate([120,60,120]); d.textContent='done'; }
+  if(left<=0){
+    clearInterval(restT); restT=null; d.classList.remove('run');
+    if(navigator.vibrate) navigator.vibrate([120,60,120]);
+    d.textContent='done';
+  }
 }
-function startRest(sec){ restEnd=Date.now()+sec*1000; document.getElementById('restDisp').classList.add('run'); clearInterval(restT); restT=setInterval(tickRest,250); tickRest(); }
-Array.prototype.forEach.call(document.querySelectorAll('.rest-preset'), function(b){ b.addEventListener('click', function(){ startRest(parseInt(b.getAttribute('data-s'),10)); }); });
-document.getElementById('restStop').addEventListener('click', function(){ clearInterval(restT); restT=null; var d=document.getElementById('restDisp'); d.classList.remove('run'); d.textContent='0:00'; });
+function startRest(sec){
+  restEnd=Date.now()+sec*1000;
+  document.getElementById('restDisp').classList.add('run');
+  clearInterval(restT); restT=setInterval(tickRest,250); tickRest();
+}
+Array.prototype.forEach.call(document.querySelectorAll('.rest-preset'), function(b){
+  b.addEventListener('click', function(){ startRest(parseInt(b.getAttribute('data-s'),10)); });
+});
+document.getElementById('restStop').addEventListener('click', function(){
+  clearInterval(restT); restT=null; var d=document.getElementById('restDisp'); d.classList.remove('run'); d.textContent='0:00';
+});
 render();
 window.addEventListener('lo-sync-applied', render);
-window.addEventListener('focus', function(){ if(isToday()) render(); });
+window.addEventListener('focus', render);
 </script>
 </body>
 </html>
