@@ -157,8 +157,7 @@ function updateClock(){
 var STATS = [
   { id:'physical',   name:'Physical',   icon:'ti-activity',       href:'physical.html',   ring:true,  live:true  },
   { id:'appearance', name:'Appearance', icon:'ti-sparkles',       href:'appearance.html', ring:true,  live:true  },
-  { id:'cognition',  name:'Cognition',  icon:'ti-brain',          href:'cognition.html',  ring:false },
-  { id:'home',       name:'Home',       icon:'ti-home',           href:'home.html',       ring:true,  live:true  },
+  { id:'life',       name:'Life',       icon:'ti-home',           href:'life.html',       ring:true,  live:true  },
   { id:'money',      name:'Money',      icon:'ti-currency-pound', href:'money.html',      ring:false, live:true }
 ];
 var SR_C = 2 * Math.PI * 33;
@@ -178,7 +177,7 @@ function calcStatPct(id){
     var h=storeGet('hygiene:'+date)||{}, done=Object.keys(h).filter(function(k){return h[k];}).length;
     return Math.round(done/HYG_TOTAL*100);
   }
-  if (id==='home'){
+  if (id==='life'){
     var defs=storeGet('todos:defs'); if(!Array.isArray(defs)) defs=[];
     var wd=new Date(date+'T12:00').getDay();
     var due=defs.filter(function(t){ return t.days && t.days.indexOf(wd)!==-1; });

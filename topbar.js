@@ -13,9 +13,8 @@
     { id: 'home',      label: 'Home',    icon: 'ti-layout-grid',      href: 'index.html' },
     { id: 'physical',  label: 'Body',    icon: 'ti-activity',         href: 'physical.html' },
     { id: 'appearance',label: 'Look',    icon: 'ti-sparkles',         href: 'appearance.html' },
-    { id: 'cognition', label: 'Mind',    icon: 'ti-brain',            href: 'cognition.html',  soon: true },
-    { id: 'social',    label: 'Social',  icon: 'ti-users',            href: 'social.html',     soon: true },
     { id: 'money',     label: 'Money',   icon: 'ti-currency-pound',   href: 'money.html' },
+    { id: 'life',      label: 'Life',    icon: 'ti-home',             href: 'life.html' },
     { id: 'system',    label: 'System',  icon: 'ti-adjustments',      href: 'system.html',     soon: true }
   ];
 

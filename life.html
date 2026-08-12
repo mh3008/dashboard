@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Life · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .hub-head { display:flex; align-items:center; gap:14px; margin-bottom:4px; }
+  .hub-icon { font-size:30px; color:var(--accent); }
+  .hub-name { font-size:24px; font-weight:800; letter-spacing:-0.02em; }
+  .hub-sub  { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
+  .app-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  .app-tile { display:flex; flex-direction:column; align-items:center; gap:10px; padding:22px 14px;
+    border-radius:var(--radius); background:var(--card); border:1px solid var(--hair);
+    cursor:pointer; text-decoration:none; transition:background .2s, border-color .2s, transform .12s; }
+  .app-tile:hover { background:var(--card-2); border-color:rgba(249,115,22,0.3); }
+  .app-tile:active { transform:scale(0.97); }
+  .app-tile i { font-size:28px; color:var(--accent-lt); }
+  .app-tile span { font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-1); }
+  .app-tile.soon { opacity:0.4; }
+  .app-tile.soon i { color:var(--text-3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hub-head"><i class="ti ti-home hub-icon"></i><div class="hub-name">Life</div></div>
+  <div class="hub-sub">Life admin · tasks · plants · house · car.</div>
+  <div class="app-grid">
+    <a class="app-tile" href="todos.html"><i class="ti ti-checkbox"></i><span>Tasks</span></a>
+    <a class="app-tile" href="plants.html"><i class="ti ti-plant-2"></i><span>Plants</span></a>
+    <a class="app-tile soon" href="javascript:void(0)" onclick="loToast('Car — coming soon')"><i class="ti ti-car"></i><span>Car</span></a>
+    <a class="app-tile soon" href="javascript:void(0)" onclick="loToast('House — coming soon')"><i class="ti ti-building"></i><span>House</span></a>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+</body>
+</html>
