@@ -413,9 +413,8 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
   ctx.fillStyle = rgba(coreColor, 0.58+0.32*life+0.15*beatAmt);
   ctx.beginPath(); ctx.arc(cx,cy,coreR,0,Math.PI*2); ctx.fill();
 
-  /* foreground: orbiters with comet trails — 2 ambient always, +1 per completed pillar */
-  var pillars = extra.pillars||0;
-  var orbiterCount = 2 + pillars;
+  /* foreground: orbiters with comet trails — always the full set of 4 (pct text still tracks real pillars) */
+  var orbiterCount = 4;
   var tint = [ [200,170,255],[170,200,255],[255,180,220],[190,255,210],[220,190,255],[180,220,255] ];
   for (i=0;i<orbiterCount;i++){
     var orbitR = coreR*2.0 + i*(minWH*0.085);
@@ -926,7 +925,8 @@ function drawAllOnce(now){
     }
 
     p.ctx.clearRect(0,0,p.w,p.h);
-    p.draw(p.ctx, p.w, p.h, p.life, now, p.extra, p.state, p.burst);
+    /* visuals always render at full richness — real p.life still drives the pct text (above) and the lo-pulse class (in updateStats) */
+    p.draw(p.ctx, p.w, p.h, 1, now, p.extra, p.state, p.burst);
 
     if (p.burst && now-p.burst.start > 900) p.burst = null;
   }
