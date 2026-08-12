@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Countdowns · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .cd-head { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; margin-bottom:16px; }
+  .cd-head i { color:var(--accent); font-size:22px; }
+  .hero-cd { text-align:center; padding:8px 0 4px; }
+  .hero-days { font-size:64px; font-weight:800; letter-spacing:-0.04em; line-height:1; }
+  .hero-unit { font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); margin-top:6px; }
+  .hero-name { font-size:16px; font-weight:800; margin-top:10px; }
+  .hero-date { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:4px; }
+  .hero-bar { height:6px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; margin-top:16px; }
+  .hero-fill { height:100%; border-radius:999px; transition:width .5s cubic-bezier(.22,1,.36,1), background .3s; }
+  .hero-empty { font-family:var(--mono); font-size:12px; color:var(--text-3); text-align:center; padding:20px 0; }
+  .cd-list { margin-top:12px; }
+  .cd-item { display:flex; align-items:center; gap:14px; padding:16px; border-radius:var(--radius);
+    background:var(--card); border:1px solid var(--hair); margin-top:10px; transition:background .16s; }
+  .cd-item:hover { background:var(--card-2); }
+  .cd-emoji { font-size:28px; line-height:1; flex-shrink:0; }
+  .cd-info { flex:1; min-width:0; }
+  .cd-name { font-size:14px; font-weight:800; }
+  .cd-date { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:3px; }
+  .cd-right { text-align:right; flex-shrink:0; }
+  .cd-num { font-family:var(--mono); font-size:22px; font-weight:800; line-height:1; }
+  .cd-lbl { font-family:var(--mono); font-size:8.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); margin-top:3px; }
+  .cd-del { color:var(--text-3); cursor:pointer; font-size:16px; flex-shrink:0; padding:4px; transition:color .16s; }
+  .cd-del:hover { color:var(--danger); }
+  .cd-passed { opacity:0.45; }
+  .add-cd { margin-top:16px; }
+  .add-btn { display:flex; align-items:center; justify-content:center; gap:9px; width:100%;
+    cursor:pointer; padding:14px; border-radius:var(--radius); border:1px dashed rgba(249,115,22,0.35);
+    color:var(--accent-lt); font-size:13px; font-weight:800; letter-spacing:0.02em;
+    background:rgba(249,115,22,0.04); transition:background .16s, border-color .16s; }
+  .add-btn:hover { background:rgba(249,115,22,0.09); border-color:rgba(249,115,22,0.55); }
+  .add-btn i { font-size:18px; }
+  .add-form { margin-top:12px; padding:16px; border-radius:var(--radius); background:var(--card); border:1px solid var(--hair); }
+  .add-row { display:flex; gap:8px; margin-bottom:10px; }
+  .add-in { flex:1; background:rgba(0,0,0,0.22); border:1px solid var(--hair); border-radius:10px;
+    color:var(--text-1); font-size:13px; padding:11px 12px; transition:border-color .16s; }
+  .add-in:focus { outline:none; border-color:rgba(249,115,22,0.5); }
+  .add-in::placeholder { color:var(--text-3); }
+  .add-in[type="date"]::-webkit-calendar-picker-indicator { filter:invert(0.7) sepia(1) saturate(4) hue-rotate(-10deg); cursor:pointer; }
+  .add-emoji-in { width:52px; flex:none; text-align:center; font-size:18px; }
+  .add-go { background:var(--accent); color:#160a04; border:none; border-radius:10px; font-weight:800;
+    font-size:13px; padding:11px 18px; cursor:pointer; white-space:nowrap; }
+  .add-go:active { transform:scale(0.96); }
+  .add-cancel { background:transparent; border:1px solid var(--hair); border-radius:10px; color:var(--text-2);
+    font-size:13px; font-weight:700; padding:11px 14px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="cd-head"><i class="ti ti-hourglass"></i> Countdowns</div>
+    <div id="heroZone"></div>
+  </div>
+  <div class="cd-list" id="cdList"></div>
+  <div class="add-cd" id="addZone"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function daysBetween(a,b){
+  var pa=a.split('-'),pb=b.split('-');
+  var da=new Date(+pa[0],+pa[1]-1,+pa[2]), db=new Date(+pb[0],+pb[1]-1,+pb[2]);
+  return Math.round((db-da)/86400000);
+}
+function fmtDateNice(dstr){
+  var p=dstr.split('-');
+  var d=new Date(+p[0],+p[1]-1,+p[2]);
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+var STORE_KEY = 'countdowns:list';
+var SEED = [
+  { id:'y2start', name:'Year 2 starts', date:'2026-09-22', emoji:'🎓' }
+];
+
+function loadList(){
+  var list = storeGet(STORE_KEY);
+  if (!Array.isArray(list)){
+    list = SEED.slice();
+    storeSet(STORE_KEY, list);
+  }
+  return list;
+}
+function saveList(list){ storeSet(STORE_KEY, list); }
+
+function cdColor(days){
+  if (days <= 0) return 'var(--text-3)';
+  if (days <= 3) return 'var(--danger)';
+  if (days <= 14) return 'var(--warning)';
+  return 'var(--success)';
+}
+
+var formOpen = false;
+
+function render(){
+  var list = loadList();
+  var today = todayStr();
+
+  /* sort: upcoming first (nearest first), then passed (most recent first) */
+  var upcoming = [], passed = [];
+  list.forEach(function(c){
+    var d = daysBetween(today, c.date);
+    var obj = { id:c.id, name:c.name, date:c.date, emoji:c.emoji||'📅', days:d };
+    if (d >= 0) upcoming.push(obj); else passed.push(obj);
+  });
+  upcoming.sort(function(a,b){ return a.days - b.days; });
+  passed.sort(function(a,b){ return b.days - a.days; }); /* most recent passed first */
+  var sorted = upcoming.concat(passed);
+
+  /* hero = nearest upcoming */
+  var hero = document.getElementById('heroZone'); hero.innerHTML = '';
+  if (upcoming.length) {
+    var h = upcoming[0];
+    var col = cdColor(h.days);
+    var html = '<div class="hero-cd">';
+    html += '<div class="hero-days" style="color:'+col+'">'+h.days+'</div>';
+    html += '<div class="hero-unit">day'+(h.days===1?'':'s')+' to go</div>';
+    html += '<div class="hero-name">'+h.emoji+' '+h.name+'</div>';
+    html += '<div class="hero-date">'+fmtDateNice(h.date)+'</div>';
+    /* bar: assume 90 day lookahead, fill = how close we are */
+    var span = 90, elapsed = span - Math.min(h.days, span), pct = Math.round(elapsed/span*100);
+    html += '<div class="hero-bar"><div class="hero-fill" style="width:'+pct+'%;background:'+col+'"></div></div>';
+    html += '</div>';
+    hero.innerHTML = html;
+  } else {
+    hero.innerHTML = '<div class="hero-empty">No upcoming countdowns — add one below.</div>';
+  }
+
+  /* list */
+  var cdList = document.getElementById('cdList'); cdList.innerHTML = '';
+  sorted.forEach(function(c){
+    var isPassed = (c.days < 0);
+    var col = cdColor(c.days);
+    var item = document.createElement('div');
+    item.className = 'cd-item' + (isPassed ? ' cd-passed' : '');
+
+    var emo = document.createElement('div'); emo.className = 'cd-emoji'; emo.textContent = c.emoji;
+    item.appendChild(emo);
+
+    var info = document.createElement('div'); info.className = 'cd-info';
+    var nm = document.createElement('div'); nm.className = 'cd-name'; nm.textContent = c.name;
+    var dt = document.createElement('div'); dt.className = 'cd-date'; dt.textContent = fmtDateNice(c.date);
+    info.appendChild(nm); info.appendChild(dt); item.appendChild(info);
+
+    var right = document.createElement('div'); right.className = 'cd-right';
+    var numEl = document.createElement('div'); numEl.className = 'cd-num'; numEl.style.color = col;
+    numEl.textContent = isPassed ? Math.abs(c.days) : c.days;
+    var lbl = document.createElement('div'); lbl.className = 'cd-lbl';
+    lbl.textContent = isPassed ? 'days ago' : (c.days === 0 ? 'today!' : 'days');
+    right.appendChild(numEl); right.appendChild(lbl); item.appendChild(right);
+
+    var del = document.createElement('span'); del.className = 'cd-del'; del.innerHTML = '<i class="ti ti-x"></i>';
+    (function(cid){
+      del.addEventListener('click', function(){
+        var l = loadList().filter(function(x){ return x.id !== cid; });
+        saveList(l); render();
+      });
+    })(c.id);
+    item.appendChild(del);
+
+    cdList.appendChild(item);
+  });
+
+  /* add zone */
+  renderAdd();
+}
+
+function renderAdd(){
+  var zone = document.getElementById('addZone'); zone.innerHTML = '';
+  if (!formOpen){
+    var btn = document.createElement('div'); btn.className = 'add-btn';
+    btn.innerHTML = '<i class="ti ti-plus"></i> Add countdown';
+    btn.addEventListener('click', function(){ formOpen = true; renderAdd(); });
+    zone.appendChild(btn);
+    return;
+  }
+  var form = document.createElement('div'); form.className = 'add-form';
+
+  var row1 = document.createElement('div'); row1.className = 'add-row';
+  var emoIn = document.createElement('input'); emoIn.className = 'add-in add-emoji-in'; emoIn.placeholder = '📅'; emoIn.maxLength = 4;
+  var nameIn = document.createElement('input'); nameIn.className = 'add-in'; nameIn.placeholder = 'Event name…';
+  row1.appendChild(emoIn); row1.appendChild(nameIn); form.appendChild(row1);
+
+  var row2 = document.createElement('div'); row2.className = 'add-row';
+  var dateIn = document.createElement('input'); dateIn.className = 'add-in'; dateIn.type = 'date';
+  var goBtn = document.createElement('button'); goBtn.className = 'add-go'; goBtn.textContent = 'Add';
+  var cancelBtn = document.createElement('button'); cancelBtn.className = 'add-cancel'; cancelBtn.textContent = 'Cancel';
+
+  function commit(){
+    var name = (nameIn.value||'').trim();
+    var date = dateIn.value;
+    if (!name || !date) return;
+    var emoji = (emoIn.value||'').trim() || '📅';
+    var list = loadList();
+    list.push({ id:uid(), name:name, date:date, emoji:emoji });
+    saveList(list);
+    formOpen = false; render();
+  }
+  goBtn.addEventListener('click', commit);
+  nameIn.addEventListener('keydown', function(e){ if(e.key==='Enter') commit(); });
+  cancelBtn.addEventListener('click', function(){ formOpen = false; renderAdd(); });
+
+  row2.appendChild(dateIn); row2.appendChild(goBtn); row2.appendChild(cancelBtn); form.appendChild(row2);
+  zone.appendChild(form);
+  nameIn.focus();
+}
+
+render();
+window.addEventListener('lo-sync-applied', render);
+window.addEventListener('focus', render);
+</script>
+</body>
+</html>
