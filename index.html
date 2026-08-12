@@ -29,7 +29,7 @@
   .sec-tile:hover { transform:translateY(-3px); }
   .sec-tile::before {
     content:''; position:absolute; top:-32%; right:-32%; width:75%; height:75%; border-radius:50%;
-    pointer-events:none; opacity:0.45; filter:blur(6px); transition:opacity .25s ease;
+    pointer-events:none; opacity:0.45; filter:blur(6px); transition:opacity .25s ease; z-index:0;
   }
   .sec-tile:hover::before { opacity:0.8; }
 
@@ -50,23 +50,25 @@
   @keyframes tilePulse { 0%,100% { opacity:0.45; } 50% { opacity:0.85; } }
   @media (prefers-reduced-motion: reduce) { .sec-tile.lo-pulse::before { animation:none; } }
 
+  .sec-tile-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; display:block; }
+
   .sec-tile-top { position:relative; display:flex; align-items:center; gap:7px; z-index:1; }
   .sec-tile-icon { font-size:17px; }
-  .sec-tile[data-sec="body"]  .sec-tile-icon, .sec-tile[data-sec="body"]  .sec-tile-name { color:var(--c-body); }
-  .sec-tile[data-sec="look"]  .sec-tile-icon, .sec-tile[data-sec="look"]  .sec-tile-name { color:var(--c-look); }
-  .sec-tile[data-sec="life"]  .sec-tile-icon, .sec-tile[data-sec="life"]  .sec-tile-name { color:var(--c-life); }
-  .sec-tile[data-sec="money"] .sec-tile-icon, .sec-tile[data-sec="money"] .sec-tile-name { color:var(--c-money); }
+  .sec-tile[data-sec="body"]  .sec-tile-icon, .sec-tile[data-sec="body"]  .sec-tile-name, .sec-tile[data-sec="body"]  .sec-tile-pct { color:var(--c-body); }
+  .sec-tile[data-sec="look"]  .sec-tile-icon, .sec-tile[data-sec="look"]  .sec-tile-name, .sec-tile[data-sec="look"]  .sec-tile-pct { color:var(--c-look); }
+  .sec-tile[data-sec="life"]  .sec-tile-icon, .sec-tile[data-sec="life"]  .sec-tile-name, .sec-tile[data-sec="life"]  .sec-tile-pct { color:var(--c-life); }
+  .sec-tile[data-sec="money"] .sec-tile-icon, .sec-tile[data-sec="money"] .sec-tile-name, .sec-tile[data-sec="money"] .sec-tile-pct { color:var(--c-money); }
   .sec-tile-name { font-size:12.5px; font-weight:800; letter-spacing:-0.01em; }
 
-  .sec-tile-mid { position:relative; z-index:1; flex:1; display:flex; align-items:center; justify-content:center; }
-  .sec-ring { width:64px; height:64px; position:relative; flex-shrink:0; }
-  .sec-ring svg { width:64px; height:64px; }
-  .sec-ring .srt { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:5; }
-  .sec-ring .srf { fill:none; stroke-width:5; stroke-linecap:round; transform:rotate(-90deg); transform-origin:32px 32px; transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); }
-  .sec-ring .sr-pct { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; font-weight:800; color:var(--text-1); font-variant-numeric:tabular-nums; }
-  .sec-tile-bigicon { font-size:38px; }
+  .sec-tile-pct {
+    position:absolute; top:14px; right:14px; z-index:1;
+    font-family:var(--mono); font-weight:800; font-size:13px; font-variant-numeric:tabular-nums;
+    text-shadow:0 1px 6px rgba(0,0,0,0.55);
+  }
 
-  .sec-tile-stat { position:relative; z-index:1; font-family:var(--mono); font-size:10.5px; color:var(--text-2); font-variant-numeric:tabular-nums; text-align:center; }
+  .sec-tile-mid { position:relative; z-index:1; flex:1; }
+
+  .sec-tile-stat { position:relative; z-index:1; font-family:var(--mono); font-size:10.5px; color:var(--text-2); font-variant-numeric:tabular-nums; text-align:center; text-shadow:0 1px 4px rgba(0,0,0,0.4); }
 </style>
 </head>
 <body>
@@ -208,21 +210,17 @@ var HYG_GROUPS = [
   { id:'AM', label:'AM', items:['Warm water face rinse','Moisturise (Purito)','Brush teeth','Tongue scrape','Deodorant','Hair — leave-in + style'] },
   { id:'PM', label:'PM', items:['Shower','Cleanse (Anua)','Moisturise (Purito)','Brush teeth','Tongue scrape'] }
 ];
-function ringSvg(pct, colorVar, size){
-  var r = (size/2) - 4;
-  var c = 2 * Math.PI * r;
-  var off = c * (1 - Math.min(100,pct)/100);
-  return '<svg viewBox="0 0 '+size+' '+size+'">'+
-    '<circle class="srt" cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'"></circle>'+
-    '<circle class="srf" cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" stroke="'+colorVar+'" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'"></circle>'+
-    '</svg>';
-}
 
-/* ---------- BODY (purple) ---------- */
+/* ============================================================
+   SCORE BUILDERS — each returns { pct, life, line, extra }
+   pct/life are the planet's "life force" (life = pct/100)
+   ============================================================ */
+
+/* ---------- BODY (purple) — 4 strict all-or-nothing pillars ---------- */
 function buildBody(date){
   var s=storeGet('supps:'+date)||{}, taken=0, k;
   for(k in s){ if(s.hasOwnProperty(k) && s[k]) taken++; }
-  var suppsPct = taken/SUPPS_TOTAL;
+  var suppsHit = taken >= SUPPS_TOTAL;
 
   var gymDone = !!(storeGet('gym:'+date)||{}).done;
 
@@ -231,15 +229,16 @@ function buildBody(date){
 
   var stp=storeGet('steps:'+date)||{};
   var stepsCount = stp.count||0, goal = stepsGoal();
-  var stepsPct = Math.min(1, stepsCount/goal);
+  var stepsHit = stepsCount >= goal;
 
-  var pct = Math.round((suppsPct+(gymDone?1:0)+(sleepDone?1:0)+stepsPct)/4*100);
-  var line = (gymDone?'✓ Gym':'Gym —') + ' · ' + taken + '/' + SUPPS_TOTAL;
+  var pillars = (gymDone?1:0) + (suppsHit?1:0) + (stepsHit?1:0) + (sleepDone?1:0);
+  var pct = pillars * 25;
+  var line = pillars + '/4 pillars hit';
 
-  return { pct:pct, line:line };
+  return { pct:pct, life:pct/100, line:line, extra:{ pillars:pillars } };
 }
 
-/* ---------- LOOK (orange) ---------- */
+/* ---------- LOOK (orange) — hygiene done/11 ---------- */
 function buildLook(date){
   var h=storeGet('hygiene:'+date)||{};
   var done=0;
@@ -249,10 +248,10 @@ function buildLook(date){
     });
   });
   var pct = Math.round(done/HYG_TOTAL*100);
-  return { pct:pct, line: done+'/'+HYG_TOTAL };
+  return { pct:pct, life:pct/100, line: done+'/'+HYG_TOTAL, extra:{} };
 }
 
-/* ---------- LIFE (green) ---------- */
+/* ---------- LIFE (green) — today's due tasks done/due ---------- */
 function buildLife(date){
   var defs=storeGet('todos:defs'); if(!Array.isArray(defs)) defs=[];
   var wd=new Date(date+'T12:00').getDay();
@@ -261,46 +260,294 @@ function buildLife(date){
   var hdone=due.filter(function(t){ return comp[t.id]; }).length;
   var pct = due.length ? Math.round(hdone/due.length*100) : 100;
   var line = due.length ? (hdone+'/'+due.length+' tasks') : 'All clear';
-  return { pct:pct, line:line };
+  return { pct:pct, life:pct/100, line:line, extra:{ tasksDone:hdone, tasksTotal:due.length } };
 }
 
-/* ---------- MONEY (red) — launcher, no ring ---------- */
+/* ---------- MONEY (red) — did something today ---------- */
 function buildMoney(date){
-  var queue = storeGet('learn:queue'); if(!Array.isArray(queue)) queue=[];
-  var qDone = queue.filter(function(q){ return q.done; }).length;
-  var qTotal = queue.length;
-
   var trades = storeGet('trades:log'); if(!Array.isArray(trades)) trades=[];
-  var weekCount = 0;
-  trades.forEach(function(t){
-    if (!t.date) return;
-    var diff = dayDiff(t.date, date);
-    if (diff>=0 && diff<=6) weekCount++;
-  });
+  var tradeToday = trades.some(function(t){ return t.date === date; });
 
-  var line;
-  if (!qTotal && !trades.length){
-    line = 'Start your journey →';
-  } else {
-    line = qTotal ? (qDone+'/'+qTotal+' learn') : '';
-    var tradeLine = weekCount+' trade'+(weekCount===1?'':'s')+' wk';
-    line = line ? (line+' · '+tradeLine) : tradeLine;
+  var queue = storeGet('learn:queue'); if(!Array.isArray(queue)) queue=[];
+  var learnAny = queue.some(function(q){ return !!q.done; });
+
+  var hit = tradeToday || learnAny;
+  var pct = hit ? 100 : 0;
+  var line = (tradeToday && learnAny) ? 'Trade + learn ✓' :
+             tradeToday ? 'Trade logged ✓' :
+             learnAny ? 'Learn done ✓' : 'Nothing yet';
+
+  return { pct:pct, life:pct/100, line:line, extra:{ tradeToday:tradeToday, learnAny:learnAny } };
+}
+
+/* ============================================================
+   CANVAS DRAW FUNCTIONS — one "living planet" per domain.
+   Signature: draw(ctx, w, h, life, now, extra)
+   life is 0..1. now is a timestamp (ms) for animation phase.
+   ============================================================ */
+var COLOR_BODY  = [167,139,250];
+var COLOR_LOOK  = [251,146,60];
+var COLOR_LIFE  = [107,227,164];
+var COLOR_MONEY = [248,113,113];
+var COLOR_DIM   = [90,90,98];
+
+function rgba(c,a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
+function mixColor(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t]; }
+
+function drawBody(ctx, w, h, life, now, extra){
+  var cx=w/2, cy=h/2;
+  var pillars = extra.pillars || 0;
+  var minWH = Math.min(w,h);
+  var baseR = minWH*0.11;
+  var pulse = Math.sin(now*0.0025*(0.4+life*1.6))*0.5+0.5;
+  var coreR = baseR*(0.82+0.30*pulse*(0.3+life*0.7));
+  var coreColor = life>0.02 ? COLOR_BODY : COLOR_DIM;
+  var glowA = 0.10+0.45*life;
+
+  var grad = ctx.createRadialGradient(cx,cy,0,cx,cy,coreR*3.2);
+  grad.addColorStop(0, rgba(coreColor, glowA));
+  grad.addColorStop(1, rgba(coreColor, 0));
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(cx,cy,coreR*3.2,0,Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = rgba(coreColor, 0.55+0.35*life);
+  ctx.beginPath(); ctx.arc(cx,cy,coreR,0,Math.PI*2); ctx.fill();
+
+  for (var i=0;i<pillars;i++){
+    var orbitR = coreR*1.9 + i*(minWH*0.085);
+    var speed = 0.0006*(1+i*0.35);
+    var ang = now*speed + i*1.9;
+    var px = cx+Math.cos(ang)*orbitR, py = cy+Math.sin(ang)*orbitR*0.62;
+    ctx.strokeStyle = rgba(COLOR_BODY, 0.10);
+    ctx.beginPath(); ctx.ellipse(cx,cy,orbitR,orbitR*0.62,0,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle = rgba(COLOR_BODY, 0.55+0.35*life);
+    ctx.beginPath(); ctx.arc(px,py,2.6,0,Math.PI*2); ctx.fill();
   }
-  return { pct:null, line:line };
+}
+
+function drawLook(ctx, w, h, life, now, extra){
+  var horizonY = h*0.72;
+  var minWH = Math.min(w,h);
+
+  var skyGrad = ctx.createLinearGradient(0,0,0,horizonY);
+  skyGrad.addColorStop(0, rgba(mixColor([18,12,18],[70,32,18],life), 0.45));
+  skyGrad.addColorStop(1, rgba(mixColor([38,20,16],COLOR_LOOK,life), 0.5));
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0,0,w,horizonY);
+
+  ctx.fillStyle = 'rgba(10,7,5,0.32)';
+  ctx.fillRect(0,horizonY,w,h-horizonY);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.beginPath(); ctx.moveTo(0,horizonY); ctx.lineTo(w,horizonY); ctx.stroke();
+
+  var sunX = w/2;
+  var sunYbottom = horizonY + minWH*0.14;
+  var sunYtop = h*0.16;
+  var sunY = sunYbottom + (sunYtop-sunYbottom)*life;
+  var sunR = minWH*0.09 + life*minWH*0.04;
+
+  var glowGrad = ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,sunR*3);
+  glowGrad.addColorStop(0, rgba(COLOR_LOOK, 0.10+0.45*life));
+  glowGrad.addColorStop(1, rgba(COLOR_LOOK, 0));
+  ctx.fillStyle = glowGrad;
+  ctx.beginPath(); ctx.arc(sunX,sunY,sunR*3,0,Math.PI*2); ctx.fill();
+
+  if (life>0.05){
+    var rays=8;
+    for (var i=0;i<rays;i++){
+      var ang = (i/rays)*Math.PI*2 + now*0.0002;
+      var rlen = sunR*(1.4+life*1.6);
+      ctx.strokeStyle = rgba(COLOR_LOOK, 0.08+0.22*life);
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(sunX+Math.cos(ang)*sunR*1.1, sunY+Math.sin(ang)*sunR*1.1);
+      ctx.lineTo(sunX+Math.cos(ang)*rlen, sunY+Math.sin(ang)*rlen);
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = rgba(COLOR_LOOK, 0.5+0.4*life);
+  ctx.beginPath(); ctx.arc(sunX,sunY,sunR,0,Math.PI*2); ctx.fill();
+
+  if (life>=0.85){
+    for (var j=0;j<5;j++){
+      var cyc = (now*0.0006 + j*0.7) % 1;
+      var sx = w*0.18 + j*(w*0.16);
+      var sy = horizonY - cyc*(horizonY-h*0.1);
+      var a = (1-cyc)*0.55;
+      ctx.fillStyle = rgba([255,240,210], a);
+      ctx.beginPath(); ctx.arc(sx,sy,1.6,0,Math.PI*2); ctx.fill();
+    }
+  }
+}
+
+function drawLife(ctx, w, h, life, now, extra){
+  var groundY = h*0.82;
+  var minWH = Math.min(w,h);
+
+  ctx.fillStyle = 'rgba(8,12,8,0.22)';
+  ctx.fillRect(0,groundY,w,h-groundY);
+
+  var sx=w*0.82, sy=h*0.18, sr=minWH*0.055;
+  var sgrad = ctx.createRadialGradient(sx,sy,0,sx,sy,sr*2.4);
+  sgrad.addColorStop(0, rgba([255,224,140], 0.08+0.3*life));
+  sgrad.addColorStop(1, rgba([255,224,140], 0));
+  ctx.fillStyle = sgrad;
+  ctx.beginPath(); ctx.arc(sx,sy,sr*2.4,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = rgba([255,224,140], 0.45+0.35*life);
+  ctx.beginPath(); ctx.arc(sx,sy,sr,0,Math.PI*2); ctx.fill();
+
+  var tasksDone = extra.tasksDone||0, tasksTotal = extra.tasksTotal||0;
+  var plantCount = tasksTotal>0 ? Math.min(6,tasksDone) : (life>=1 ? 3 : 0);
+  var swayAmt = 2+life*6;
+
+  if (plantCount===0){
+    var bx=w*0.5;
+    ctx.strokeStyle = rgba(COLOR_LIFE, 0.45);
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(bx,groundY); ctx.lineTo(bx,groundY-6); ctx.stroke();
+  } else {
+    var slotW = w/(plantCount+1);
+    for (var i=0;i<plantCount;i++){
+      var px = slotW*(i+1);
+      var sway = Math.sin(now*0.0018 + i*1.1)*swayAmt;
+      var stemH = minWH*(0.16+0.05*(i%3));
+      ctx.strokeStyle = rgba(COLOR_LIFE, 0.5+0.4*life);
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(px, groundY);
+      ctx.quadraticCurveTo(px+sway*0.5, groundY-stemH*0.5, px+sway, groundY-stemH);
+      ctx.stroke();
+      ctx.fillStyle = rgba(COLOR_LIFE, 0.5+0.35*life);
+      ctx.beginPath();
+      ctx.ellipse(px+sway*0.7, groundY-stemH*0.6, 5, 2.6, sway*0.05, 0, Math.PI*2);
+      ctx.fill();
+      if (life>=1 && i===plantCount-1){
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.beginPath(); ctx.arc(px+sway, groundY-stemH, 3.2, 0, Math.PI*2); ctx.fill();
+      }
+    }
+  }
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(w,groundY); ctx.stroke();
+}
+
+function drawMoney(ctx, w, h, life, now, extra){
+  var minWH = Math.min(w,h);
+  var baseY = h*0.78;
+  var candles = 10;
+  var cw = w/(candles*1.6);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.beginPath(); ctx.moveTo(0,baseY); ctx.lineTo(w,baseY); ctx.stroke();
+
+  for (var i=0;i<candles;i++){
+    var slow = now*0.00025;
+    var n = Math.sin(i*1.7+slow)*0.5+0.5;
+    var trend = (i/candles)*life;
+    var bodyH = 6+n*14+trend*18;
+    var x = (i+0.6)*(w/candles);
+    var up = (Math.sin(i*2.3+slow*1.3)+life*0.6) > 0.15;
+    var col = up ? COLOR_LIFE : COLOR_MONEY;
+    var topY = baseY - bodyH - trend*(minWH*0.12);
+    ctx.fillStyle = rgba(col, 0.45+0.3*life);
+    ctx.fillRect(x-cw/2, topY, cw, bodyH);
+    ctx.strokeStyle = rgba(col, 0.6);
+    ctx.beginPath(); ctx.moveTo(x, topY-4); ctx.lineTo(x, topY+bodyH+4); ctx.stroke();
+  }
+
+  var fx=w/2, fy=baseY-minWH*0.34;
+  var flameH = minWH*(0.05+life*0.22);
+  var flick = Math.sin(now*0.01)*0.15+1;
+  ctx.save();
+  ctx.translate(fx,fy);
+  var fgrad = ctx.createLinearGradient(0,flameH*flick,0,-flameH*0.3);
+  fgrad.addColorStop(0, rgba(COLOR_MONEY, 0.12+0.45*life));
+  fgrad.addColorStop(0.5, rgba([251,191,110], 0.4+0.35*life));
+  fgrad.addColorStop(1, rgba([255,235,160], 0.5*life));
+  ctx.fillStyle = fgrad;
+  ctx.beginPath();
+  ctx.moveTo(0, flameH*flick);
+  ctx.quadraticCurveTo(minWH*0.09, flameH*0.1, 0, -flameH*flick);
+  ctx.quadraticCurveTo(-minWH*0.09, flameH*0.1, 0, flameH*flick);
+  ctx.fill();
+  ctx.restore();
+
+  if (life>=0.9){
+    ctx.strokeStyle = rgba(COLOR_LIFE, 0.65);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w*0.2, baseY-6);
+    ctx.lineTo(w*0.8, baseY-minWH*0.3);
+    ctx.stroke();
+  }
 }
 
 /* ---------- SECTIONS ---------- */
 var SECTIONS = [
-  { id:'body',  sec:'body',  href:'physical.html',   icon:'ti-activity',       name:'Body',  ring:true,  build:buildBody  },
-  { id:'look',  sec:'look',  href:'appearance.html', icon:'ti-sparkles',       name:'Look',  ring:true,  build:buildLook  },
-  { id:'life',  sec:'life',  href:'life.html',       icon:'ti-home',           name:'Life',  ring:true,  build:buildLife  },
-  { id:'money', sec:'money', href:'money.html',      icon:'ti-currency-pound', name:'Money', ring:false, build:buildMoney }
+  { id:'body',  sec:'body',  href:'physical.html',   icon:'ti-activity',       name:'Body',  build:buildBody,  draw:drawBody  },
+  { id:'look',  sec:'look',  href:'appearance.html', icon:'ti-sparkles',       name:'Look',  build:buildLook,  draw:drawLook  },
+  { id:'life',  sec:'life',  href:'life.html',       icon:'ti-home',           name:'Life',  build:buildLife,  draw:drawLife  },
+  { id:'money', sec:'money', href:'money.html',      icon:'ti-currency-pound', name:'Money', build:buildMoney, draw:drawMoney }
 ];
+
+/* ---------- canvas sizing / render registry ---------- */
+var PLANETS = {};
+var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+var rafHandle = null;
+
+function fitCanvas(canvas){
+  var rect = canvas.getBoundingClientRect();
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var w = Math.max(1, Math.round(rect.width));
+  var h = Math.max(1, Math.round(rect.height));
+  canvas.width = w*dpr;
+  canvas.height = h*dpr;
+  var ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return { ctx:ctx, w:w, h:h };
+}
+
+function drawAllOnce(now){
+  now = now || (window.performance && performance.now ? performance.now() : Date.now());
+  var sec;
+  for (sec in PLANETS){
+    if (!PLANETS.hasOwnProperty(sec)) continue;
+    var p = PLANETS[sec];
+    p.ctx.clearRect(0,0,p.w,p.h);
+    p.draw(p.ctx, p.w, p.h, p.life, now, p.extra);
+  }
+}
+
+function animLoop(now){
+  drawAllOnce(now);
+  rafHandle = requestAnimationFrame(animLoop);
+}
+function startLoop(){
+  if (reduceMotion){ drawAllOnce(); return; }
+  if (rafHandle) return;
+  rafHandle = requestAnimationFrame(animLoop);
+}
+
+function refitAll(){
+  var sec;
+  for (sec in PLANETS){
+    if (!PLANETS.hasOwnProperty(sec)) continue;
+    var p = PLANETS[sec];
+    var fit = fitCanvas(p.canvas);
+    p.ctx = fit.ctx; p.w = fit.w; p.h = fit.h;
+  }
+  drawAllOnce();
+}
+window.addEventListener('resize', refitAll);
 
 function renderStats(){
   var grid = document.getElementById('secGrid');
   var date = getActiveDateString();
   grid.innerHTML = '';
+  PLANETS = {};
 
   SECTIONS.forEach(function(s, idx){
     var res = s.build(date);
@@ -309,21 +556,32 @@ function renderStats(){
     a.setAttribute('data-sec', s.sec);
     a.href = s.href;
 
-    var midHtml;
-    if (s.ring){
-      midHtml = '<div class="sec-ring">'+ringSvg(res.pct, 'var(--c-'+s.sec+')', 64)+'<div class="sr-pct">'+res.pct+'%</div></div>';
-    } else {
-      midHtml = '<i class="ti '+s.icon+' sec-tile-bigicon"></i>';
-    }
+    var canvas = document.createElement('canvas');
+    canvas.className = 'sec-tile-canvas';
 
-    a.innerHTML =
-      '<div class="sec-tile-top"><i class="ti '+s.icon+' sec-tile-icon"></i><span class="sec-tile-name">'+s.name+'</span></div>'+
-      '<div class="sec-tile-mid">'+midHtml+'</div>'+
-      '<div class="sec-tile-stat">'+res.line+'</div>';
+    var topEl = document.createElement('div'); topEl.className = 'sec-tile-top';
+    topEl.innerHTML = '<i class="ti '+s.icon+' sec-tile-icon"></i><span class="sec-tile-name">'+s.name+'</span>';
 
-    if (s.ring && res.pct >= 80) a.classList.add('lo-pulse');
+    var pctEl = document.createElement('div'); pctEl.className = 'sec-tile-pct';
+    pctEl.textContent = res.pct + '%';
+
+    var midEl = document.createElement('div'); midEl.className = 'sec-tile-mid';
+
+    var statEl = document.createElement('div'); statEl.className = 'sec-tile-stat';
+    statEl.textContent = res.line;
+
+    a.appendChild(canvas);
+    a.appendChild(topEl);
+    a.appendChild(pctEl);
+    a.appendChild(midEl);
+    a.appendChild(statEl);
+
+    if (res.life >= 0.8) a.classList.add('lo-pulse');
     a.style.transitionDelay = (idx*80)+'ms';
     grid.appendChild(a);
+
+    var fit = fitCanvas(canvas);
+    PLANETS[s.sec] = { ctx:fit.ctx, w:fit.w, h:fit.h, canvas:canvas, life:res.life, extra:res.extra||{}, draw:s.draw };
   });
 
   requestAnimationFrame(function(){
@@ -332,6 +590,9 @@ function renderStats(){
       tiles.forEach(function(t){ t.classList.add('lo-visible'); });
     });
   });
+
+  drawAllOnce();
+  startLoop();
 }
 
 /* ---------- GOAL TICKER ---------- */
