@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Car · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .car-head { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px; }
+  .car-head i { color:var(--accent); font-size:22px; }
+  .car-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
+  .spec-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:4px; }
+  .spec { padding:12px 14px; border-radius:12px; background:var(--card); border:1px solid var(--hair); }
+  .spec-label { font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); margin-bottom:4px; }
+  .spec-val { font-size:14px; font-weight:700; color:var(--text-1); }
+  .up-list { display:flex; flex-direction:column; gap:8px; }
+  .up-row { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:var(--radius);
+    background:var(--card); border:1px solid var(--hair); cursor:pointer; transition:background .16s; }
+  .up-row:hover { background:var(--card-2); }
+  .up-cb { width:24px; height:24px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.18);
+    background:rgba(0,0,0,0.2); flex-shrink:0; position:relative; transition:background .16s, border-color .16s; }
+  .up-row.done .up-cb { background:var(--success); border-color:var(--success); box-shadow:0 0 12px rgba(107,227,164,0.4); }
+  .up-row.done .up-cb::after { content:''; position:absolute; left:8px; top:3px; width:6px; height:11px;
+    border:solid #0a0a0b; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  .up-name { font-size:14px; font-weight:700; color:var(--text-1); }
+  .up-row.done .up-name { color:var(--text-3); text-decoration:line-through; }
+  .up-detail { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
+  .up-score { font-family:var(--mono); font-size:11px; color:var(--text-3); text-align:center; margin-top:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="car-head"><i class="ti ti-car"></i> Audi A1</div>
+    <div class="car-sub">2015/16 · 8X · 3-door · 1.0 TFSI · Manual · Grey</div>
+    <div class="spec-grid">
+      <div class="spec"><div class="spec-label">Engine</div><div class="spec-val">1.0 TFSI</div></div>
+      <div class="spec"><div class="spec-label">Gearbox</div><div class="spec-val">Manual</div></div>
+      <div class="spec"><div class="spec-label">Doors</div><div class="spec-val">3-door</div></div>
+      <div class="spec"><div class="spec-label">Infotainment</div><div class="spec-val">MMI 3G+ HN+</div></div>
+    </div>
+  </div>
+  <div class="section-title">Upgrades</div>
+  <div class="up-list" id="upList"></div>
+  <div class="up-score" id="upScore"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+
+var UPGRADES = [
+  { id:'screen',  name:'12.3" CarPlay Screen', detail:'Linux-based HN variant for MMI 3G+ HN+' },
+  { id:'cluster', name:'Digital Instrument Cluster', detail:'Replace analogue cluster' },
+  { id:'camera',  name:'Reverse Camera', detail:'GreenYi boot handle · AHD 1080P' },
+  { id:'fspk',    name:'Front Speakers', detail:'200mm · upgraded drivers' },
+  { id:'rspk',    name:'Rear Speakers', detail:'165mm · shallow-mount for 3-door' }
+];
+
+function loadState(){ return storeGet('car:upgrades') || {}; }
+function saveState(s){ localStorage.setItem('car:upgrades', JSON.stringify(s)); }
+
+function render(){
+  var state = loadState();
+  var list = document.getElementById('upList');
+  list.innerHTML = '';
+  var total = UPGRADES.length, done = 0;
+  UPGRADES.forEach(function(up){
+    var isDone = !!state[up.id];
+    if(isDone) done++;
+    var row = document.createElement('div');
+    row.className = 'up-row' + (isDone ? ' done' : '');
+    var cb = document.createElement('span'); cb.className = 'up-cb';
+    var info = document.createElement('div'); info.style.cssText='flex:1;';
+    var nm = document.createElement('div'); nm.className = 'up-name'; nm.textContent = up.name;
+    var dt = document.createElement('div'); dt.className = 'up-detail'; dt.textContent = up.detail;
+    info.appendChild(nm); info.appendChild(dt);
+    row.appendChild(cb); row.appendChild(info);
+    row.addEventListener('click', function(){
+      var s = loadState();
+      if(s[up.id]) delete s[up.id]; else s[up.id] = true;
+      saveState(s); render();
+    });
+    list.appendChild(row);
+  });
+  document.getElementById('upScore').textContent = done + '/' + total + ' upgrades done';
+}
+render();
+window.addEventListener('lo-sync-applied', render);
+window.addEventListener('focus', render);
+</script>
+</body>
+</html>

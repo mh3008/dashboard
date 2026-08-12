@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>House · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .hs-head { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px; }
+  .hs-head i { color:var(--accent); font-size:22px; }
+  .hs-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
+  .spec-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:4px; }
+  .spec { padding:12px 14px; border-radius:12px; background:var(--card); border:1px solid var(--hair); }
+  .spec-label { font-family:var(--mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); margin-bottom:4px; }
+  .spec-val { font-size:14px; font-weight:700; color:var(--text-1); }
+  .hs-links { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .hs-link { display:flex; flex-direction:column; align-items:center; gap:10px; padding:22px 14px;
+    border-radius:var(--radius); background:var(--card); border:1px solid var(--hair);
+    cursor:pointer; text-decoration:none; transition:background .2s, border-color .2s, transform .12s; }
+  .hs-link:hover { background:var(--card-2); border-color:rgba(249,115,22,0.3); }
+  .hs-link:active { transform:scale(0.97); }
+  .hs-link i { font-size:28px; color:var(--accent-lt); }
+  .hs-link span { font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-1); }
+  .hs-note { font-family:var(--mono); font-size:10px; color:var(--text-3); text-align:center; margin-top:18px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="hs-head"><i class="ti ti-building"></i> House</div>
+    <div class="hs-sub">Fanny St · Cathays · Cardiff</div>
+    <div class="spec-grid">
+      <div class="spec"><div class="spec-label">Type</div><div class="spec-val">6-Bed Student</div></div>
+      <div class="spec"><div class="spec-label">Room</div><div class="spec-val">430×480cm</div></div>
+      <div class="spec"><div class="spec-label">Internet</div><div class="spec-val">Virgin Media</div></div>
+      <div class="spec"><div class="spec-label">Bills</div><div class="spec-val">Student Energy</div></div>
+    </div>
+  </div>
+  <div class="section-title">Quick Links</div>
+  <div class="hs-links">
+    <a class="hs-link" href="todos.html"><i class="ti ti-checkbox"></i><span>Tasks</span></a>
+    <a class="hs-link" href="plants.html"><i class="ti ti-plant-2"></i><span>Plants</span></a>
+  </div>
+  <div class="hs-note">Bills via Student Energy app.<br>Internet: Virgin Media + BT powerline adapters.</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+</body>
+</html>

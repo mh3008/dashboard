@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Goals · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .gl-head { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px; }
+  .gl-head i { color:var(--accent); font-size:22px; }
+  .gl-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:16px; }
+  .gl-score { display:flex; align-items:baseline; gap:8px; margin-bottom:18px; }
+  .gl-score .n { font-size:40px; font-weight:800; color:var(--accent-lt); line-height:1; }
+  .gl-score .u { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .gl-list { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .gl-row { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:var(--radius);
+    background:var(--card); border:1px solid var(--hair); cursor:pointer; transition:background .16s; }
+  .gl-row:hover { background:var(--card-2); }
+  .gl-cb { width:24px; height:24px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.18);
+    background:rgba(0,0,0,0.2); flex-shrink:0; position:relative; transition:background .16s, border-color .16s; }
+  .gl-row.done .gl-cb { background:var(--success); border-color:var(--success); box-shadow:0 0 12px rgba(107,227,164,0.4); }
+  .gl-row.done .gl-cb::after { content:''; position:absolute; left:8px; top:3px; width:6px; height:11px;
+    border:solid #0a0a0b; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  .gl-txt { font-size:14px; font-weight:700; color:var(--text-1); flex:1; }
+  .gl-row.done .gl-txt { color:var(--text-3); text-decoration:line-through; }
+  .gl-del { width:28px; height:28px; border-radius:8px; border:none; background:rgba(255,107,107,0.12);
+    color:var(--danger); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity .16s; flex-shrink:0; }
+  .gl-row:hover .gl-del { opacity:1; }
+  .gl-empty { text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px;
+    padding:24px; border:1px dashed var(--hair); border-radius:var(--radius); }
+  .gl-add { display:flex; gap:8px; }
+  .gl-input { flex:1; padding:12px 14px; border-radius:var(--radius); border:1px solid var(--hair);
+    background:var(--card); color:var(--text-1); font-size:14px; font-family:var(--font); outline:none; }
+  .gl-input::placeholder { color:var(--text-3); }
+  .gl-input:focus { border-color:rgba(249,115,22,0.4); }
+  .gl-btn { padding:12px 18px; border-radius:var(--radius); border:none; background:var(--accent);
+    color:#0a0a0b; font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0; }
+  .gl-btn:active { transform:scale(0.96); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="gl-head"><i class="ti ti-target-arrow"></i> Daily Goals</div>
+    <div class="gl-sub" id="glDate">—</div>
+    <div class="gl-score"><span class="n" id="glDone">0</span><span class="u">/ <span id="glTotal">0</span> done</span></div>
+  </div>
+  <div class="section-title">Goals</div>
+  <div class="gl-list" id="glList"></div>
+  <div class="gl-add">
+    <input class="gl-input" id="glIn" type="text" placeholder="Add a goal for today…" maxlength="120">
+    <button class="gl-btn" id="glBtn">Add</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function activeDate(){
+  var d = new Date();
+  if (d.getHours() < 6) d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+var date = activeDate();
+function loadGoals(){ return storeGet('goals:'+date) || []; }
+function saveGoals(g){ localStorage.setItem('goals:'+date, JSON.stringify(g)); }
+
+function render(){
+  var goals = loadGoals();
+  var list = document.getElementById('glList');
+  var done = goals.filter(function(g){ return g.done; }).length;
+  document.getElementById('glDone').textContent = done;
+  document.getElementById('glTotal').textContent = goals.length;
+  document.getElementById('glDate').textContent = date;
+  list.innerHTML = '';
+  if (!goals.length){
+    list.innerHTML = '<div class="gl-empty">No goals yet — add one below.</div>';
+    return;
+  }
+  goals.forEach(function(g, i){
+    var row = document.createElement('div');
+    row.className = 'gl-row' + (g.done ? ' done' : '');
+    var cb = document.createElement('span'); cb.className = 'gl-cb';
+    var txt = document.createElement('span'); txt.className = 'gl-txt'; txt.textContent = g.text;
+    var del = document.createElement('button'); del.className = 'gl-del';
+    del.innerHTML = '<i class="ti ti-x"></i>';
+    del.addEventListener('click', function(e){
+      e.stopPropagation();
+      var gl = loadGoals(); gl.splice(i, 1); saveGoals(gl); render();
+    });
+    row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
+    row.addEventListener('click', function(){
+      var gl = loadGoals(); gl[i].done = !gl[i].done; saveGoals(gl); render();
+    });
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('glBtn').addEventListener('click', function(){
+  var input = document.getElementById('glIn');
+  var text = (input.value || '').trim();
+  if (!text) return;
+  var goals = loadGoals();
+  goals.push({ id:uid(), text:text, done:false });
+  saveGoals(goals);
+  input.value = '';
+  render();
+});
+document.getElementById('glIn').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') document.getElementById('glBtn').click();
+});
+
+render();
+window.addEventListener('lo-sync-applied', render);
+window.addEventListener('focus', render);
+</script>
+</body>
+</html>

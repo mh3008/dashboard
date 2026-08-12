@@ -29,7 +29,7 @@
     'learn:', 'reading:',
     'social:', 'timers:', 'posture:', 'football:',
     'countdowns:', 'weekly:', 'goal_streak_v1',
-    'plants:'
+    'plants:', 'car:'
   ];
 
   function matches(k) {

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Learn · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .lr-head { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; margin-bottom:4px; }
+  .lr-head i { color:var(--accent); font-size:22px; }
+  .lr-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
+  .lr-score { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; }
+  .lr-score .n { font-size:40px; font-weight:800; color:var(--accent-lt); line-height:1; }
+  .lr-score .u { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .lr-list { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .lr-row { display:flex; align-items:center; gap:10px; padding:14px 16px; border-radius:var(--radius);
+    background:var(--card); border:1px solid var(--hair); transition:background .16s; }
+  .lr-row:hover { background:var(--card-2); }
+  .lr-num { font-family:var(--mono); font-size:11px; font-weight:800; color:var(--text-3); width:20px; text-align:center; flex-shrink:0; }
+  .lr-cb { width:24px; height:24px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.18);
+    background:rgba(0,0,0,0.2); flex-shrink:0; position:relative; cursor:pointer; transition:background .16s, border-color .16s; }
+  .lr-row.done .lr-cb { background:var(--success); border-color:var(--success); box-shadow:0 0 12px rgba(107,227,164,0.4); }
+  .lr-row.done .lr-cb::after { content:''; position:absolute; left:8px; top:3px; width:6px; height:11px;
+    border:solid #0a0a0b; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  .lr-info { flex:1; }
+  .lr-name { font-size:14px; font-weight:700; color:var(--text-1); }
+  .lr-row.done .lr-name { color:var(--text-3); text-decoration:line-through; }
+  .lr-acts { display:flex; gap:4px; flex-shrink:0; }
+  .lr-act { width:28px; height:28px; border-radius:8px; border:none; background:rgba(255,255,255,0.05);
+    color:var(--text-3); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .lr-act:hover { background:rgba(255,255,255,0.1); color:var(--text-1); }
+  .lr-act.del { background:rgba(255,107,107,0.12); color:var(--danger); }
+  .lr-empty { text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px;
+    padding:24px; border:1px dashed var(--hair); border-radius:var(--radius); }
+  .lr-add { display:flex; gap:8px; }
+  .lr-input { flex:1; padding:12px 14px; border-radius:var(--radius); border:1px solid var(--hair);
+    background:var(--card); color:var(--text-1); font-size:14px; font-family:var(--font); outline:none; }
+  .lr-input::placeholder { color:var(--text-3); }
+  .lr-input:focus { border-color:rgba(249,115,22,0.4); }
+  .lr-btn { padding:12px 18px; border-radius:var(--radius); border:none; background:var(--accent);
+    color:#0a0a0b; font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0; }
+  .lr-btn:active { transform:scale(0.96); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="lr-head"><i class="ti ti-books"></i> Learn Queue</div>
+    <div class="lr-sub">Prioritised learning — money lane</div>
+    <div class="lr-score"><span class="n" id="lrDone">0</span><span class="u">/ <span id="lrTotal">0</span> completed</span></div>
+  </div>
+  <div class="section-title">Queue</div>
+  <div class="lr-list" id="lrList"></div>
+  <div class="lr-add">
+    <input class="lr-input" id="lrIn" type="text" placeholder="Add a learning topic…" maxlength="120">
+    <button class="lr-btn" id="lrBtn">Add</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function loadQueue(){ return storeGet('learn:queue') || []; }
+function saveQueue(q){ localStorage.setItem('learn:queue', JSON.stringify(q)); }
+
+function render(){
+  var queue = loadQueue();
+  var list = document.getElementById('lrList');
+  var done = queue.filter(function(q){ return q.done; }).length;
+  document.getElementById('lrDone').textContent = done;
+  document.getElementById('lrTotal').textContent = queue.length;
+  list.innerHTML = '';
+  if (!queue.length){
+    list.innerHTML = '<div class="lr-empty">Nothing in the queue — add a topic below.</div>';
+    return;
+  }
+  queue.forEach(function(item, i){
+    var row = document.createElement('div');
+    row.className = 'lr-row' + (item.done ? ' done' : '');
+
+    var num = document.createElement('span'); num.className = 'lr-num'; num.textContent = i+1;
+    var cb = document.createElement('span'); cb.className = 'lr-cb';
+    cb.addEventListener('click', function(e){
+      e.stopPropagation();
+      var q = loadQueue(); q[i].done = !q[i].done; saveQueue(q); render();
+    });
+    var info = document.createElement('div'); info.className = 'lr-info';
+    var nm = document.createElement('div'); nm.className = 'lr-name'; nm.textContent = item.name;
+    info.appendChild(nm);
+
+    var acts = document.createElement('div'); acts.className = 'lr-acts';
+    if(i > 0){
+      var up = document.createElement('button'); up.className = 'lr-act';
+      up.innerHTML = '<i class="ti ti-arrow-up"></i>';
+      up.addEventListener('click', function(e){
+        e.stopPropagation();
+        var q = loadQueue(); var tmp = q[i]; q[i] = q[i-1]; q[i-1] = tmp; saveQueue(q); render();
+      });
+      acts.appendChild(up);
+    }
+    if(i < queue.length - 1){
+      var dn = document.createElement('button'); dn.className = 'lr-act';
+      dn.innerHTML = '<i class="ti ti-arrow-down"></i>';
+      dn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var q = loadQueue(); var tmp = q[i]; q[i] = q[i+1]; q[i+1] = tmp; saveQueue(q); render();
+      });
+      acts.appendChild(dn);
+    }
+    var del = document.createElement('button'); del.className = 'lr-act del';
+    del.innerHTML = '<i class="ti ti-x"></i>';
+    del.addEventListener('click', function(e){
+      e.stopPropagation();
+      var q = loadQueue(); q.splice(i,1); saveQueue(q); render();
+    });
+    acts.appendChild(del);
+
+    row.appendChild(num); row.appendChild(cb); row.appendChild(info); row.appendChild(acts);
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('lrBtn').addEventListener('click', function(){
+  var input = document.getElementById('lrIn');
+  var text = (input.value || '').trim();
+  if (!text) return;
+  var queue = loadQueue();
+  queue.push({ id:uid(), name:text, done:false });
+  saveQueue(queue);
+  input.value = '';
+  render();
+});
+document.getElementById('lrIn').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') document.getElementById('lrBtn').click();
+});
+
+render();
+window.addEventListener('lo-sync-applied', render);
+window.addEventListener('focus', render);
+</script>
+</body>
+</html>
