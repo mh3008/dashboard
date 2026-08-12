@@ -973,16 +973,30 @@ function drawAllOnce(now){
       p.lastShownPct = rounded;
     }
 
-    p.ctx.clearRect(0,0,p.w,p.h);
     /* visuals always render at full richness — real p.life still drives the pct text (above) and the lo-pulse class (in updateStats) */
-    p.draw(p.ctx, p.w, p.h, 1, now, p.extra, p.state, p.burst);
+    try {
+      p.ctx.clearRect(0,0,p.w,p.h);
+      p.draw(p.ctx, p.w, p.h, 1, now, p.extra, p.state, p.burst);
+    } catch (err) {
+      p.ctx.clearRect(0,0,p.w,p.h);
+      p.ctx.fillStyle = 'rgba(255,80,80,0.95)';
+      p.ctx.font = '10px monospace';
+      var msg = (err && err.message ? err.message : String(err));
+      var words = msg.split(' '), lineTxt = '', yy = 16, wi;
+      for (wi=0; wi<words.length; wi++){
+        var test = lineTxt ? lineTxt+' '+words[wi] : words[wi];
+        if (test.length > 22){ p.ctx.fillText(lineTxt, 8, yy); yy += 12; lineTxt = words[wi]; }
+        else { lineTxt = test; }
+      }
+      if (lineTxt) p.ctx.fillText(lineTxt, 8, yy);
+    }
 
     if (p.burst && now-p.burst.start > 900) p.burst = null;
   }
 }
 
 function animLoop(now){
-  drawAllOnce(now);
+  try { drawAllOnce(now); } catch (e) {}
   rafHandle = requestAnimationFrame(animLoop);
 }
 function startLoop(){
