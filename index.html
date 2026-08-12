@@ -288,7 +288,6 @@ var COLOR_BODY  = [167,139,250];
 var COLOR_LOOK  = [251,146,60];
 var COLOR_LIFE  = [107,227,164];
 var COLOR_MONEY = [248,113,113];
-var COLOR_DIM   = [90,90,98];
 
 function rgba(c,a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
 function mixColor(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t]; }
@@ -363,13 +362,13 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
   if (reduceMotion) now = 0;
   var cx=w/2, cy=h/2, minWH=Math.min(w,h), i;
 
-  /* background: starfield */
+  /* background: starfield — always bright and twinkling */
   for (i=0;i<state.stars.length;i++){
     var st = state.stars[i];
     var tw = Math.sin(now*0.0015*st.speed + st.phase)*0.5+0.5;
-    var a = (0.14+0.5*tw)*(0.45+0.55*life) + 0.10*(1-life);
+    var a = 0.34+0.5*tw;
     ctx.fillStyle = rgba([220,220,255], a*0.8);
-    ctx.beginPath(); ctx.arc(st.x*w, st.y*h, st.r*(0.7+0.5*life), 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(st.x*w, st.y*h, st.r, 0, Math.PI*2); ctx.fill();
   }
 
   /* idle event: shooting star */
@@ -393,31 +392,32 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
     }
   }
 
-  /* midground: bloom halo + heartbeat (double-beat) core */
-  var coreColor = life>0.02 ? COLOR_BODY : COLOR_DIM;
+  /* midground: bloom halo + heartbeat (double-beat) core — always the real purple, never grey */
+  var coreColor = COLOR_BODY;
   var baseR = minWH*0.115;
   var cyc = (now*0.0009) % 1;
   var beat1 = Math.exp(-Math.pow((cyc-0.08)*14,2));
   var beat2 = Math.exp(-Math.pow((cyc-0.22)*14,2));
   var beatAmt = Math.max(beat1,beat2);
-  var coreR = baseR*(0.78+0.22*(0.3+life*0.7)) + baseR*0.35*beatAmt*(0.3+life*0.9);
+  var coreR = baseR*(0.95+0.15*life) + baseR*0.35*beatAmt*(0.65+0.35*life);
 
-  bloom(ctx, cx, cy, coreR*3.4, coreColor, 0.08+0.4*life);
+  bloom(ctx, cx, cy, coreR*3.4, coreColor, 0.28+0.20*life);
 
   /* faint crackle texture */
   for (i=0;i<6;i++){
     var nAng = (i/6)*Math.PI*2 + now*0.0004;
-    ctx.fillStyle = rgba([255,255,255], 0.05+0.1*life);
+    ctx.fillStyle = rgba([255,255,255], 0.12+0.08*life);
     ctx.beginPath(); ctx.arc(cx+Math.cos(nAng)*coreR*0.6, cy+Math.sin(nAng)*coreR*0.6, 1, 0, Math.PI*2); ctx.fill();
   }
 
-  ctx.fillStyle = rgba(coreColor, 0.5+0.4*life+0.15*beatAmt);
+  ctx.fillStyle = rgba(coreColor, 0.58+0.32*life+0.15*beatAmt);
   ctx.beginPath(); ctx.arc(cx,cy,coreR,0,Math.PI*2); ctx.fill();
 
-  /* foreground: orbiters with comet trails, one per completed pillar */
+  /* foreground: orbiters with comet trails — 2 ambient always, +1 per completed pillar */
   var pillars = extra.pillars||0;
-  var tint = [ [200,170,255],[170,200,255],[255,180,220],[190,255,210] ];
-  for (i=0;i<pillars;i++){
+  var orbiterCount = 2 + pillars;
+  var tint = [ [200,170,255],[170,200,255],[255,180,220],[190,255,210],[220,190,255],[180,220,255] ];
+  for (i=0;i<orbiterCount;i++){
     var orbitR = coreR*2.0 + i*(minWH*0.085);
     var ang = now*0.0006*(1+i*0.35) + i*1.9;
     var px = cx+Math.cos(ang)*orbitR, py = cy+Math.sin(ang)*orbitR*0.62;
@@ -426,15 +426,16 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
     ctx.beginPath(); ctx.ellipse(cx,cy,orbitR,orbitR*0.62,0,0,Math.PI*2); ctx.stroke();
 
     var trail = state.trails[i];
+    if (!trail){ trail = []; state.trails[i] = trail; }
     trail.push({ x:px, y:py });
     if (trail.length>7) trail.shift();
     var tcol = tint[i%tint.length];
     for (var tI=0;tI<trail.length;tI++){
-      var ta = (tI/trail.length)*(0.5+0.3*life);
+      var ta = (tI/trail.length)*(0.62+0.18*life);
       ctx.fillStyle = rgba(tcol, ta*0.6);
       ctx.beginPath(); ctx.arc(trail[tI].x, trail[tI].y, 1.6*(tI/trail.length+0.3), 0, Math.PI*2); ctx.fill();
     }
-    bloom(ctx, px, py, 6, tcol, 0.35+0.3*life);
+    bloom(ctx, px, py, 6, tcol, 0.55+0.20*life);
     ctx.fillStyle = rgba(tcol, 0.85);
     ctx.beginPath(); ctx.arc(px,py,2.4,0,Math.PI*2); ctx.fill();
   }
@@ -455,17 +456,19 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
 function drawLook(ctx, w, h, life, now, extra, state, burst){
   if (reduceMotion) now = 0;
   var horizonY = h*0.72, minWH = Math.min(w,h), i;
+  /* effLife: the sun/sky's OWN progress, floored at 35% so it's always at least a warm dusk, never a flat dark night */
+  var effLife = 0.35+0.65*life;
 
   var nightTop=[10,12,28], nightBot=[24,20,34];
   var dawnTop=[70,32,18], dawnBot=COLOR_LOOK;
   var skyGrad = ctx.createLinearGradient(0,0,0,horizonY);
-  skyGrad.addColorStop(0, rgba(mixColor(nightTop,dawnTop,life), 0.55));
-  skyGrad.addColorStop(1, rgba(mixColor(nightBot,dawnBot,life), 0.55));
+  skyGrad.addColorStop(0, rgba(mixColor(nightTop,dawnTop,effLife), 0.55));
+  skyGrad.addColorStop(1, rgba(mixColor(nightBot,dawnBot,effLife), 0.55));
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0,0,w,horizonY);
 
   /* background: stars fading as sun rises */
-  var starVis = Math.max(0, 1-life*1.3);
+  var starVis = Math.max(0, 1-effLife*1.3);
   if (starVis>0.01){
     for (i=0;i<state.stars.length;i++){
       var st = state.stars[i];
@@ -475,13 +478,13 @@ function drawLook(ctx, w, h, life, now, extra, state, burst){
     }
   }
 
-  /* midground: layered drifting clouds */
+  /* midground: layered drifting clouds — always present */
   for (i=0;i<state.clouds.length;i++){
     var c = state.clouds[i];
     var cx2 = ((c.x + now*0.00002*c.speed) % 1.3 - 0.15) * w;
     var cy2 = c.y*horizonY;
     var cw2 = minWH*0.22*c.scale;
-    ctx.fillStyle = rgba([255,255,255], 0.09+0.10*life);
+    ctx.fillStyle = rgba([255,255,255], 0.13+0.06*life);
     ctx.beginPath();
     ctx.ellipse(cx2, cy2, cw2, cw2*0.42, 0, 0, Math.PI*2);
     ctx.ellipse(cx2+cw2*0.5, cy2+cw2*0.08, cw2*0.65, cw2*0.34, 0, 0, Math.PI*2);
@@ -492,35 +495,34 @@ function drawLook(ctx, w, h, life, now, extra, state, burst){
   ctx.fillStyle = 'rgba(10,7,5,0.32)';
   ctx.fillRect(0,horizonY,w,h-horizonY);
   var reflGrad = ctx.createLinearGradient(0,horizonY,0,horizonY+minWH*0.18);
-  reflGrad.addColorStop(0, rgba(COLOR_LOOK, 0.10+0.22*life));
+  reflGrad.addColorStop(0, rgba(COLOR_LOOK, 0.19+0.13*effLife));
   reflGrad.addColorStop(1, rgba(COLOR_LOOK, 0));
   ctx.fillStyle = reflGrad;
   ctx.fillRect(0,horizonY,w,minWH*0.18);
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.beginPath(); ctx.moveTo(0,horizonY); ctx.lineTo(w,horizonY); ctx.stroke();
 
-  /* foreground: rising sun */
+  /* foreground: sun — at least ~35% risen, rising further with life */
   var sunX = w/2;
   var sunYbottom = horizonY+minWH*0.14, sunYtop = h*0.15;
-  var sunY = sunYbottom + (sunYtop-sunYbottom)*life;
-  var sunR = minWH*0.09 + life*minWH*0.045;
+  var sunY = sunYbottom + (sunYtop-sunYbottom)*effLife;
+  var sunR = minWH*0.09 + effLife*minWH*0.045;
 
-  bloom(ctx, sunX, sunY, sunR*3.3, COLOR_LOOK, 0.10+0.5*life);
+  bloom(ctx, sunX, sunY, sunR*3.3, COLOR_LOOK, 0.28+0.32*effLife);
 
-  if (life>0.05){
-    var rays=10;
-    for (i=0;i<rays;i++){
-      var ang = (i/rays)*Math.PI*2 + now*0.00018;
-      var rlen = sunR*(1.4+life*1.7);
-      ctx.strokeStyle = rgba(COLOR_LOOK, 0.08+0.24*life);
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(sunX+Math.cos(ang)*sunR*1.1, sunY+Math.sin(ang)*sunR*1.1);
-      ctx.lineTo(sunX+Math.cos(ang)*rlen, sunY+Math.sin(ang)*rlen);
-      ctx.stroke();
-    }
+  /* rays always present, rotating and brightening with life */
+  var rays=10;
+  for (i=0;i<rays;i++){
+    var ang = (i/rays)*Math.PI*2 + now*0.00018;
+    var rlen = sunR*(1.9+effLife*1.2);
+    ctx.strokeStyle = rgba(COLOR_LOOK, 0.19+0.13*effLife);
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(sunX+Math.cos(ang)*sunR*1.1, sunY+Math.sin(ang)*sunR*1.1);
+    ctx.lineTo(sunX+Math.cos(ang)*rlen, sunY+Math.sin(ang)*rlen);
+    ctx.stroke();
   }
-  ctx.fillStyle = rgba(COLOR_LOOK, 0.55+0.4*life);
+  ctx.fillStyle = rgba(COLOR_LOOK, 0.65+0.3*effLife);
   ctx.beginPath(); ctx.arc(sunX,sunY,sunR,0,Math.PI*2); ctx.fill();
 
   if (life>=0.85){
@@ -568,24 +570,26 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
   ctx.fillRect(0,0,w,groundY);
 
   var sx=w*0.82, sy=h*0.18, sr=minWH*0.055;
-  bloom(ctx, sx, sy, sr*2.6, [255,224,140], 0.08+0.3*life);
-  ctx.fillStyle = rgba([255,224,140], 0.45+0.35*life);
+  bloom(ctx, sx, sy, sr*2.6, [255,224,140], 0.22+0.16*life);
+  ctx.fillStyle = rgba([255,224,140], 0.62+0.18*life);
   ctx.beginPath(); ctx.arc(sx,sy,sr,0,Math.PI*2); ctx.fill();
 
   ctx.fillStyle = 'rgba(8,12,8,0.22)';
   ctx.fillRect(0,groundY,w,h-groundY);
 
   var tasksDone = extra.tasksDone||0, tasksTotal = extra.tasksTotal||0;
-  var plantCount = tasksTotal>0 ? Math.min(6,tasksDone) : (life>=1 ? 3 : 0);
-  var swayAmt = 2+life*6;
+  /* always at least 3 plants — a decent garden — growing to 6 with completed tasks */
+  var plantCount = Math.max(3, Math.min(6, tasksTotal>0 ? tasksDone : 3));
+  /* grass always sways at full liveliness; life only adds a bit more amplitude */
+  var swayAmt = 5+life*3;
 
   /* background plants — parallax layer behind main garden */
-  var bgCount = Math.max(0, Math.floor(plantCount*0.6));
+  var bgCount = Math.max(1, Math.floor(plantCount*0.6));
   for (i=0;i<bgCount;i++){
     var bx = (w/(bgCount+1))*(i+1) + minWH*0.06;
     var bsway = Math.sin(now*0.0012+i*2)*swayAmt*0.5;
     var bh = minWH*0.10;
-    ctx.strokeStyle = rgba(COLOR_LIFE, 0.20+0.16*life);
+    ctx.strokeStyle = rgba(COLOR_LIFE, 0.22+0.14*life);
     ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.moveTo(bx, groundY-2);
@@ -593,63 +597,57 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
     ctx.stroke();
   }
 
-  if (plantCount===0){
-    var bx2=w*0.5;
-    ctx.strokeStyle = rgba(COLOR_LIFE,0.45); ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(bx2,groundY); ctx.lineTo(bx2,groundY-6); ctx.stroke();
-  } else {
-    var slotW = w/(plantCount+1);
-    for (i=0;i<plantCount;i++){
-      var px = slotW*(i+1);
-      var sway = Math.sin(now*0.0018+i*1.1)*swayAmt;
-      var kind = i%3;
-      var stemH = minWH*(0.16+0.05*(i%3));
-      ctx.strokeStyle = rgba(COLOR_LIFE, 0.5+0.4*life);
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.moveTo(px, groundY);
-      ctx.quadraticCurveTo(px+sway*0.5, groundY-stemH*0.5, px+sway, groundY-stemH);
-      ctx.stroke();
+  var slotW = w/(plantCount+1);
+  for (i=0;i<plantCount;i++){
+    var px = slotW*(i+1);
+    var sway = Math.sin(now*0.0018+i*1.1)*swayAmt;
+    var kind = i%3;
+    var stemH = minWH*(0.16+0.05*(i%3));
+    ctx.strokeStyle = rgba(COLOR_LIFE, 0.56+0.34*life);
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(px, groundY);
+    ctx.quadraticCurveTo(px+sway*0.5, groundY-stemH*0.5, px+sway, groundY-stemH);
+    ctx.stroke();
 
-      if (kind===0){
-        ctx.fillStyle = rgba(COLOR_LIFE, 0.5+0.35*life);
-        ctx.beginPath(); ctx.ellipse(px+sway*0.7, groundY-stemH*0.6, 5, 2.6, sway*0.05, 0, Math.PI*2); ctx.fill();
-        if (life>=0.7){
-          var petalA = Math.min(1,(life-0.7)/0.3), pi;
-          for (pi=0;pi<5;pi++){
-            var pAng = (pi/5)*Math.PI*2;
-            ctx.fillStyle = rgba([255,255,255], 0.7*petalA);
-            ctx.beginPath(); ctx.arc(px+sway+Math.cos(pAng)*4*petalA, groundY-stemH+Math.sin(pAng)*4*petalA, 1.8, 0, Math.PI*2); ctx.fill();
-          }
+    if (kind===0){
+      ctx.fillStyle = rgba(COLOR_LIFE, 0.5+0.35*life);
+      ctx.beginPath(); ctx.ellipse(px+sway*0.7, groundY-stemH*0.6, 5, 2.6, sway*0.05, 0, Math.PI*2); ctx.fill();
+      if (life>=0.7){
+        var petalA = Math.min(1,(life-0.7)/0.3), pi;
+        for (pi=0;pi<5;pi++){
+          var pAng = (pi/5)*Math.PI*2;
+          ctx.fillStyle = rgba([255,255,255], 0.7*petalA);
+          ctx.beginPath(); ctx.arc(px+sway+Math.cos(pAng)*4*petalA, groundY-stemH+Math.sin(pAng)*4*petalA, 1.8, 0, Math.PI*2); ctx.fill();
         }
-      } else if (kind===1){
-        var li;
-        for (li=0;li<3;li++){
-          var ly = groundY-stemH*(0.3+li*0.25);
-          var lx = px+sway*(0.3+li*0.2)+(li%2===0?4:-4);
-          ctx.fillStyle = rgba(COLOR_LIFE, 0.45+0.3*life);
-          ctx.beginPath(); ctx.ellipse(lx, ly, 4.2, 2, sway*0.05, 0, Math.PI*2); ctx.fill();
-        }
-      } else {
-        ctx.fillStyle = rgba(COLOR_LIFE, 0.4+0.35*life);
-        ctx.beginPath(); ctx.arc(px+sway*0.5, groundY-stemH*0.85, 6.5, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(px+sway*0.5-4, groundY-stemH*0.7, 4.5, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(px+sway*0.5+4, groundY-stemH*0.7, 4.5, 0, Math.PI*2); ctx.fill();
       }
+    } else if (kind===1){
+      var li;
+      for (li=0;li<3;li++){
+        var ly = groundY-stemH*(0.3+li*0.25);
+        var lx = px+sway*(0.3+li*0.2)+(li%2===0?4:-4);
+        ctx.fillStyle = rgba(COLOR_LIFE, 0.45+0.3*life);
+        ctx.beginPath(); ctx.ellipse(lx, ly, 4.2, 2, sway*0.05, 0, Math.PI*2); ctx.fill();
+      }
+    } else {
+      ctx.fillStyle = rgba(COLOR_LIFE, 0.45+0.30*life);
+      ctx.beginPath(); ctx.arc(px+sway*0.5, groundY-stemH*0.85, 6.5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px+sway*0.5-4, groundY-stemH*0.7, 4.5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px+sway*0.5+4, groundY-stemH*0.7, 4.5, 0, Math.PI*2); ctx.fill();
+    }
 
-      if (life>=1 && i===plantCount-1){
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.beginPath(); ctx.arc(px+sway, groundY-stemH, 3.2, 0, Math.PI*2); ctx.fill();
-      }
+    if (life>=1 && i===plantCount-1){
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.beginPath(); ctx.arc(px+sway, groundY-stemH, 3.2, 0, Math.PI*2); ctx.fill();
     }
   }
 
-  /* foreground: grass sway, in front of garden */
+  /* foreground: grass sway, in front of garden — always lively */
   var blades = 14;
   for (i=0;i<blades;i++){
     var gx = (w/blades)*(i+0.5);
     var gsway = Math.sin(now*0.003+i*0.8)*swayAmt*0.6;
-    ctx.strokeStyle = rgba(COLOR_LIFE, 0.3+0.3*life);
+    ctx.strokeStyle = rgba(COLOR_LIFE, 0.36+0.24*life);
     ctx.lineWidth = 1.4;
     ctx.beginPath();
     ctx.moveTo(gx, groundY+4);
@@ -678,18 +676,18 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
     ctx.restore();
   }
 
-  /* pollinators at high life */
-  if (life>=0.8){
-    for (i=0;i<state.flies.length;i++){
-      var fl = state.flies[i];
-      if (!reduceMotion && !fl.active && Math.random()<0.004) fl.active=true;
-      if (!fl.active) continue;
-      var t2 = now*0.0009+fl.phase;
-      var fx2 = w*0.15 + (Math.sin(t2)*0.5+0.5)*(w*0.7);
-      var fy2 = groundY-minWH*0.22 + Math.sin(t2*3)*8;
-      ctx.fillStyle = fl.kind==='b' ? 'rgba(255,255,255,0.7)' : 'rgba(255,210,90,0.75)';
-      ctx.beginPath(); ctx.arc(fx2,fy2, fl.kind==='b'?2.4:1.8, 0, Math.PI*2); ctx.fill();
-    }
+  /* butterflies always drift (idle event); bees are the high-life pollinator bonus */
+  for (i=0;i<state.flies.length;i++){
+    var fl = state.flies[i];
+    var isBee = fl.kind==='bee';
+    if (isBee && life<0.8){ fl.active=false; continue; }
+    if (!reduceMotion && !fl.active && Math.random()<(isBee?0.004:0.003)) fl.active=true;
+    if (!fl.active) continue;
+    var t2 = now*0.0009+fl.phase;
+    var fx2 = w*0.15 + (Math.sin(t2)*0.5+0.5)*(w*0.7);
+    var fy2 = groundY-minWH*0.22 + Math.sin(t2*3)*8;
+    ctx.fillStyle = isBee ? 'rgba(255,210,90,0.75)' : 'rgba(255,255,255,0.7)';
+    ctx.beginPath(); ctx.arc(fx2,fy2, isBee?1.8:2.4, 0, Math.PI*2); ctx.fill();
   }
 
   ctx.strokeStyle = 'rgba(255,255,255,0.07)';
@@ -735,23 +733,23 @@ function drawMoney(ctx, w, h, life, now, extra, state, burst){
     ctx.beginPath(); ctx.moveTo(x, topY-4); ctx.lineTo(x, topY+bodyH+4); ctx.stroke();
     priceTop.push({ x:x, y:topY });
   }
-  ctx.strokeStyle = rgba(COLOR_MONEY, 0.35+0.35*life);
+  ctx.strokeStyle = rgba(COLOR_MONEY, 0.40+0.30*life);
   ctx.lineWidth = 1.4;
   ctx.beginPath();
   for (i=0;i<priceTop.length;i++){ if (i===0) ctx.moveTo(priceTop[i].x,priceTop[i].y); else ctx.lineTo(priceTop[i].x,priceTop[i].y); }
   ctx.stroke();
 
-  /* foreground: rising flame with sparks */
+  /* foreground: flame always burning at a healthy baseline, growing bigger with life */
   var fx=w/2, fy=baseY-minWH*0.34;
-  var flameH = minWH*(0.05+life*0.22);
+  var flameH = minWH*(0.15+life*0.12);
   var flick = Math.sin(now*0.01)*0.15+1;
-  bloom(ctx, fx, fy, flameH*2.2, COLOR_MONEY, 0.08+0.35*life);
+  bloom(ctx, fx, fy, flameH*2.2, COLOR_MONEY, 0.26+0.17*life);
   ctx.save();
   ctx.translate(fx,fy);
   var fgrad = ctx.createLinearGradient(0,flameH*flick,0,-flameH*0.3);
-  fgrad.addColorStop(0, rgba(COLOR_MONEY, 0.12+0.45*life));
+  fgrad.addColorStop(0, rgba(COLOR_MONEY, 0.34+0.23*life));
   fgrad.addColorStop(0.5, rgba([251,191,110], 0.4+0.35*life));
-  fgrad.addColorStop(1, rgba([255,235,160], 0.5*life));
+  fgrad.addColorStop(1, rgba([255,235,160], 0.30+0.20*life));
   ctx.fillStyle = fgrad;
   ctx.beginPath();
   ctx.moveTo(0, flameH*flick);
@@ -764,8 +762,8 @@ function drawMoney(ctx, w, h, life, now, extra, state, burst){
     var sp, spi;
     for (spi=0; spi<state.sparks.length; spi++){
       sp = state.sparks[spi];
-      if (!sp.active && Math.random() < 0.02+life*0.05){
-        sp.active=true; sp.x=fx+(Math.random()-0.5)*6; sp.y=fy; sp.vx=(Math.random()-0.5)*0.3; sp.vy=-(0.5+Math.random()*0.8)*(0.4+life); sp.life=1;
+      if (!sp.active && Math.random() < 0.045+life*0.035){
+        sp.active=true; sp.x=fx+(Math.random()-0.5)*6; sp.y=fy; sp.vx=(Math.random()-0.5)*0.3; sp.vy=-(0.5+Math.random()*0.8)*(0.84+life*0.56); sp.life=1;
       }
       if (!sp.active) continue;
       sp.x += sp.vx; sp.y += sp.vy; sp.life -= 0.018;
