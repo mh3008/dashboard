@@ -8,19 +8,82 @@
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="theme.css" rel="stylesheet">
 <style>
-  .task-board { display:flex; flex-direction:column; gap:8px; }
-  .task-row { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:var(--radius);
-    background:var(--card); border:1px solid var(--hair); cursor:pointer; transition:background .16s, border-color .16s; }
-  .task-row:hover { background:var(--card-2); }
-  .task-cb { width:24px; height:24px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.18);
-    background:rgba(0,0,0,0.2); flex-shrink:0; position:relative; transition:background .16s, border-color .16s; }
-  .task-row.done .task-cb { background:var(--success); border-color:var(--success); box-shadow:0 0 12px rgba(107,227,164,0.4); }
-  .task-row.done .task-cb::after { content:''; position:absolute; left:8px; top:3px; width:6px; height:11px;
-    border:solid #0a0a0b; border-width:0 2px 2px 0; transform:rotate(45deg); }
-  .task-name { font-size:14px; font-weight:700; color:var(--text-1); }
-  .task-row.done .task-name { color:var(--text-3); text-decoration:line-through; }
-  .task-empty { display:block; text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px;
-    padding:16px; border:1px dashed var(--hair); border-radius:var(--radius); text-decoration:none; }
+  :root {
+    --c-body:   #a78bfa; --c-body-glow:   rgba(167,139,250,0.35); --c-body-bg:   rgba(167,139,250,0.06); --c-body-bd:   rgba(167,139,250,0.18);
+    --c-look:   #fb923c; --c-look-glow:   rgba(251,146,60,0.35);  --c-look-bg:   rgba(251,146,60,0.06);  --c-look-bd:   rgba(251,146,60,0.18);
+    --c-life:   #6be3a4; --c-life-glow:   rgba(107,227,164,0.35); --c-life-bg:   rgba(107,227,164,0.06); --c-life-bd:   rgba(107,227,164,0.18);
+    --c-money:  #f87171; --c-money-glow:  rgba(248,113,113,0.35); --c-money-bg:  rgba(248,113,113,0.06); --c-money-bd:  rgba(248,113,113,0.18);
+  }
+
+  /* ---- section cards ---- */
+  .sec-stack { display:flex; flex-direction:column; gap:12px; }
+  .sec-card {
+    position:relative; display:block; text-decoration:none; color:inherit;
+    border-radius:var(--radius); padding:18px 18px 18px 22px; overflow:hidden;
+    cursor:pointer; backdrop-filter:blur(24px) saturate(1.2); -webkit-backdrop-filter:blur(24px) saturate(1.2);
+    box-shadow:0 12px 40px rgba(0,0,0,0.45);
+    opacity:0; transform:translateY(20px);
+    transition:opacity .5s ease-out, transform .5s ease-out, box-shadow .18s ease;
+  }
+  .sec-card.lo-visible { opacity:1; transform:translateY(0); }
+  .sec-card:hover { transform:translateY(-2px); box-shadow:0 18px 48px rgba(0,0,0,0.55); }
+  .sec-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; }
+
+  .sec-card[data-sec="body"]  { background:var(--c-body-bg);  border:1px solid var(--c-body-bd); }
+  .sec-card[data-sec="body"]::before  { background:var(--c-body);  box-shadow:0 0 12px var(--c-body-glow); }
+  .sec-card[data-sec="look"]  { background:var(--c-look-bg);  border:1px solid var(--c-look-bd); }
+  .sec-card[data-sec="look"]::before  { background:var(--c-look);  box-shadow:0 0 12px var(--c-look-glow); }
+  .sec-card[data-sec="life"]  { background:var(--c-life-bg);  border:1px solid var(--c-life-bd); }
+  .sec-card[data-sec="life"]::before  { background:var(--c-life);  box-shadow:0 0 12px var(--c-life-glow); }
+  .sec-card[data-sec="money"] { background:var(--c-money-bg); border:1px solid var(--c-money-bd); }
+  .sec-card[data-sec="money"]::before { background:var(--c-money); box-shadow:0 0 12px var(--c-money-glow); }
+
+  .sec-card.lo-pulse::before { animation:secPulse 2s ease-in-out infinite; }
+  @keyframes secPulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+  @media (prefers-reduced-motion: reduce) { .sec-card.lo-pulse::before { animation:none; } }
+
+  .sec-top { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .sec-icon { font-size:19px; }
+  .sec-card[data-sec="body"]  .sec-icon, .sec-card[data-sec="body"]  .sec-name { color:var(--c-body); }
+  .sec-card[data-sec="look"]  .sec-icon, .sec-card[data-sec="look"]  .sec-name { color:var(--c-look); }
+  .sec-card[data-sec="life"]  .sec-icon, .sec-card[data-sec="life"]  .sec-name { color:var(--c-life); }
+  .sec-card[data-sec="money"] .sec-icon, .sec-card[data-sec="money"] .sec-name { color:var(--c-money); }
+  .sec-name { font-size:15px; font-weight:800; letter-spacing:-0.01em; flex:1; }
+  .sec-pct-txt { font-family:var(--mono); font-size:13px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--text-2); }
+
+  .sec-ring { width:52px; height:52px; position:relative; flex-shrink:0; }
+  .sec-ring svg { width:52px; height:52px; }
+  .sec-ring .srt { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:5; }
+  .sec-ring .srf { fill:none; stroke-width:5; stroke-linecap:round; transform:rotate(-90deg); transform-origin:26px 26px; transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); }
+  .sec-ring .sr-pct { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:11px; font-weight:800; color:var(--text-1); font-variant-numeric:tabular-nums; }
+
+  .sec-body { display:flex; flex-direction:column; gap:10px; }
+
+  .sec-row-top { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+  .sec-row-label { display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--text-2); flex:1; }
+  .sec-row-label i { font-size:14px; color:var(--text-3); }
+  .sec-row-val { font-family:var(--mono); font-size:11.5px; font-weight:700; color:var(--text-1); font-variant-numeric:tabular-nums; }
+  .sec-row-val.hit { color:var(--success); }
+  .sec-row-val.dim { color:var(--text-3); font-weight:600; }
+  .sec-bar { height:6px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; }
+  .sec-bar-fill { height:100%; border-radius:999px; width:0; transition:width .6s ease-out; }
+  .sec-bar-fill.body  { background:var(--c-body); }
+  .sec-bar-fill.look  { background:var(--c-look); }
+  .sec-bar-fill.life  { background:var(--c-life); }
+  .sec-bar-fill.money { background:var(--c-money); }
+
+  .sec-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:10px; margin-top:2px; border-top:1px solid var(--hair); }
+  .sec-sub.good { color:var(--success); }
+  .sec-sub b { color:var(--text-1); font-weight:800; }
+
+  .sec-tasks { display:flex; flex-direction:column; gap:6px; }
+  .sec-task { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-2); }
+  .sec-task i { font-size:14px; color:var(--text-3); flex-shrink:0; }
+  .sec-task.done { color:var(--text-3); text-decoration:line-through; }
+  .sec-task.done i { color:var(--c-life); }
+  .sec-more { font-family:var(--mono); font-size:10.5px; color:var(--text-3); }
+
+  .sec-empty-note { font-size:12.5px; color:var(--text-2); text-align:center; padding:6px 0; }
 </style>
 </head>
 <body>
@@ -57,13 +120,9 @@
     </div>
   </div>
 
-  <!-- TODAY TASKS -->
-  <div class="section-title">Today</div>
-  <div class="task-board" id="taskBoard"></div>
-
-  <!-- STAT MENU -->
+  <!-- STATS -->
   <div class="section-title">Stats</div>
-  <div class="stat-grid" id="statGrid"></div>
+  <div class="sec-stack" id="secStack"></div>
 
   <!-- SYSTEM -->
   <div class="section-title">System</div>
@@ -89,6 +148,13 @@ function getActiveDateString(){
   if (d.getHours() < 6) d.setDate(d.getDate()-1);
   return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
 }
+function dayDiff(a,b){
+  var pa=a.split('-'),pb=b.split('-');
+  var da=new Date(+pa[0],+pa[1]-1,+pa[2]), db=new Date(+pb[0],+pb[1]-1,+pb[2]);
+  return Math.round((db-da)/86400000);
+}
+function toMin(t){ if(!t||t.indexOf(':')<0) return null; var p=t.split(':'); return (+p[0])*60+(+p[1]); }
+function durMins(bed,wake){ var b=toMin(bed),w=toMin(wake); if(b==null||w==null) return null; if(w<=b) w+=1440; return w-b; }
 
 /* ---------- DAY RING (sun-cycle) ---------- */
 var WAKE_HOUR = 8, SLEEP_HOUR = 24;
@@ -152,74 +218,220 @@ function updateClock(){
   document.getElementById('dayClock').textContent=h12+':'+m+' '+ap;
 }
 
-/* ---------- STAT MENU ---------- */
-/* rings read the same localStorage keys each app will write.
-   Empty now → 0%; they light up as Phase-1 apps land. */
-var STATS = [
-  { id:'physical',   name:'Physical',   icon:'ti-activity',       href:'physical.html',   ring:true,  live:true  },
-  { id:'appearance', name:'Appearance', icon:'ti-sparkles',       href:'appearance.html', ring:true,  live:true  },
-  { id:'life',       name:'Life',       icon:'ti-home',           href:'life.html',       ring:true,  live:true  },
-  { id:'money',      name:'Money',      icon:'ti-currency-pound', href:'money.html',      ring:false, live:true }
-];
-var SR_C = 2 * Math.PI * 33;
+/* ---------- shared thresholds (match physical/appearance/life pages) ---------- */
 var SUPPS_TOTAL = 16, HYG_TOTAL = 11;
 function stepsGoal(){ var g=storeGet('steps:goal'); return (typeof g==='number' && g>0) ? g : 15000; }
-function calcStatPct(id){
-  var date=getActiveDateString();
-  if (id==='physical'){
-    var s=storeGet('supps:'+date)||{}, taken=Object.keys(s).filter(function(k){return s[k];}).length;
-    var suppsPct = taken/SUPPS_TOTAL;
-    var gym=(storeGet('gym:'+date)||{}).done?1:0;
-    var sl=storeGet('sleep:'+date)||{}; var sleep=(sl.bed||sl.wake)?1:0;
-    var stp=storeGet('steps:'+date)||{}; var stepsPct=Math.min(1,(stp.count||0)/stepsGoal());
-    return Math.round((suppsPct+gym+sleep+stepsPct)/4*100);
-  }
-  if (id==='appearance'){
-    var h=storeGet('hygiene:'+date)||{}, done=Object.keys(h).filter(function(k){return h[k];}).length;
-    return Math.round(done/HYG_TOTAL*100);
-  }
-  if (id==='life'){
-    var defs=storeGet('todos:defs'); if(!Array.isArray(defs)) defs=[];
-    var wd=new Date(date+'T12:00').getDay();
-    var due=defs.filter(function(t){ return t.days && t.days.indexOf(wd)!==-1; });
-    if(!due.length) return 100;
-    var comp=storeGet('todos:'+date)||{};
-    var hdone=due.filter(function(t){ return comp[t.id]; }).length;
-    return Math.round(hdone/due.length*100);
-  }
-  return 0;
+var HYG_GROUPS = [
+  { id:'AM', label:'AM', items:['Warm water face rinse','Moisturise (Purito)','Brush teeth','Tongue scrape','Deodorant','Hair — leave-in + style'] },
+  { id:'PM', label:'PM', items:['Shower','Cleanse (Anua)','Moisturise (Purito)','Brush teeth','Tongue scrape'] }
+];
+var PLANTS = [
+  { id:'aloe',  name:'Aloe Vera',  days:14 },
+  { id:'peace', name:'Peace Lily', days:7 },
+  { id:'yucca', name:'Yucca',      days:10 }
+];
+
+function ringSvg(pct, colorVar, size){
+  var r = (size/2) - 4;
+  var c = 2 * Math.PI * r;
+  var off = c * (1 - Math.min(100,pct)/100);
+  return '<svg viewBox="0 0 '+size+' '+size+'">'+
+    '<circle class="srt" cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'"></circle>'+
+    '<circle class="srf" cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" stroke="'+colorVar+'" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'"></circle>'+
+    '</svg>';
 }
-function statColor(pct){
-  if (pct>=80) return '#ff8c00';
-  if (pct>=50) return '#f97316';
-  if (pct>=25) return '#ea580c';
-  return 'rgba(249,115,22,0.45)';
+
+/* ---------- BODY (purple) ---------- */
+function buildBody(date){
+  var s=storeGet('supps:'+date)||{}, taken=0, k;
+  for(k in s){ if(s.hasOwnProperty(k) && s[k]) taken++; }
+  var suppsPct = taken/SUPPS_TOTAL;
+
+  var gymDone = !!(storeGet('gym:'+date)||{}).done;
+
+  var sl=storeGet('sleep:'+date)||{};
+  var mins = durMins(sl.bed, sl.wake);
+  var sleepDone = !!(sl.bed || sl.wake);
+  var sleepHours = mins!=null ? (mins/60) : null;
+
+  var stp=storeGet('steps:'+date)||{};
+  var stepsCount = stp.count||0, goal = stepsGoal();
+  var stepsPct = Math.min(1, stepsCount/goal);
+
+  var pct = Math.round((suppsPct+(gymDone?1:0)+(sleepDone?1:0)+stepsPct)/4*100);
+
+  var html = '';
+  html += '<div class="sec-row">'+
+    '<div class="sec-row-top"><span class="sec-row-label"><i class="ti ti-barbell"></i>Gym</span>'+
+    '<span class="sec-row-val'+(gymDone?' hit':' dim')+'">'+(gymDone?'Done ✓':'Not yet')+'</span></div>'+
+    '<div class="sec-bar"><div class="sec-bar-fill body" data-w="'+(gymDone?100:0)+'"></div></div></div>';
+
+  html += '<div class="sec-row">'+
+    '<div class="sec-row-top"><span class="sec-row-label"><i class="ti ti-pill"></i>Supps</span>'+
+    '<span class="sec-row-val">'+taken+' / '+SUPPS_TOTAL+'</span></div>'+
+    '<div class="sec-bar"><div class="sec-bar-fill body" data-w="'+Math.round(suppsPct*100)+'"></div></div></div>';
+
+  html += '<div class="sec-row">'+
+    '<div class="sec-row-top"><span class="sec-row-label"><i class="ti ti-walk"></i>Steps</span>'+
+    '<span class="sec-row-val">'+stepsCount.toLocaleString()+' / '+goal.toLocaleString()+'</span></div>'+
+    '<div class="sec-bar"><div class="sec-bar-fill body" data-w="'+Math.round(stepsPct*100)+'"></div></div></div>';
+
+  html += '<div class="sec-row">'+
+    '<div class="sec-row-top"><span class="sec-row-label"><i class="ti ti-moon"></i>Sleep</span>'+
+    '<span class="sec-row-val'+(sleepHours!=null?'':' dim')+'">'+(sleepHours!=null?(Math.round(sleepHours*10)/10)+'h':'—')+'</span></div>'+
+    '<div class="sec-bar"><div class="sec-bar-fill body" data-w="'+(sleepHours!=null?Math.min(100,Math.round(sleepHours/8*100)):0)+'"></div></div></div>';
+
+  return { pct:pct, html:html };
 }
+
+/* ---------- LOOK (orange) ---------- */
+function buildLook(date){
+  var h=storeGet('hygiene:'+date)||{};
+  var done=0, nextItem=null, i;
+  HYG_GROUPS.forEach(function(g){
+    g.items.forEach(function(name, idx){
+      var ik = g.id+':'+idx;
+      if (h[ik]) done++;
+      else if (!nextItem) nextItem = name;
+    });
+  });
+  var pct = Math.round(done/HYG_TOTAL*100);
+
+  var html = '<div class="sec-row">'+
+    '<div class="sec-row-top"><span class="sec-row-label">Grooming</span>'+
+    '<span class="sec-row-val">'+done+' / '+HYG_TOTAL+' done</span></div>'+
+    '<div class="sec-bar"><div class="sec-bar-fill look" data-w="'+pct+'"></div></div></div>';
+
+  if (!nextItem){
+    html += '<div class="sec-sub good">All done ✨</div>';
+  } else {
+    html += '<div class="sec-sub">Next up: <b>'+nextItem+'</b></div>';
+  }
+  return { pct:pct, html:html };
+}
+
+/* ---------- LIFE (green) ---------- */
+function buildLife(date){
+  var defs=storeGet('todos:defs'); if(!Array.isArray(defs)) defs=[];
+  var wd=new Date(date+'T12:00').getDay();
+  var due=defs.filter(function(t){ return t.days && t.days.indexOf(wd)!==-1; });
+  var comp=storeGet('todos:'+date)||{};
+  var hdone=due.filter(function(t){ return comp[t.id]; }).length;
+  var pct = due.length ? Math.round(hdone/due.length*100) : 100;
+
+  var html = '<div class="sec-row">'+
+    '<div class="sec-row-top"><span class="sec-row-label">Today’s tasks</span>'+
+    '<span class="sec-row-val">'+hdone+' / '+due.length+' done</span></div>'+
+    '<div class="sec-bar"><div class="sec-bar-fill life" data-w="'+pct+'"></div></div></div>';
+
+  if (!due.length){
+    html += '<div class="sec-empty-note">Nothing due today. Nice.</div>';
+  } else {
+    html += '<div class="sec-tasks">';
+    due.slice(0,3).forEach(function(t){
+      var isDone = !!comp[t.id];
+      html += '<div class="sec-task'+(isDone?' done':'')+'"><i class="ti '+(isDone?'ti-circle-check':'ti-circle')+'"></i>'+t.name+'</div>';
+    });
+    html += '</div>';
+    if (due.length > 3){
+      html += '<div class="sec-more">+'+(due.length-3)+' more</div>';
+    }
+  }
+
+  var pdata = storeGet('plants:data') || {};
+  var today = date;
+  var best = null;
+  PLANTS.forEach(function(p){
+    var rec = pdata[p.id];
+    if (!rec || !rec.lastWatered) return;
+    var since = dayDiff(rec.lastWatered, today);
+    var daysLeft = p.days - since;
+    if (best === null || daysLeft < best.daysLeft) best = { name:p.name, daysLeft:daysLeft };
+  });
+  if (best){
+    var when = best.daysLeft <= 0 ? 'now' : ('in '+best.daysLeft+'d');
+    html += '<div class="sec-sub">🌱 Next water: <b>'+best.name+'</b> '+when+'</div>';
+  } else {
+    html += '<div class="sec-sub">🌱 Plants</div>';
+  }
+
+  return { pct:pct, html:html };
+}
+
+/* ---------- MONEY (red) — launcher, no ring ---------- */
+function buildMoney(date){
+  var queue = storeGet('learn:queue'); if(!Array.isArray(queue)) queue=[];
+  var qDone = queue.filter(function(q){ return q.done; }).length;
+  var qTotal = queue.length;
+  var pct = qTotal ? Math.round(qDone/qTotal*100) : 0;
+  var nextTopic = null, i;
+  for (i=0;i<queue.length;i++){ if (!queue[i].done){ nextTopic = queue[i].name; break; } }
+
+  var trades = storeGet('trades:log'); if(!Array.isArray(trades)) trades=[];
+  var weekCount = 0;
+  trades.forEach(function(t){
+    if (!t.date) return;
+    var diff = dayDiff(t.date, date);
+    if (diff>=0 && diff<=6) weekCount++;
+  });
+
+  var html = '';
+  if (!qTotal && !trades.length){
+    html += '<div class="sec-empty-note">Start your trading journey →</div>';
+  } else {
+    html += '<div class="sec-row">'+
+      '<div class="sec-row-top"><span class="sec-row-label">Learn queue</span>'+
+      '<span class="sec-row-val">'+qDone+' / '+qTotal+' done</span></div>'+
+      '<div class="sec-bar"><div class="sec-bar-fill money" data-w="'+pct+'"></div></div></div>';
+    if (nextTopic){
+      html += '<div class="sec-sub">Now: <b>'+nextTopic+'</b></div>';
+    }
+    html += '<div class="sec-sub">'+weekCount+' trade'+(weekCount===1?'':'s')+' this week</div>';
+  }
+  return { pct:pct, html:html };
+}
+
+/* ---------- SECTIONS ---------- */
+var SECTIONS = [
+  { id:'body',  sec:'body',  href:'physical.html',   icon:'ti-activity',       name:'Body',  ring:true,  build:buildBody  },
+  { id:'look',  sec:'look',  href:'appearance.html', icon:'ti-sparkles',       name:'Look',  ring:true,  build:buildLook  },
+  { id:'life',  sec:'life',  href:'life.html',       icon:'ti-home',           name:'Life',  ring:true,  build:buildLife  },
+  { id:'money', sec:'money', href:'money.html',      icon:'ti-currency-pound', name:'Money', ring:false, build:buildMoney }
+];
+
 function renderStats(){
-  var grid=document.getElementById('statGrid'); grid.innerHTML='';
-  STATS.forEach(function(st){
-    var a=document.createElement('a');
-    a.className='stat-tile'+(st.ring?'':' is-launcher');
-    if (st.live) {
-      a.href = st.href;
+  var stack = document.getElementById('secStack');
+  var date = getActiveDateString();
+  stack.innerHTML = '';
+
+  SECTIONS.forEach(function(s, idx){
+    var res = s.build(date);
+    var a = document.createElement('a');
+    a.className = 'sec-card';
+    a.setAttribute('data-sec', s.sec);
+    a.href = s.href;
+
+    var topHtml = '<div class="sec-top"><i class="ti '+s.icon+' sec-icon"></i><div class="sec-name">'+s.name+'</div>';
+    if (s.ring){
+      topHtml += '<div class="sec-ring">'+ringSvg(res.pct, 'var(--c-'+s.sec+')', 52)+'<div class="sr-pct">'+res.pct+'%</div></div>';
     } else {
-      a.href='javascript:void(0)';
-      a.addEventListener('click',function(){ loToast(st.name+' — coming soon'); });
+      topHtml += '<span class="sec-pct-txt">'+res.pct+'%</span>';
     }
-    if (st.ring){
-      var pct=calcStatPct(st.id), col=statColor(pct), off=SR_C*(1-pct/100);
-      a.innerHTML =
-        '<div class="stat-ring"><svg viewBox="0 0 76 76">'+
-        '<circle class="srt" cx="38" cy="38" r="33"></circle>'+
-        '<circle class="srf" cx="38" cy="38" r="33" stroke="'+col+'" stroke-dasharray="'+SR_C+'" stroke-dashoffset="'+off+'"></circle>'+
-        '</svg><div class="sr-inner"><i class="ti '+st.icon+' sr-icon"></i><div class="sr-pct">'+pct+'%</div></div></div>'+
-        '<div class="stat-name">'+st.name+'</div>';
-    } else {
-      a.innerHTML =
-        '<div class="stat-ring"><div class="sr-inner"><i class="ti '+st.icon+' sr-icon"></i></div></div>'+
-        '<div class="stat-name">'+st.name+'</div>';
-    }
-    grid.appendChild(a);
+    topHtml += '</div>';
+
+    a.innerHTML = topHtml + '<div class="sec-body">' + res.html + '</div>';
+    if (res.pct >= 80) a.classList.add('lo-pulse');
+    a.style.transitionDelay = (idx*80)+'ms';
+    stack.appendChild(a);
+  });
+
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      var cards = stack.querySelectorAll('.sec-card');
+      cards.forEach(function(c){ c.classList.add('lo-visible'); });
+      var bars = stack.querySelectorAll('.sec-bar-fill');
+      bars.forEach(function(b){ b.style.width = (b.getAttribute('data-w')||0)+'%'; });
+    });
   });
 }
 
@@ -241,38 +453,13 @@ function tick(){
   tickIdx++;
 }
 
-/* ---------- TASK BOARD ---------- */
-function todayWeekday(){ var ds=getActiveDateString(); var d=new Date(ds+'T12:00'); return d.getDay(); }
-function renderTasks(){
-  var board=document.getElementById('taskBoard'); if(!board) return;
-  var defs=storeGet('todos:defs'); if(!Array.isArray(defs)) defs=[];
-  var date=getActiveDateString(), wd=todayWeekday();
-  var due=defs.filter(function(t){ return t.days && t.days.indexOf(wd)!==-1; });
-  board.innerHTML='';
-  if(!defs.length){ board.innerHTML='<a class="task-empty" href="todos.html">No recurring tasks yet — set them up →</a>'; return; }
-  if(!due.length){ board.innerHTML='<div class="task-empty">Nothing due today. Nice.</div>'; return; }
-  due.forEach(function(t){
-    var comp=storeGet('todos:'+date)||{};
-    var row=document.createElement('div'); row.className='task-row'+(comp[t.id]?' done':'');
-    var cb=document.createElement('span'); cb.className='task-cb';
-    var nm=document.createElement('span'); nm.className='task-name'; nm.textContent=t.name;
-    row.appendChild(cb); row.appendChild(nm);
-    row.addEventListener('click', function(){
-      var c=storeGet('todos:'+date)||{};
-      if(c[t.id]) delete c[t.id]; else c[t.id]=true;
-      localStorage.setItem('todos:'+date, JSON.stringify(c));
-      renderTasks();
-    });
-    board.appendChild(row);
-  });
-}
 /* ---------- boot ---------- */
-updateClock(); updateDayRing(); renderStats(); tick(); renderTasks();
+updateClock(); updateDayRing(); renderStats(); tick();
 setInterval(updateClock, 1000);
 setInterval(updateDayRing, 60*1000);
 setInterval(tick, 5000);
-window.addEventListener('focus', function(){ renderStats(); updateDayRing(); renderTasks(); });
-window.addEventListener('lo-sync-applied', function(){ renderStats(); tick(); renderTasks(); });
+window.addEventListener('focus', function(){ renderStats(); updateDayRing(); });
+window.addEventListener('lo-sync-applied', function(){ renderStats(); tick(); });
 </script>
 </body>
 </html>
