@@ -454,15 +454,15 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
 
 function drawLook(ctx, w, h, life, now, extra, state, burst){
   if (reduceMotion) now = 0;
-  var horizonY = h*0.72, minWH = Math.min(w,h), i;
-  /* effLife: the sun/sky's OWN progress, floored at 35% so it's always at least a warm dusk, never a flat dark night */
-  var effLife = 0.35+0.65*life;
+  var horizonY = h*0.82, minWH = Math.min(w,h), i;
+  /* effLife: the sun/sky's OWN progress, floored high so the sky is always a bright warm dawn, never a dark night */
+  var effLife = 0.55+0.45*life;
 
-  var nightTop=[10,12,28], nightBot=[24,20,34];
-  var dawnTop=[70,32,18], dawnBot=COLOR_LOOK;
+  var nightTop=[26,18,30], nightBot=[36,24,30];
+  var dawnTop=[120,54,22], dawnBot=COLOR_LOOK;
   var skyGrad = ctx.createLinearGradient(0,0,0,horizonY);
-  skyGrad.addColorStop(0, rgba(mixColor(nightTop,dawnTop,effLife), 0.55));
-  skyGrad.addColorStop(1, rgba(mixColor(nightBot,dawnBot,effLife), 0.55));
+  skyGrad.addColorStop(0, rgba(mixColor(nightTop,dawnTop,effLife), 0.85));
+  skyGrad.addColorStop(1, rgba(mixColor(nightBot,dawnBot,effLife), 0.85));
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0,0,w,horizonY);
 
@@ -477,17 +477,26 @@ function drawLook(ctx, w, h, life, now, extra, state, burst){
     }
   }
 
-  /* midground: layered drifting clouds — always present */
+  /* midground: layered drifting clouds — always present, spread across the whole sky */
   for (i=0;i<state.clouds.length;i++){
     var c = state.clouds[i];
     var cx2 = ((c.x + now*0.00002*c.speed) % 1.3 - 0.15) * w;
     var cy2 = c.y*horizonY;
-    var cw2 = minWH*0.22*c.scale;
-    ctx.fillStyle = rgba([255,255,255], 0.13+0.06*life);
+    var cw2 = minWH*0.26*c.scale;
+    ctx.fillStyle = rgba([255,255,255], 0.22+0.10*life);
     ctx.beginPath();
     ctx.ellipse(cx2, cy2, cw2, cw2*0.42, 0, 0, Math.PI*2);
     ctx.ellipse(cx2+cw2*0.5, cy2+cw2*0.08, cw2*0.65, cw2*0.34, 0, 0, Math.PI*2);
     ctx.fill();
+  }
+
+  /* ambient light motes scattered across the upper sky */
+  for (i=0;i<8;i++){
+    var mx = ((i*0.13 + now*0.00003*(1+ (i%3)*0.4)) % 1) * w;
+    var my = horizonY * (0.08 + ((i*37)%100)/100 * 0.55);
+    var mtw = Math.sin(now*0.0012+i*1.3)*0.5+0.5;
+    ctx.fillStyle = rgba([255,235,200], 0.18+0.28*mtw);
+    ctx.beginPath(); ctx.arc(mx,my,1.4,0,Math.PI*2); ctx.fill();
   }
 
   /* ground + horizon reflection */
@@ -501,27 +510,27 @@ function drawLook(ctx, w, h, life, now, extra, state, burst){
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.beginPath(); ctx.moveTo(0,horizonY); ctx.lineTo(w,horizonY); ctx.stroke();
 
-  /* foreground: sun — at least ~35% risen, rising further with life */
+  /* foreground: sun — big central focal point, at least ~55% risen, rising further with life */
   var sunX = w/2;
-  var sunYbottom = horizonY+minWH*0.14, sunYtop = h*0.15;
+  var sunYbottom = horizonY+minWH*0.10, sunYtop = h*0.34;
   var sunY = sunYbottom + (sunYtop-sunYbottom)*effLife;
-  var sunR = minWH*0.09 + effLife*minWH*0.045;
+  var sunR = (minWH*0.09 + effLife*minWH*0.045) * 1.4;
 
-  bloom(ctx, sunX, sunY, sunR*3.3, COLOR_LOOK, 0.28+0.32*effLife);
+  bloom(ctx, sunX, sunY, sunR*3.3, COLOR_LOOK, 0.50+0.30*effLife);
 
   /* rays always present, rotating and brightening with life */
-  var rays=10;
+  var rays=12;
   for (i=0;i<rays;i++){
     var ang = (i/rays)*Math.PI*2 + now*0.00018;
-    var rlen = sunR*(1.9+effLife*1.2);
-    ctx.strokeStyle = rgba(COLOR_LOOK, 0.19+0.13*effLife);
-    ctx.lineWidth = 1.4;
+    var rlen = sunR*(2.2+effLife*1.4);
+    ctx.strokeStyle = rgba(COLOR_LOOK, 0.40+0.18*effLife);
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.moveTo(sunX+Math.cos(ang)*sunR*1.1, sunY+Math.sin(ang)*sunR*1.1);
     ctx.lineTo(sunX+Math.cos(ang)*rlen, sunY+Math.sin(ang)*rlen);
     ctx.stroke();
   }
-  ctx.fillStyle = rgba(COLOR_LOOK, 0.65+0.3*effLife);
+  ctx.fillStyle = rgba(COLOR_LOOK, 0.7+0.3*effLife);
   ctx.beginPath(); ctx.arc(sunX,sunY,sunR,0,Math.PI*2); ctx.fill();
 
   if (life>=0.85){
@@ -565,20 +574,44 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
   if (reduceMotion) now = 0;
   var groundY = h*0.82, minWH = Math.min(w,h), i;
 
-  ctx.fillStyle = rgba(mixColor([10,16,12],[30,40,26],life), 0.2);
+  /* full-tile soft green ambient glow so the top isn't empty */
+  var skyGrad = ctx.createLinearGradient(0,0,0,groundY);
+  skyGrad.addColorStop(0, rgba(mixColor([16,30,20],[40,62,36],life), 0.42));
+  skyGrad.addColorStop(1, rgba(mixColor([14,26,16],COLOR_LIFE,life), 0.30));
+  ctx.fillStyle = skyGrad;
   ctx.fillRect(0,0,w,groundY);
 
-  var sx=w*0.82, sy=h*0.18, sr=minWH*0.055;
-  bloom(ctx, sx, sy, sr*2.6, [255,224,140], 0.22+0.16*life);
-  ctx.fillStyle = rgba([255,224,140], 0.62+0.18*life);
+  /* corner sun with a soft god-ray glow */
+  var sx=w*0.82, sy=h*0.18, sr=minWH*0.07;
+  bloom(ctx, sx, sy, sr*3.4, [255,224,140], 0.34+0.20*life);
+  var rayN=6, ri;
+  for (ri=0; ri<rayN; ri++){
+    var rAng = (ri/rayN)*Math.PI*2 + now*0.00012;
+    ctx.strokeStyle = rgba([255,224,140], 0.14+0.10*life);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(sx+Math.cos(rAng)*sr*1.2, sy+Math.sin(rAng)*sr*1.2);
+    ctx.lineTo(sx+Math.cos(rAng)*sr*3.2, sy+Math.sin(rAng)*sr*3.2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = rgba([255,224,140], 0.72+0.18*life);
   ctx.beginPath(); ctx.arc(sx,sy,sr,0,Math.PI*2); ctx.fill();
+
+  /* drifting pollen/spores across the upper garden */
+  for (i=0;i<7;i++){
+    var polX = ((i*0.17 + now*0.00002*(1+(i%3)*0.5)) % 1) * w;
+    var polY = groundY * (0.10 + ((i*53)%100)/100 * 0.55);
+    var polTw = Math.sin(now*0.0015+i*1.7)*0.5+0.5;
+    ctx.fillStyle = rgba([220,255,220], 0.16+0.26*polTw);
+    ctx.beginPath(); ctx.arc(polX,polY,1.3,0,Math.PI*2); ctx.fill();
+  }
 
   ctx.fillStyle = 'rgba(8,12,8,0.22)';
   ctx.fillRect(0,groundY,w,h-groundY);
 
   var tasksDone = extra.tasksDone||0, tasksTotal = extra.tasksTotal||0;
-  /* always at least 3 plants — a decent garden — growing to 6 with completed tasks */
-  var plantCount = Math.max(3, Math.min(6, tasksTotal>0 ? tasksDone : 3));
+  /* always at least 5 plants — a full garden — growing to 6 with completed tasks */
+  var plantCount = Math.max(5, Math.min(6, tasksTotal>0 ? tasksDone : 5));
   /* grass always sways at full liveliness; life only adds a bit more amplitude */
   var swayAmt = 5+life*3;
 
@@ -587,8 +620,8 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
   for (i=0;i<bgCount;i++){
     var bx = (w/(bgCount+1))*(i+1) + minWH*0.06;
     var bsway = Math.sin(now*0.0012+i*2)*swayAmt*0.5;
-    var bh = minWH*0.10;
-    ctx.strokeStyle = rgba(COLOR_LIFE, 0.22+0.14*life);
+    var bh = minWH*0.14;
+    ctx.strokeStyle = rgba(COLOR_LIFE, 0.30+0.18*life);
     ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.moveTo(bx, groundY-2);
@@ -601,8 +634,8 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
     var px = slotW*(i+1);
     var sway = Math.sin(now*0.0018+i*1.1)*swayAmt;
     var kind = i%3;
-    var stemH = minWH*(0.16+0.05*(i%3));
-    ctx.strokeStyle = rgba(COLOR_LIFE, 0.56+0.34*life);
+    var stemH = minWH*(0.16+0.05*(i%3))*1.4;
+    ctx.strokeStyle = rgba(COLOR_LIFE, 0.76+0.24*life);
     ctx.lineWidth = 2.2;
     ctx.beginPath();
     ctx.moveTo(px, groundY);
@@ -610,7 +643,7 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
     ctx.stroke();
 
     if (kind===0){
-      ctx.fillStyle = rgba(COLOR_LIFE, 0.5+0.35*life);
+      ctx.fillStyle = rgba(COLOR_LIFE, 0.75+0.25*life);
       ctx.beginPath(); ctx.ellipse(px+sway*0.7, groundY-stemH*0.6, 5, 2.6, sway*0.05, 0, Math.PI*2); ctx.fill();
       if (life>=0.7){
         var petalA = Math.min(1,(life-0.7)/0.3), pi;
@@ -625,11 +658,11 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
       for (li=0;li<3;li++){
         var ly = groundY-stemH*(0.3+li*0.25);
         var lx = px+sway*(0.3+li*0.2)+(li%2===0?4:-4);
-        ctx.fillStyle = rgba(COLOR_LIFE, 0.45+0.3*life);
+        ctx.fillStyle = rgba(COLOR_LIFE, 0.70+0.25*life);
         ctx.beginPath(); ctx.ellipse(lx, ly, 4.2, 2, sway*0.05, 0, Math.PI*2); ctx.fill();
       }
     } else {
-      ctx.fillStyle = rgba(COLOR_LIFE, 0.45+0.30*life);
+      ctx.fillStyle = rgba(COLOR_LIFE, 0.70+0.25*life);
       ctx.beginPath(); ctx.arc(px+sway*0.5, groundY-stemH*0.85, 6.5, 0, Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.arc(px+sway*0.5-4, groundY-stemH*0.7, 4.5, 0, Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.arc(px+sway*0.5+4, groundY-stemH*0.7, 4.5, 0, Math.PI*2); ctx.fill();
@@ -646,7 +679,7 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
   for (i=0;i<blades;i++){
     var gx = (w/blades)*(i+0.5);
     var gsway = Math.sin(now*0.003+i*0.8)*swayAmt*0.6;
-    ctx.strokeStyle = rgba(COLOR_LIFE, 0.36+0.24*life);
+    ctx.strokeStyle = rgba(COLOR_LIFE, 0.60+0.24*life);
     ctx.lineWidth = 1.4;
     ctx.beginPath();
     ctx.moveTo(gx, groundY+4);
@@ -670,7 +703,7 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
     if (lf.y > groundY){ lf.active=false; continue; }
     ctx.save();
     ctx.translate(lf.x, lf.y); ctx.rotate(lf.rot);
-    ctx.fillStyle = rgba(COLOR_LIFE, 0.5);
+    ctx.fillStyle = rgba(COLOR_LIFE, 0.7);
     ctx.beginPath(); ctx.ellipse(0,0,3.2,1.6,0,0,Math.PI*2); ctx.fill();
     ctx.restore();
   }
@@ -700,20 +733,36 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
 function drawMoney(ctx, w, h, life, now, extra, state, burst){
   if (reduceMotion) now = 0;
   var minWH = Math.min(w,h);
-  var baseY = h*0.78, i;
+  var baseY = h*0.80, i;
 
-  /* background: trading grid */
-  ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+  /* full-tile ambient red glow so the top isn't empty */
+  var ambGrad = ctx.createLinearGradient(0,0,0,h);
+  ambGrad.addColorStop(0, rgba(COLOR_MONEY, 0.10+0.06*life));
+  ambGrad.addColorStop(1, rgba(COLOR_MONEY, 0.22+0.10*life));
+  ctx.fillStyle = ambGrad;
+  ctx.fillRect(0,0,w,h);
+
+  /* background: trading grid — brighter, texture across the whole tile */
+  ctx.strokeStyle = 'rgba(255,255,255,0.09)';
   ctx.lineWidth = 1;
-  var gridN=4, gi;
+  var gridN=5, gi;
   for (gi=1; gi<gridN; gi++){
-    var gy = (h*0.15) + (baseY-h*0.15)*(gi/gridN);
+    var gy = (h*0.06) + (baseY-h*0.06)*(gi/gridN);
     ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(w,gy); ctx.stroke();
   }
 
-  /* midground: scrolling candlestick chart */
+  /* ambient embers drifting up across the whole square */
+  for (i=0;i<7;i++){
+    var emX = ((i*0.15 + now*0.00003*(1+(i%3)*0.4)) % 1) * w;
+    var emY = h - ((now*0.00004*(1+(i%2)*0.3) + i*0.2) % 1) * h;
+    var emTw = Math.sin(now*0.0013+i*1.6)*0.5+0.5;
+    ctx.fillStyle = rgba([255,180,140], 0.14+0.22*emTw);
+    ctx.beginPath(); ctx.arc(emX,emY,1.3,0,Math.PI*2); ctx.fill();
+  }
+
+  /* midground: scrolling candlestick chart — taller, reaching into the middle of the tile */
   if (!reduceMotion && now > state.nextCandleAt){
-    state.candles.push({ h:6+Math.random()*10+life*8, up:Math.random() < (0.45+life*0.3) });
+    state.candles.push({ h:16+Math.random()*14+life*10, up:Math.random() < (0.45+life*0.3) });
     state.candles.shift();
     state.nextCandleAt = now + 1400;
   }
@@ -723,26 +772,26 @@ function drawMoney(ctx, w, h, life, now, extra, state, burst){
     var c = candles[i];
     var x = (i+0.6)*(w/n);
     var trend = (i/n)*life;
-    var bodyH = c.h + trend*16;
-    var topY = baseY - bodyH - trend*(minWH*0.10);
+    var bodyH = c.h + trend*22;
+    var topY = baseY - bodyH - trend*(minWH*0.16);
     var col = c.up ? COLOR_LIFE : COLOR_MONEY;
-    ctx.fillStyle = rgba(col, 0.4+0.3*life);
+    ctx.fillStyle = rgba(col, 0.45+0.25*life);
     ctx.fillRect(x-cw/2, topY, cw, bodyH);
-    ctx.strokeStyle = rgba(col, 0.55);
+    ctx.strokeStyle = rgba(col, 0.65);
     ctx.beginPath(); ctx.moveTo(x, topY-4); ctx.lineTo(x, topY+bodyH+4); ctx.stroke();
     priceTop.push({ x:x, y:topY });
   }
-  ctx.strokeStyle = rgba(COLOR_MONEY, 0.40+0.30*life);
-  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = rgba(COLOR_MONEY, 0.55+0.25*life);
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
   for (i=0;i<priceTop.length;i++){ if (i===0) ctx.moveTo(priceTop[i].x,priceTop[i].y); else ctx.lineTo(priceTop[i].x,priceTop[i].y); }
   ctx.stroke();
 
-  /* foreground: flame always burning at a healthy baseline, growing bigger with life */
+  /* foreground: flame, big central focal point — baseline ~1.5x taller than before */
   var fx=w/2, fy=baseY-minWH*0.34;
-  var flameH = minWH*(0.15+life*0.12);
+  var flameH = minWH*(0.22+life*0.14);
   var flick = Math.sin(now*0.01)*0.15+1;
-  bloom(ctx, fx, fy, flameH*2.2, COLOR_MONEY, 0.26+0.17*life);
+  bloom(ctx, fx, fy, flameH*2.2, COLOR_MONEY, 0.38+0.22*life);
   ctx.save();
   ctx.translate(fx,fy);
   var fgrad = ctx.createLinearGradient(0,flameH*flick,0,-flameH*0.3);
