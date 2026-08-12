@@ -15,75 +15,58 @@
     --c-money:  #f87171; --c-money-glow:  rgba(248,113,113,0.35); --c-money-bg:  rgba(248,113,113,0.06); --c-money-bd:  rgba(248,113,113,0.18);
   }
 
-  /* ---- section cards ---- */
-  .sec-stack { display:flex; flex-direction:column; gap:12px; }
-  .sec-card {
-    position:relative; display:block; text-decoration:none; color:inherit;
-    border-radius:var(--radius); padding:18px 18px 18px 22px; overflow:hidden;
+  /* ---- 2x2 square planet tiles ---- */
+  .sec-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
+  .sec-tile {
+    position:relative; aspect-ratio:1 / 1; display:flex; flex-direction:column; justify-content:space-between;
+    border-radius:var(--radius); padding:16px; overflow:hidden; text-decoration:none; color:inherit;
     cursor:pointer; backdrop-filter:blur(24px) saturate(1.2); -webkit-backdrop-filter:blur(24px) saturate(1.2);
-    box-shadow:0 12px 40px rgba(0,0,0,0.45);
-    opacity:0; transform:translateY(20px);
-    transition:opacity .5s ease-out, transform .5s ease-out, box-shadow .18s ease;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.04);
+    opacity:0; transform:translateY(16px);
+    transition:opacity .5s ease-out, transform .5s ease-out, box-shadow .22s ease;
   }
-  .sec-card.lo-visible { opacity:1; transform:translateY(0); }
-  .sec-card:hover { transform:translateY(-2px); box-shadow:0 18px 48px rgba(0,0,0,0.55); }
-  .sec-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; }
+  .sec-tile.lo-visible { opacity:1; transform:translateY(0); }
+  .sec-tile:hover { transform:translateY(-3px); }
+  .sec-tile::before {
+    content:''; position:absolute; top:-32%; right:-32%; width:75%; height:75%; border-radius:50%;
+    pointer-events:none; opacity:0.45; filter:blur(6px); transition:opacity .25s ease;
+  }
+  .sec-tile:hover::before { opacity:0.8; }
 
-  .sec-card[data-sec="body"]  { background:var(--c-body-bg);  border:1px solid var(--c-body-bd); }
-  .sec-card[data-sec="body"]::before  { background:var(--c-body);  box-shadow:0 0 12px var(--c-body-glow); }
-  .sec-card[data-sec="look"]  { background:var(--c-look-bg);  border:1px solid var(--c-look-bd); }
-  .sec-card[data-sec="look"]::before  { background:var(--c-look);  box-shadow:0 0 12px var(--c-look-glow); }
-  .sec-card[data-sec="life"]  { background:var(--c-life-bg);  border:1px solid var(--c-life-bd); }
-  .sec-card[data-sec="life"]::before  { background:var(--c-life);  box-shadow:0 0 12px var(--c-life-glow); }
-  .sec-card[data-sec="money"] { background:var(--c-money-bg); border:1px solid var(--c-money-bd); }
-  .sec-card[data-sec="money"]::before { background:var(--c-money); box-shadow:0 0 12px var(--c-money-glow); }
+  .sec-tile[data-sec="body"]  { background:var(--c-body-bg);  border:1px solid var(--c-body-bd); }
+  .sec-tile[data-sec="body"]::before  { background:radial-gradient(circle, var(--c-body) 0%, transparent 70%); }
+  .sec-tile[data-sec="body"]:hover    { box-shadow:0 16px 40px var(--c-body-glow), inset 0 0 40px rgba(0,0,0,0.22); }
+  .sec-tile[data-sec="look"]  { background:var(--c-look-bg);  border:1px solid var(--c-look-bd); }
+  .sec-tile[data-sec="look"]::before  { background:radial-gradient(circle, var(--c-look) 0%, transparent 70%); }
+  .sec-tile[data-sec="look"]:hover    { box-shadow:0 16px 40px var(--c-look-glow), inset 0 0 40px rgba(0,0,0,0.22); }
+  .sec-tile[data-sec="life"]  { background:var(--c-life-bg);  border:1px solid var(--c-life-bd); }
+  .sec-tile[data-sec="life"]::before  { background:radial-gradient(circle, var(--c-life) 0%, transparent 70%); }
+  .sec-tile[data-sec="life"]:hover    { box-shadow:0 16px 40px var(--c-life-glow), inset 0 0 40px rgba(0,0,0,0.22); }
+  .sec-tile[data-sec="money"] { background:var(--c-money-bg); border:1px solid var(--c-money-bd); }
+  .sec-tile[data-sec="money"]::before { background:radial-gradient(circle, var(--c-money) 0%, transparent 70%); }
+  .sec-tile[data-sec="money"]:hover   { box-shadow:0 16px 40px var(--c-money-glow), inset 0 0 40px rgba(0,0,0,0.22); }
 
-  .sec-card.lo-pulse::before { animation:secPulse 2s ease-in-out infinite; }
-  @keyframes secPulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
-  @media (prefers-reduced-motion: reduce) { .sec-card.lo-pulse::before { animation:none; } }
+  .sec-tile.lo-pulse::before { animation:tilePulse 2s ease-in-out infinite; }
+  @keyframes tilePulse { 0%,100% { opacity:0.45; } 50% { opacity:0.85; } }
+  @media (prefers-reduced-motion: reduce) { .sec-tile.lo-pulse::before { animation:none; } }
 
-  .sec-top { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-  .sec-icon { font-size:19px; }
-  .sec-card[data-sec="body"]  .sec-icon, .sec-card[data-sec="body"]  .sec-name { color:var(--c-body); }
-  .sec-card[data-sec="look"]  .sec-icon, .sec-card[data-sec="look"]  .sec-name { color:var(--c-look); }
-  .sec-card[data-sec="life"]  .sec-icon, .sec-card[data-sec="life"]  .sec-name { color:var(--c-life); }
-  .sec-card[data-sec="money"] .sec-icon, .sec-card[data-sec="money"] .sec-name { color:var(--c-money); }
-  .sec-name { font-size:15px; font-weight:800; letter-spacing:-0.01em; flex:1; }
-  .sec-pct-txt { font-family:var(--mono); font-size:13px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--text-2); }
+  .sec-tile-top { position:relative; display:flex; align-items:center; gap:7px; z-index:1; }
+  .sec-tile-icon { font-size:17px; }
+  .sec-tile[data-sec="body"]  .sec-tile-icon, .sec-tile[data-sec="body"]  .sec-tile-name { color:var(--c-body); }
+  .sec-tile[data-sec="look"]  .sec-tile-icon, .sec-tile[data-sec="look"]  .sec-tile-name { color:var(--c-look); }
+  .sec-tile[data-sec="life"]  .sec-tile-icon, .sec-tile[data-sec="life"]  .sec-tile-name { color:var(--c-life); }
+  .sec-tile[data-sec="money"] .sec-tile-icon, .sec-tile[data-sec="money"] .sec-tile-name { color:var(--c-money); }
+  .sec-tile-name { font-size:12.5px; font-weight:800; letter-spacing:-0.01em; }
 
-  .sec-ring { width:52px; height:52px; position:relative; flex-shrink:0; }
-  .sec-ring svg { width:52px; height:52px; }
+  .sec-tile-mid { position:relative; z-index:1; flex:1; display:flex; align-items:center; justify-content:center; }
+  .sec-ring { width:64px; height:64px; position:relative; flex-shrink:0; }
+  .sec-ring svg { width:64px; height:64px; }
   .sec-ring .srt { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:5; }
-  .sec-ring .srf { fill:none; stroke-width:5; stroke-linecap:round; transform:rotate(-90deg); transform-origin:26px 26px; transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); }
-  .sec-ring .sr-pct { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:11px; font-weight:800; color:var(--text-1); font-variant-numeric:tabular-nums; }
+  .sec-ring .srf { fill:none; stroke-width:5; stroke-linecap:round; transform:rotate(-90deg); transform-origin:32px 32px; transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); }
+  .sec-ring .sr-pct { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; font-weight:800; color:var(--text-1); font-variant-numeric:tabular-nums; }
+  .sec-tile-bigicon { font-size:38px; }
 
-  .sec-body { display:flex; flex-direction:column; gap:10px; }
-
-  .sec-row-top { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
-  .sec-row-label { display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--text-2); flex:1; }
-  .sec-row-label i { font-size:14px; color:var(--text-3); }
-  .sec-row-val { font-family:var(--mono); font-size:11.5px; font-weight:700; color:var(--text-1); font-variant-numeric:tabular-nums; }
-  .sec-row-val.hit { color:var(--success); }
-  .sec-row-val.dim { color:var(--text-3); font-weight:600; }
-  .sec-bar { height:6px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; }
-  .sec-bar-fill { height:100%; border-radius:999px; width:0; transition:width .6s ease-out; }
-  .sec-bar-fill.body  { background:var(--c-body); }
-  .sec-bar-fill.look  { background:var(--c-look); }
-  .sec-bar-fill.life  { background:var(--c-life); }
-  .sec-bar-fill.money { background:var(--c-money); }
-
-  .sec-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:10px; margin-top:2px; border-top:1px solid var(--hair); }
-  .sec-sub.good { color:var(--success); }
-  .sec-sub b { color:var(--text-1); font-weight:800; }
-
-  .sec-tasks { display:flex; flex-direction:column; gap:6px; }
-  .sec-task { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-2); }
-  .sec-task i { font-size:14px; color:var(--text-3); flex-shrink:0; }
-  .sec-task.done { color:var(--text-3); text-decoration:line-through; }
-  .sec-task.done i { color:var(--c-life); }
-  .sec-more { font-family:var(--mono); font-size:10.5px; color:var(--text-3); }
-
-  .sec-empty-note { font-size:12.5px; color:var(--text-2); text-align:center; padding:6px 0; }
+  .sec-tile-stat { position:relative; z-index:1; font-family:var(--mono); font-size:10.5px; color:var(--text-2); font-variant-numeric:tabular-nums; text-align:center; }
 </style>
 </head>
 <body>
@@ -122,7 +105,7 @@
 
   <!-- STATS -->
   <div class="section-title">Stats</div>
-  <div class="sec-stack" id="secStack"></div>
+  <div class="sec-grid" id="secGrid"></div>
 
   <!-- SYSTEM -->
   <div class="section-title">System</div>
@@ -225,12 +208,6 @@ var HYG_GROUPS = [
   { id:'AM', label:'AM', items:['Warm water face rinse','Moisturise (Purito)','Brush teeth','Tongue scrape','Deodorant','Hair — leave-in + style'] },
   { id:'PM', label:'PM', items:['Shower','Cleanse (Anua)','Moisturise (Purito)','Brush teeth','Tongue scrape'] }
 ];
-var PLANTS = [
-  { id:'aloe',  name:'Aloe Vera',  days:14 },
-  { id:'peace', name:'Peace Lily', days:7 },
-  { id:'yucca', name:'Yucca',      days:10 }
-];
-
 function ringSvg(pct, colorVar, size){
   var r = (size/2) - 4;
   var c = 2 * Math.PI * r;
@@ -250,64 +227,29 @@ function buildBody(date){
   var gymDone = !!(storeGet('gym:'+date)||{}).done;
 
   var sl=storeGet('sleep:'+date)||{};
-  var mins = durMins(sl.bed, sl.wake);
   var sleepDone = !!(sl.bed || sl.wake);
-  var sleepHours = mins!=null ? (mins/60) : null;
 
   var stp=storeGet('steps:'+date)||{};
   var stepsCount = stp.count||0, goal = stepsGoal();
   var stepsPct = Math.min(1, stepsCount/goal);
 
   var pct = Math.round((suppsPct+(gymDone?1:0)+(sleepDone?1:0)+stepsPct)/4*100);
+  var line = (gymDone?'✓ Gym':'Gym —') + ' · ' + taken + '/' + SUPPS_TOTAL;
 
-  var html = '';
-  html += '<div class="sec-row">'+
-    '<div class="sec-row-top"><span class="sec-row-label"><i class="ti ti-barbell"></i>Gym</span>'+
-    '<span class="sec-row-val'+(gymDone?' hit':' dim')+'">'+(gymDone?'Done ✓':'Not yet')+'</span></div>'+
-    '<div class="sec-bar"><div class="sec-bar-fill body" data-w="'+(gymDone?100:0)+'"></div></div></div>';
-
-  html += '<div class="sec-row">'+
-    '<div class="sec-row-top"><span class="sec-row-label"><i class="ti ti-pill"></i>Supps</span>'+
-    '<span class="sec-row-val">'+taken+' / '+SUPPS_TOTAL+'</span></div>'+
-    '<div class="sec-bar"><div class="sec-bar-fill body" data-w="'+Math.round(suppsPct*100)+'"></div></div></div>';
-
-  html += '<div class="sec-row">'+
-    '<div class="sec-row-top"><span class="sec-row-label"><i class="ti ti-walk"></i>Steps</span>'+
-    '<span class="sec-row-val">'+stepsCount.toLocaleString()+' / '+goal.toLocaleString()+'</span></div>'+
-    '<div class="sec-bar"><div class="sec-bar-fill body" data-w="'+Math.round(stepsPct*100)+'"></div></div></div>';
-
-  html += '<div class="sec-row">'+
-    '<div class="sec-row-top"><span class="sec-row-label"><i class="ti ti-moon"></i>Sleep</span>'+
-    '<span class="sec-row-val'+(sleepHours!=null?'':' dim')+'">'+(sleepHours!=null?(Math.round(sleepHours*10)/10)+'h':'—')+'</span></div>'+
-    '<div class="sec-bar"><div class="sec-bar-fill body" data-w="'+(sleepHours!=null?Math.min(100,Math.round(sleepHours/8*100)):0)+'"></div></div></div>';
-
-  return { pct:pct, html:html };
+  return { pct:pct, line:line };
 }
 
 /* ---------- LOOK (orange) ---------- */
 function buildLook(date){
   var h=storeGet('hygiene:'+date)||{};
-  var done=0, nextItem=null, i;
+  var done=0;
   HYG_GROUPS.forEach(function(g){
     g.items.forEach(function(name, idx){
-      var ik = g.id+':'+idx;
-      if (h[ik]) done++;
-      else if (!nextItem) nextItem = name;
+      if (h[g.id+':'+idx]) done++;
     });
   });
   var pct = Math.round(done/HYG_TOTAL*100);
-
-  var html = '<div class="sec-row">'+
-    '<div class="sec-row-top"><span class="sec-row-label">Grooming</span>'+
-    '<span class="sec-row-val">'+done+' / '+HYG_TOTAL+' done</span></div>'+
-    '<div class="sec-bar"><div class="sec-bar-fill look" data-w="'+pct+'"></div></div></div>';
-
-  if (!nextItem){
-    html += '<div class="sec-sub good">All done ✨</div>';
-  } else {
-    html += '<div class="sec-sub">Next up: <b>'+nextItem+'</b></div>';
-  }
-  return { pct:pct, html:html };
+  return { pct:pct, line: done+'/'+HYG_TOTAL };
 }
 
 /* ---------- LIFE (green) ---------- */
@@ -318,44 +260,8 @@ function buildLife(date){
   var comp=storeGet('todos:'+date)||{};
   var hdone=due.filter(function(t){ return comp[t.id]; }).length;
   var pct = due.length ? Math.round(hdone/due.length*100) : 100;
-
-  var html = '<div class="sec-row">'+
-    '<div class="sec-row-top"><span class="sec-row-label">Today’s tasks</span>'+
-    '<span class="sec-row-val">'+hdone+' / '+due.length+' done</span></div>'+
-    '<div class="sec-bar"><div class="sec-bar-fill life" data-w="'+pct+'"></div></div></div>';
-
-  if (!due.length){
-    html += '<div class="sec-empty-note">Nothing due today. Nice.</div>';
-  } else {
-    html += '<div class="sec-tasks">';
-    due.slice(0,3).forEach(function(t){
-      var isDone = !!comp[t.id];
-      html += '<div class="sec-task'+(isDone?' done':'')+'"><i class="ti '+(isDone?'ti-circle-check':'ti-circle')+'"></i>'+t.name+'</div>';
-    });
-    html += '</div>';
-    if (due.length > 3){
-      html += '<div class="sec-more">+'+(due.length-3)+' more</div>';
-    }
-  }
-
-  var pdata = storeGet('plants:data') || {};
-  var today = date;
-  var best = null;
-  PLANTS.forEach(function(p){
-    var rec = pdata[p.id];
-    if (!rec || !rec.lastWatered) return;
-    var since = dayDiff(rec.lastWatered, today);
-    var daysLeft = p.days - since;
-    if (best === null || daysLeft < best.daysLeft) best = { name:p.name, daysLeft:daysLeft };
-  });
-  if (best){
-    var when = best.daysLeft <= 0 ? 'now' : ('in '+best.daysLeft+'d');
-    html += '<div class="sec-sub">🌱 Next water: <b>'+best.name+'</b> '+when+'</div>';
-  } else {
-    html += '<div class="sec-sub">🌱 Plants</div>';
-  }
-
-  return { pct:pct, html:html };
+  var line = due.length ? (hdone+'/'+due.length+' tasks') : 'All clear';
+  return { pct:pct, line:line };
 }
 
 /* ---------- MONEY (red) — launcher, no ring ---------- */
@@ -363,9 +269,6 @@ function buildMoney(date){
   var queue = storeGet('learn:queue'); if(!Array.isArray(queue)) queue=[];
   var qDone = queue.filter(function(q){ return q.done; }).length;
   var qTotal = queue.length;
-  var pct = qTotal ? Math.round(qDone/qTotal*100) : 0;
-  var nextTopic = null, i;
-  for (i=0;i<queue.length;i++){ if (!queue[i].done){ nextTopic = queue[i].name; break; } }
 
   var trades = storeGet('trades:log'); if(!Array.isArray(trades)) trades=[];
   var weekCount = 0;
@@ -375,20 +278,15 @@ function buildMoney(date){
     if (diff>=0 && diff<=6) weekCount++;
   });
 
-  var html = '';
+  var line;
   if (!qTotal && !trades.length){
-    html += '<div class="sec-empty-note">Start your trading journey →</div>';
+    line = 'Start your journey →';
   } else {
-    html += '<div class="sec-row">'+
-      '<div class="sec-row-top"><span class="sec-row-label">Learn queue</span>'+
-      '<span class="sec-row-val">'+qDone+' / '+qTotal+' done</span></div>'+
-      '<div class="sec-bar"><div class="sec-bar-fill money" data-w="'+pct+'"></div></div></div>';
-    if (nextTopic){
-      html += '<div class="sec-sub">Now: <b>'+nextTopic+'</b></div>';
-    }
-    html += '<div class="sec-sub">'+weekCount+' trade'+(weekCount===1?'':'s')+' this week</div>';
+    line = qTotal ? (qDone+'/'+qTotal+' learn') : '';
+    var tradeLine = weekCount+' trade'+(weekCount===1?'':'s')+' wk';
+    line = line ? (line+' · '+tradeLine) : tradeLine;
   }
-  return { pct:pct, html:html };
+  return { pct:null, line:line };
 }
 
 /* ---------- SECTIONS ---------- */
@@ -400,37 +298,38 @@ var SECTIONS = [
 ];
 
 function renderStats(){
-  var stack = document.getElementById('secStack');
+  var grid = document.getElementById('secGrid');
   var date = getActiveDateString();
-  stack.innerHTML = '';
+  grid.innerHTML = '';
 
   SECTIONS.forEach(function(s, idx){
     var res = s.build(date);
     var a = document.createElement('a');
-    a.className = 'sec-card';
+    a.className = 'sec-tile';
     a.setAttribute('data-sec', s.sec);
     a.href = s.href;
 
-    var topHtml = '<div class="sec-top"><i class="ti '+s.icon+' sec-icon"></i><div class="sec-name">'+s.name+'</div>';
+    var midHtml;
     if (s.ring){
-      topHtml += '<div class="sec-ring">'+ringSvg(res.pct, 'var(--c-'+s.sec+')', 52)+'<div class="sr-pct">'+res.pct+'%</div></div>';
+      midHtml = '<div class="sec-ring">'+ringSvg(res.pct, 'var(--c-'+s.sec+')', 64)+'<div class="sr-pct">'+res.pct+'%</div></div>';
     } else {
-      topHtml += '<span class="sec-pct-txt">'+res.pct+'%</span>';
+      midHtml = '<i class="ti '+s.icon+' sec-tile-bigicon"></i>';
     }
-    topHtml += '</div>';
 
-    a.innerHTML = topHtml + '<div class="sec-body">' + res.html + '</div>';
-    if (res.pct >= 80) a.classList.add('lo-pulse');
+    a.innerHTML =
+      '<div class="sec-tile-top"><i class="ti '+s.icon+' sec-tile-icon"></i><span class="sec-tile-name">'+s.name+'</span></div>'+
+      '<div class="sec-tile-mid">'+midHtml+'</div>'+
+      '<div class="sec-tile-stat">'+res.line+'</div>';
+
+    if (s.ring && res.pct >= 80) a.classList.add('lo-pulse');
     a.style.transitionDelay = (idx*80)+'ms';
-    stack.appendChild(a);
+    grid.appendChild(a);
   });
 
   requestAnimationFrame(function(){
     requestAnimationFrame(function(){
-      var cards = stack.querySelectorAll('.sec-card');
-      cards.forEach(function(c){ c.classList.add('lo-visible'); });
-      var bars = stack.querySelectorAll('.sec-bar-fill');
-      bars.forEach(function(b){ b.style.width = (b.getAttribute('data-w')||0)+'%'; });
+      var tiles = grid.querySelectorAll('.sec-tile');
+      tiles.forEach(function(t){ t.classList.add('lo-visible'); });
     });
   });
 }
