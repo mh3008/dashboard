@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Streaks · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .stk-head { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; margin-bottom:16px; }
+  .stk-head i { color:var(--accent); font-size:22px; }
+  .hero-stk { display:flex; align-items:center; gap:18px; }
+  .hero-flame { font-size:52px; line-height:1; filter:drop-shadow(0 0 14px rgba(249,115,22,0.5)); }
+  .hero-flame.cold { filter:none; opacity:0.4; }
+  .hero-num { font-size:52px; font-weight:800; letter-spacing:-0.03em; line-height:1; color:var(--accent-lt); }
+  .hero-num.cold { color:var(--text-3); }
+  .hero-cap { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:6px; }
+  .hero-cap b { color:var(--text-1); font-weight:800; }
+  .hab { margin-top:12px; }
+  .hab-top { display:flex; align-items:center; gap:12px; }
+  .hab-ic { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.22); color:var(--accent-lt); font-size:20px; flex-shrink:0; }
+  .hab-ic.cold { background:rgba(255,255,255,0.03); border-color:var(--hair); color:var(--text-3); }
+  .hab-name { font-size:15px; font-weight:800; letter-spacing:-0.01em; }
+  .hab-best { font-family:var(--mono); font-size:10.5px; color:var(--text-3); margin-top:2px; }
+  .hab-best b { color:var(--text-2); font-weight:800; }
+  .hab-cur { margin-left:auto; text-align:right; }
+  .hab-cur .n { font-family:var(--mono); font-size:26px; font-weight:800; line-height:1; color:var(--accent-lt); }
+  .hab-cur .n.cold { color:var(--text-3); }
+  .hab-cur .u { font-family:var(--mono); font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); margin-top:3px; }
+  .dots { display:flex; gap:5px; margin-top:14px; }
+  .dot { flex:1; height:26px; border-radius:6px; background:rgba(255,255,255,0.05); border:1px solid var(--hair);
+    position:relative; }
+  .dot.on { background:var(--success); border-color:var(--success); box-shadow:0 0 8px rgba(107,227,164,0.35); }
+  .dot.today { border-color:rgba(249,115,22,0.6); border-width:1.5px; }
+  .dot.today.on { box-shadow:0 0 10px rgba(107,227,164,0.5); }
+  .dot-lbls { display:flex; gap:5px; margin-top:5px; }
+  .dot-lbl { flex:1; text-align:center; font-family:var(--mono); font-size:8px; color:var(--text-3); }
+  .pend { font-family:var(--mono); font-size:10px; color:var(--warning); margin-top:10px; text-align:center; min-height:12px; }
+  .stk-note { font-family:var(--mono); font-size:10px; color:var(--text-3); text-align:center; margin-top:18px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="stk-head"><i class="ti ti-flame"></i> Streaks</div>
+    <div class="hero-stk">
+      <div class="hero-flame" id="heroFlame">🔥</div>
+      <div>
+        <div class="hero-num" id="heroNum">0</div>
+        <div class="hero-cap" id="heroCap">no active streaks yet</div>
+      </div>
+    </div>
+  </div>
+  <div id="habList"></div>
+  <div class="stk-note" id="stkNote"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function fmtDate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function activeDate(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d; }
+function todayStr(){ return fmtDate(activeDate()); }
+function shiftStr(dstr, delta){ var p=dstr.split('-'); var d=new Date(+p[0],+p[1]-1,+p[2]); d.setDate(d.getDate()+delta); return fmtDate(d); }
+function dayDiff(a,b){ var pa=a.split('-'),pb=b.split('-'); var da=new Date(+pa[0],+pa[1]-1,+pa[2]); var db=new Date(+pb[0],+pb[1]-1,+pb[2]); return Math.round((db-da)/86400000); }
+
+/* thresholds pulled from the same keys the other pages use */
+var SUPPS_TOTAL = 16;
+var SUPPS_DONE = 13;            /* supps counts if >=13 of 16 logged */
+function stepsGoal(){ var g=storeGet('steps:goal'); return (typeof g==='number' && g>0) ? g : 15000; }
+function sleepTarget(){ var t=storeGet('sleep:target'); return (typeof t==='number' && t>0) ? t : 8; }
+function toMin(t){ if(!t||t.indexOf(':')<0) return null; var p=t.split(':'); return (+p[0])*60+(+p[1]); }
+function durMins(bed,wake){ var b=toMin(bed),w=toMin(wake); if(b==null||w==null) return null; if(w<=b) w+=1440; return w-b; }
+
+var HABITS = [
+  { id:'gym',   name:'Gym',   icon:'ti-barbell', bar:'session finished',
+    done:function(dt){ var s=storeGet('gym:'+dt)||{}; return !!s.done; } },
+  { id:'steps', name:'Steps', icon:'ti-walk',    bar:'goal hit',
+    done:function(dt){ var s=storeGet('steps:'+dt)||{}; return (s.count||0)>=stepsGoal(); } },
+  { id:'sleep', name:'Sleep', icon:'ti-moon',    bar:'target hit',
+    done:function(dt){ var s=storeGet('sleep:'+dt)||{}; var m=durMins(s.bed,s.wake); return m!=null && (m/60)>=sleepTarget(); } },
+  { id:'supps', name:'Supps', icon:'ti-pill',    bar:SUPPS_DONE+'/'+SUPPS_TOTAL+' taken',
+    done:function(dt){ var s=storeGet('supps:'+dt)||{}; var t=0,k; for(k in s){ if(s.hasOwnProperty(k)&&s[k]) t++; } return t>=SUPPS_DONE; } }
+];
+
+function doneSetFor(hab){
+  var set={}, i, k, m, re=new RegExp('^'+hab.id+':(\\d{4}-\\d{2}-\\d{2})$');
+  for(i=0;i<localStorage.length;i++){
+    k=localStorage.key(i); if(!k) continue;
+    m=k.match(re); if(!m) continue;
+    if(hab.done(m[1])) set[m[1]]=true;
+  }
+  return set;
+}
+function computeStreaks(set){
+  var dates=[], d; for(d in set){ if(set.hasOwnProperty(d)) dates.push(d); }
+  dates.sort();
+  var best=0, run=0, prev=null, i;
+  for(i=0;i<dates.length;i++){
+    if(prev!=null && dayDiff(prev,dates[i])===1) run++; else run=1;
+    if(run>best) best=run; prev=dates[i];
+  }
+  var cur=0, day=todayStr(), pendingToday=false;
+  if(!set[day]){ pendingToday=true; day=shiftStr(day,-1); }
+  while(set[day]){ cur++; day=shiftStr(day,-1); }
+  return { cur:cur, best:best, pending:pendingToday };
+}
+
+function render(){
+  var list=document.getElementById('habList'); list.innerHTML='';
+  var today=todayStr(), maxCur=0, maxName='';
+  HABITS.forEach(function(hab){
+    var set=doneSetFor(hab);
+    var st=computeStreaks(set);
+    if(st.cur>maxCur){ maxCur=st.cur; maxName=hab.name; }
+    var cold=(st.cur===0);
+
+    var card=document.createElement('div'); card.className='card hab';
+    var top=document.createElement('div'); top.className='hab-top';
+
+    var ic=document.createElement('div'); ic.className='hab-ic'+(cold?' cold':'');
+    ic.innerHTML='<i class="ti '+hab.icon+'"></i>'; top.appendChild(ic);
+
+    var mid=document.createElement('div');
+    var nm=document.createElement('div'); nm.className='hab-name'; nm.textContent=hab.name;
+    var bs=document.createElement('div'); bs.className='hab-best';
+    bs.innerHTML='best <b>'+st.best+'</b> · '+hab.bar;
+    mid.appendChild(nm); mid.appendChild(bs); top.appendChild(mid);
+
+    var cur=document.createElement('div'); cur.className='hab-cur';
+    cur.innerHTML='<div class="n'+(cold?' cold':'')+'">'+st.cur+'</div><div class="u">day'+(st.cur===1?'':'s')+'</div>';
+    top.appendChild(cur);
+    card.appendChild(top);
+
+    var dots=document.createElement('div'); dots.className='dots';
+    var lbls=document.createElement('div'); lbls.className='dot-lbls';
+    var i, dstr, on, isToday, day;
+    for(i=13;i>=0;i--){
+      dstr=shiftStr(today,-i); on=!!set[dstr]; isToday=(i===0);
+      var dot=document.createElement('div');
+      dot.className='dot'+(on?' on':'')+(isToday?' today':'');
+      dots.appendChild(dot);
+      day=new Date((function(p){return new Date(+p[0],+p[1]-1,+p[2]);})(dstr.split('-'))).toLocaleDateString('en-GB',{weekday:'short'}).slice(0,1);
+      var lb=document.createElement('div'); lb.className='dot-lbl'; lb.textContent=(i%2===0?day:''); lbls.appendChild(lb);
+    }
+    card.appendChild(dots); card.appendChild(lbls);
+
+    if(st.pending && st.cur>0){
+      var pd=document.createElement('div'); pd.className='pend';
+      pd.textContent='today still open — '+hab.bar+' to keep the '+st.cur+' alive';
+      card.appendChild(pd);
+    }
+    list.appendChild(card);
+  });
+
+  var flame=document.getElementById('heroFlame'), num=document.getElementById('heroNum'), cap=document.getElementById('heroCap');
+  num.textContent=maxCur;
+  if(maxCur>0){
+    flame.className='hero-flame'; num.className='hero-num';
+    cap.innerHTML='longest live streak · <b>'+maxName+'</b>';
+  } else {
+    flame.className='hero-flame cold'; num.className='hero-num cold';
+    cap.textContent='no active streaks — log today to start one';
+  }
+  document.getElementById('stkNote').innerHTML='Streaks are computed from your logs — nothing to fill in here.<br>Miss a day and it resets. Today stays open until you hit the bar.';
+}
+render();
+window.addEventListener('lo-sync-applied', render);
+window.addEventListener('focus', render);
+</script>
+</body>
+</html>
