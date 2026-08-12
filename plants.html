@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Plants · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  .plt-head { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; letter-spacing:-0.02em; margin-bottom:16px; }
+  .plt-head i { color:var(--accent); font-size:22px; }
+  .plt-summary { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
+  .plt-summary b { color:var(--text-1); font-weight:800; }
+  .plt { margin-top:12px; }
+  .plt-top { display:flex; align-items:center; gap:14px; }
+  .plt-emoji { font-size:36px; line-height:1; flex-shrink:0; }
+  .plt-info { flex:1; min-width:0; }
+  .plt-name { font-size:16px; font-weight:800; letter-spacing:-0.01em; }
+  .plt-latin { font-family:var(--mono); font-size:10px; color:var(--text-3); font-style:italic; margin-top:2px; }
+  .plt-sched { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:4px; }
+  .plt-sched i { font-size:11px; margin-right:3px; vertical-align:-1px; }
+  .water-btn { flex-shrink:0; display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:12px;
+    cursor:pointer; border:1px solid rgba(56,189,248,0.3); background:rgba(56,189,248,0.08);
+    color:var(--cool); font-family:var(--mono); font-size:12px; font-weight:700;
+    transition:background .16s, transform .1s, border-color .16s; }
+  .water-btn:hover { background:rgba(56,189,248,0.16); border-color:rgba(56,189,248,0.5); }
+  .water-btn:active { transform:scale(0.95); }
+  .water-btn i { font-size:18px; }
+  .water-btn.just { background:rgba(107,227,164,0.12); border-color:rgba(107,227,164,0.4); color:var(--success); pointer-events:none; }
+  .plt-status { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .plt-tag { font-family:var(--mono); font-size:10px; font-weight:700; padding:5px 10px; border-radius:999px;
+    background:rgba(255,255,255,0.04); border:1px solid var(--hair); color:var(--text-2); }
+  .plt-tag.due { background:rgba(249,115,22,0.10); border-color:rgba(249,115,22,0.35); color:var(--accent-lt); }
+  .plt-tag.overdue { background:rgba(239,68,68,0.10); border-color:rgba(239,68,68,0.35); color:var(--danger); }
+  .plt-tag.ok { background:rgba(107,227,164,0.08); border-color:rgba(107,227,164,0.25); color:var(--success); }
+  .plt-bar { height:5px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; margin-top:12px; }
+  .plt-fill { height:100%; border-radius:999px; transition:width .5s cubic-bezier(.22,1,.36,1), background .3s; }
+  .plt-tips { margin-top:16px; padding-top:14px; border-top:1px solid var(--hair); }
+  .plt-tips-lbl { font-family:var(--mono); font-size:9px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); margin-bottom:8px; }
+  .plt-tip { font-size:12px; color:var(--text-2); line-height:1.5; margin-top:4px; }
+  .plt-tip i { color:var(--text-3); font-size:12px; margin-right:5px; }
+  .plt-note { font-family:var(--mono); font-size:10px; color:var(--text-3); text-align:center; margin-top:18px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="plt-head"><i class="ti ti-plant-2"></i> Plants</div>
+    <div class="plt-summary" id="pltSummary">—</div>
+  </div>
+  <div id="pltList"></div>
+  <div class="plt-note">Tap 💧 when you water. The schedule tracks from your last log.</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function fmtDate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function todayDate(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d; }
+function todayStr(){ return fmtDate(todayDate()); }
+function dayDiff(a,b){
+  var pa=a.split('-'),pb=b.split('-');
+  var da=new Date(+pa[0],+pa[1]-1,+pa[2]), db=new Date(+pb[0],+pb[1]-1,+pb[2]);
+  return Math.round((db-da)/86400000);
+}
+
+var STORE_KEY = 'plants:data';
+
+var PLANTS = [
+  { id:'aloe',  name:'Aloe Vera',   latin:'Aloe barbadensis', emoji:'🌵', days:14,
+    tips:['Bright indirect light — south-facing window ideal','Let soil dry completely between waterings','Well-draining pot, no sitting water'] },
+  { id:'peace', name:'Peace Lily',   latin:'Spathiphyllum',    emoji:'🌿', days:7,
+    tips:['Low to medium indirect light — tolerates shade','Keep soil lightly moist, not soggy','Drooping leaves = thirsty, bounces back fast'] },
+  { id:'yucca', name:'Yucca',        latin:'Yucca elephantipes', emoji:'🌴', days:10,
+    tips:['Bright light, can handle some direct sun','Water when top half of soil is dry','Very drought tolerant — underwatering beats overwatering'] }
+];
+
+function loadData(){
+  var d = storeGet(STORE_KEY);
+  if (!d || typeof d !== 'object') d = {};
+  PLANTS.forEach(function(p){
+    if (!d[p.id]) d[p.id] = { lastWatered:null };
+  });
+  return d;
+}
+function saveData(d){ storeSet(STORE_KEY, d); }
+
+function render(){
+  var data = loadData();
+  var list = document.getElementById('pltList'); list.innerHTML = '';
+  var today = todayStr();
+  var dueCount = 0, okCount = 0, overdueCount = 0;
+
+  PLANTS.forEach(function(p){
+    var rec = data[p.id] || {};
+    var last = rec.lastWatered;
+    var sinceWater = last ? dayDiff(last, today) : null;
+    var daysLeft = (sinceWater != null) ? p.days - sinceWater : null;
+    var justWatered = (last === today);
+
+    var statusClass, statusText;
+    if (!last){
+      statusClass = 'due'; statusText = 'never watered — water now'; dueCount++;
+    } else if (justWatered){
+      statusClass = 'ok'; statusText = 'watered today ✓'; okCount++;
+    } else if (daysLeft != null && daysLeft <= 0){
+      statusClass = 'overdue'; statusText = Math.abs(daysLeft) + ' day' + (Math.abs(daysLeft)===1?'':'s') + ' overdue'; overdueCount++;
+    } else if (daysLeft != null && daysLeft <= 2){
+      statusClass = 'due'; statusText = 'due ' + (daysLeft === 0 ? 'today' : (daysLeft === 1 ? 'tomorrow' : 'in ' + daysLeft + ' days')); dueCount++;
+    } else {
+      statusClass = 'ok'; statusText = daysLeft + ' days until next water'; okCount++;
+    }
+
+    var card = document.createElement('div'); card.className = 'card plt';
+
+    /* top row */
+    var top = document.createElement('div'); top.className = 'plt-top';
+    var emo = document.createElement('div'); emo.className = 'plt-emoji'; emo.textContent = p.emoji;
+    top.appendChild(emo);
+
+    var info = document.createElement('div'); info.className = 'plt-info';
+    var nm = document.createElement('div'); nm.className = 'plt-name'; nm.textContent = p.name;
+    var lt = document.createElement('div'); lt.className = 'plt-latin'; lt.textContent = p.latin;
+    var sc = document.createElement('div'); sc.className = 'plt-sched';
+    sc.innerHTML = '<i class="ti ti-calendar-repeat"></i>Every ' + p.days + ' days';
+    info.appendChild(nm); info.appendChild(lt); info.appendChild(sc);
+    top.appendChild(info);
+
+    var btn = document.createElement('div'); btn.className = 'water-btn' + (justWatered ? ' just' : '');
+    btn.innerHTML = '<i class="ti ti-droplet"></i>' + (justWatered ? 'Done' : 'Water');
+    if (!justWatered) {
+      (function(pid){
+        btn.addEventListener('click', function(){
+          var d = loadData();
+          d[pid].lastWatered = todayStr();
+          saveData(d); render();
+        });
+      })(p.id);
+    }
+    top.appendChild(btn);
+    card.appendChild(top);
+
+    /* status tags */
+    var statRow = document.createElement('div'); statRow.className = 'plt-status';
+    var tag = document.createElement('span'); tag.className = 'plt-tag ' + statusClass; tag.textContent = statusText;
+    statRow.appendChild(tag);
+    if (last && !justWatered) {
+      var ago = document.createElement('span'); ago.className = 'plt-tag';
+      ago.textContent = 'last: ' + sinceWater + 'd ago';
+      statRow.appendChild(ago);
+    }
+    card.appendChild(statRow);
+
+    /* progress bar — fills from 0 (just watered) to 100 (due/overdue) */
+    if (last) {
+      var bar = document.createElement('div'); bar.className = 'plt-bar';
+      var fill = document.createElement('div'); fill.className = 'plt-fill';
+      var pct = Math.min(100, (sinceWater / p.days) * 100);
+      fill.style.width = pct + '%';
+      var col = pct >= 100 ? 'var(--danger)' : (pct >= 75 ? 'var(--warning)' : 'var(--success)');
+      fill.style.background = col;
+      bar.appendChild(fill); card.appendChild(bar);
+    }
+
+    /* tips */
+    var tipsBox = document.createElement('div'); tipsBox.className = 'plt-tips';
+    var tLbl = document.createElement('div'); tLbl.className = 'plt-tips-lbl'; tLbl.textContent = 'Care'; tipsBox.appendChild(tLbl);
+    p.tips.forEach(function(t){
+      var tip = document.createElement('div'); tip.className = 'plt-tip';
+      tip.innerHTML = '<i class="ti ti-leaf"></i>' + t;
+      tipsBox.appendChild(tip);
+    });
+    card.appendChild(tipsBox);
+
+    list.appendChild(card);
+  });
+
+  /* summary */
+  var sum = document.getElementById('pltSummary');
+  var parts = [];
+  if (overdueCount) parts.push('<b>' + overdueCount + '</b> overdue');
+  if (dueCount) parts.push('<b>' + dueCount + '</b> due soon');
+  if (okCount) parts.push('<b>' + okCount + '</b> happy');
+  sum.innerHTML = parts.length ? parts.join(' · ') : 'All good — nothing needs water.';
+}
+
+render();
+window.addEventListener('lo-sync-applied', render);
+window.addEventListener('focus', render);
+</script>
+</body>
+</html>

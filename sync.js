@@ -28,7 +28,8 @@
     'money:', 'trades:', 'buy:', 'subs:',
     'learn:', 'reading:',
     'social:', 'timers:', 'posture:', 'football:',
-    'countdowns:', 'weekly:', 'goal_streak_v1'
+    'countdowns:', 'weekly:', 'goal_streak_v1',
+    'plants:'
   ];
 
   function matches(k) {
