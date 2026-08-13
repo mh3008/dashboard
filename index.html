@@ -84,6 +84,37 @@
   .sec-tile-mid { position:relative; z-index:1; flex:1; }
 
   .sec-tile-stat { position:relative; z-index:1; font-family:var(--mono); font-size:10.5px; color:var(--text-2); font-variant-numeric:tabular-nums; text-align:center; text-shadow:0 1px 4px rgba(0,0,0,0.4); }
+
+  /* --- glass tile glow-up --- */
+  .sec-tile {
+    border-radius: 20px;
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+  }
+  /* animated iridescent gradient border, per-tile colour family */
+  .sec-tile::after {
+    content:''; position:absolute; inset:0; border-radius:20px; padding:1.5px;
+    background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3), var(--g2), var(--g1));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: borderShift 8s ease infinite;
+    opacity: 0.75; pointer-events: none; z-index: 2;
+  }
+  @keyframes borderShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .sec-tile:hover::after { opacity: 1; }
+  @media (prefers-reduced-motion: reduce){
+    .sec-tile::after { animation: none; background-position: 50% 50%; }
+  }
+  .sec-tile[data-sec="body"]  { --g1:#a78bfa; --g2:#ec4899; --g3:#60a5fa; }
+  .sec-tile[data-sec="look"]  { --g1:#fb923c; --g2:#f59e0b; --g3:#ec4899; }
+  .sec-tile[data-sec="life"]  { --g1:#6be3a4; --g2:#38bdf8; --g3:#a3e635; }
+  .sec-tile[data-sec="money"] { --g1:#f87171; --g2:#fb923c; --g3:#ec4899; }
 </style>
 </head>
 <body>
