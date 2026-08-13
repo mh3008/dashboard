@@ -292,6 +292,7 @@ var COLOR_MONEY = [248,113,113];
 function rgba(c,a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
 function mixColor(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t]; }
 function bloom(ctx,x,y,r,color,alpha){
+  if (r <= 0) return;
   var g = ctx.createRadialGradient(x,y,0,x,y,r);
   g.addColorStop(0, rgba(color, alpha));
   g.addColorStop(1, rgba(color, 0));
@@ -299,6 +300,7 @@ function bloom(ctx,x,y,r,color,alpha){
   ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
 }
 function drawBurst(ctx,cx,cy,progress,color,maxR){
+  if (progress <= 0) return;
   var r = maxR*progress;
   var alpha = (1-progress)*0.5;
   ctx.strokeStyle = rgba(color, alpha);

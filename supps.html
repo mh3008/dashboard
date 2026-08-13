@@ -24,7 +24,9 @@
   .grp-body.collapsed { display:none; }
 
   .item { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
-    background:rgba(255,255,255,0.035); border:1px solid var(--hair); transition:background .18s, opacity .18s; cursor:pointer; }
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); transition:background .18s, opacity .18s; cursor:pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none; user-select: none; }
   .item:hover { background:var(--card-2); }
   .item.done { opacity:0.5; background:rgba(107,227,164,0.05); }
   .item.done .item-txt { text-decoration:line-through; text-decoration-color:rgba(255,255,255,0.4); }
@@ -56,63 +58,93 @@
 <script src="sync.js" defer></script>
 <script src="topbar.js" defer></script>
 <script>
-function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
-function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
-function pad2(n){ return String(n).padStart(2,'0'); }
-function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+(function(){
+  function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+  function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
 
-var GROUPS = [
-  { id:'WakeUp',    label:'Wake Up',                             items:['L-Theanine + Caffeine'] },
-  { id:'FatSupps',  label:'Fat Supps — morning with milk',       items:['D3 + K2','Boron','Beta Carotene','Fish Oil','Multivitamin'] },
-  { id:'PreGym',    label:'Pre-Gym',                             items:['Taurine','Electrolyte Powder'] },
-  { id:'VitCSupps', label:'Vit C Supps — dinner with OJ + meat', items:['NAC','Vitamin C','Zinc','Copper'] },
-  { id:'PreSleep',  label:'Pre-Sleep',                           items:['Taurine','Glycine','Mag Glycinate','L-Theanine'] }
-];
-var TOTAL = GROUPS.reduce(function(n,g){ return n+g.items.length; },0); // 16
+  var GROUPS = [
+    { id:'WakeUp',    label:'Wake Up',                             items:['L-Theanine + Caffeine'] },
+    { id:'FatSupps',  label:'Fat Supps — morning with milk',       items:['D3 + K2','Boron','Beta Carotene','Fish Oil','Multivitamin'] },
+    { id:'PreGym',    label:'Pre-Gym',                             items:['Taurine','Electrolyte Powder'] },
+    { id:'VitCSupps', label:'Vit C Supps — dinner with OJ + meat', items:['NAC','Vitamin C','Zinc','Copper'] },
+    { id:'PreSleep',  label:'Pre-Sleep',                           items:['Taurine','Glycine','Mag Glycinate','L-Theanine'] }
+  ];
+  var TOTAL = 16;
 
-function key(){ return 'supps:'+getActiveDateString(); }
+  function dateKey(){ return 'supps:'+getActiveDateString(); }
 
-function render(){
-  var data = storeGet(key()) || {};
-  var box = document.getElementById('suppGroups');
-  box.innerHTML = '';
-  GROUPS.forEach(function(g){
-    var grp = document.createElement('div'); grp.className='grp';
-    var head = document.createElement('div'); head.className='grp-head';
-    head.innerHTML = '<span class="grp-caret open">&gt;</span><span class="grp-name">'+g.label+'</span>';
-    var body = document.createElement('div'); body.className='grp-body';
-    head.addEventListener('click', function(){
-      var open = body.classList.toggle('collapsed');
-      head.querySelector('.grp-caret').classList.toggle('open', !open);
-    });
-    g.items.forEach(function(name, i){
-      var ik = g.id+':'+i, done = !!data[ik];
-      var row = document.createElement('div'); row.className='item'+(done?' done':'');
-      row.innerHTML = '<span class="cb"></span><span class="item-txt">'+name+'</span>';
-      row.addEventListener('click', function(){
-        var d = storeGet(key()) || {};
-        d[ik] = !d[ik];
-        storeSet(key(), d);
-        render();
+  var rows = [];
+  var built = false;
+
+  function buildUI(){
+    var data = storeGet(dateKey()) || {};
+    var box = document.getElementById('suppGroups');
+    box.innerHTML = '';
+    rows = [];
+
+    GROUPS.forEach(function(g){
+      var grp = document.createElement('div'); grp.className = 'grp';
+      var head = document.createElement('div'); head.className = 'grp-head';
+      head.innerHTML = '<span class="grp-caret open">&gt;</span><span class="grp-name">' + g.label + '</span>';
+      var body = document.createElement('div'); body.className = 'grp-body';
+      head.addEventListener('click', function(){
+        var collapsed = body.classList.toggle('collapsed');
+        head.querySelector('.grp-caret').classList.toggle('open', !collapsed);
       });
-      body.appendChild(row);
+
+      g.items.forEach(function(name, i){
+        var ik = g.id + ':' + i;
+        var done = !!data[ik];
+        var row = document.createElement('div');
+        row.className = 'item' + (done ? ' done' : '');
+        row.innerHTML = '<span class="cb"></span><span class="item-txt">' + name + '</span>';
+        row.setAttribute('data-ik', ik);
+        row.addEventListener('click', function(e){
+          e.preventDefault();
+          var d = storeGet(dateKey()) || {};
+          var nowDone = !d[ik];
+          d[ik] = nowDone;
+          storeSet(dateKey(), d);
+          row.classList.toggle('done', nowDone);
+          updateCount();
+        });
+        body.appendChild(row);
+        rows.push({ el: row, ik: ik });
+      });
+
+      grp.appendChild(head);
+      grp.appendChild(body);
+      box.appendChild(grp);
     });
-    grp.appendChild(head); grp.appendChild(body);
-    box.appendChild(grp);
-  });
+    built = true;
+    updateCount();
+  }
 
-  var done = 0;
-  GROUPS.forEach(function(g){ g.items.forEach(function(_,i){ if(data[g.id+':'+i]) done++; }); });
-  var cnt = document.getElementById('suppCount');
-  cnt.textContent = done+' / '+TOTAL;
-  cnt.classList.toggle('all-done', done===TOTAL);
-  document.getElementById('suppFill').style.width = (done/TOTAL*100)+'%';
-  document.getElementById('suppsCard').classList.toggle('is-done', done===TOTAL);
-}
+  function updateCount(){
+    var data = storeGet(dateKey()) || {};
+    var done = 0;
+    rows.forEach(function(r){ if (data[r.ik]) done++; });
+    var cnt = document.getElementById('suppCount');
+    cnt.textContent = done + ' / ' + TOTAL;
+    cnt.classList.toggle('all-done', done === TOTAL);
+    document.getElementById('suppFill').style.width = (done / TOTAL * 100) + '%';
+    document.getElementById('suppsCard').classList.toggle('is-done', done === TOTAL);
+  }
 
-render();
-window.addEventListener('lo-sync-applied', render);
-window.addEventListener('focus', render);
+  function refreshState(){
+    var data = storeGet(dateKey()) || {};
+    rows.forEach(function(r){
+      r.el.classList.toggle('done', !!data[r.ik]);
+    });
+    updateCount();
+  }
+
+  buildUI();
+  window.addEventListener('lo-sync-applied', refreshState);
+  window.addEventListener('focus', refreshState);
+})();
 </script>
 </body>
 </html>
