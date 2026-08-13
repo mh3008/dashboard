@@ -8,11 +8,14 @@
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="theme.css" rel="stylesheet">
 <style>
+  body { background: #000; }
+
   :root {
     --c-body:   #a78bfa; --c-body-glow:   rgba(167,139,250,0.35); --c-body-bg:   rgba(167,139,250,0.06); --c-body-bd:   rgba(167,139,250,0.18);
     --c-look:   #fb923c; --c-look-glow:   rgba(251,146,60,0.35);  --c-look-bg:   rgba(251,146,60,0.06);  --c-look-bd:   rgba(251,146,60,0.18);
     --c-life:   #6be3a4; --c-life-glow:   rgba(107,227,164,0.35); --c-life-bg:   rgba(107,227,164,0.06); --c-life-bd:   rgba(107,227,164,0.18);
     --c-money:  #f87171; --c-money-glow:  rgba(248,113,113,0.35); --c-money-bg:  rgba(248,113,113,0.06); --c-money-bd:  rgba(248,113,113,0.18);
+    --c-system: #60a5fa; --c-system-glow: rgba(96,165,250,0.35); --c-system-bg: rgba(96,165,250,0.06); --c-system-bd: rgba(96,165,250,0.18);
   }
 
   /* ---- 2x2 square planet tiles ---- */
@@ -45,6 +48,18 @@
   .sec-tile[data-sec="money"] { background:var(--c-money-bg); border:1px solid var(--c-money-bd); }
   .sec-tile[data-sec="money"]::before { background:radial-gradient(circle, var(--c-money) 0%, transparent 70%); }
   .sec-tile[data-sec="money"]:hover   { box-shadow:0 16px 40px var(--c-money-glow), inset 0 0 40px rgba(0,0,0,0.22); }
+
+  .sys-launch {
+    grid-column: 1 / -1;
+    aspect-ratio: auto;
+    height: 80px;
+    margin-top: 4px;
+  }
+  .sec-tile[data-sec="system"] { background: var(--c-system-bg); border: 1px solid var(--c-system-bd); }
+  .sec-tile[data-sec="system"]::before { background: radial-gradient(circle, var(--c-system) 0%, transparent 70%); }
+  .sec-tile[data-sec="system"]:hover { box-shadow: 0 16px 40px var(--c-system-glow), inset 0 0 40px rgba(0,0,0,0.22); }
+  .sec-tile[data-sec="system"] .sec-tile-icon,
+  .sec-tile[data-sec="system"] .sec-tile-name { color: var(--c-system); }
 
   .sec-tile.lo-pulse::before { animation:tilePulse 2s ease-in-out infinite; }
   @keyframes tilePulse { 0%,100% { opacity:0.45; } 50% { opacity:0.85; } }
@@ -109,15 +124,15 @@
   <div class="section-title">Stats</div>
   <div class="sec-grid" id="secGrid"></div>
 
-  <!-- SYSTEM -->
-  <div class="section-title">System</div>
-  <div class="sys-grid">
-    <a class="sys-tile" href="todos.html"><i class="ti ti-checkbox"></i><span>Todos</span></a>
-    <a class="sys-tile" href="streaks.html"><i class="ti ti-flame"></i><span>Streaks</span></a>
-    <a class="sys-tile" href="goals.html"><i class="ti ti-target-arrow"></i><span>Goals</span></a>
-    <a class="sys-tile" href="countdowns.html"><i class="ti ti-hourglass"></i><span>Countdowns</span></a>
-    <a class="sys-tile" href="weekly.html"><i class="ti ti-calendar-week"></i><span>Weekly</span></a>
-  </div>
+  <a class="sec-tile sys-launch" data-sec="system" href="system.html" id="sysTile">
+    <canvas class="sec-tile-canvas" id="sysCanvas"></canvas>
+    <div class="sec-tile-top">
+      <i class="ti ti-settings sec-tile-icon"></i>
+      <span class="sec-tile-name">System</span>
+    </div>
+    <div class="sec-tile-mid"></div>
+    <div class="sec-tile-stat"></div>
+  </a>
 
 </div>
 
@@ -1039,7 +1054,14 @@ function tick(){
 
 /* ---------- boot ---------- */
 updateClock(); updateDayRing();
-buildTiles(); updateStats(); startLoop();
+buildTiles();
+(function(){
+  var st = document.getElementById('sysTile');
+  if (st) {
+    setTimeout(function(){ st.classList.add('lo-visible'); }, 350);
+  }
+})();
+updateStats(); startLoop();
 tick();
 setInterval(updateClock, 1000);
 setInterval(updateDayRing, 60*1000);
