@@ -52,7 +52,7 @@
   .sys-launch {
     grid-column: 1 / -1;
     aspect-ratio: auto;
-    height: 80px;
+    height: 288px;
     margin-top: 4px;
   }
   .sec-tile[data-sec="system"] { background: var(--c-system-bg); border: 1px solid var(--c-system-bd); }
@@ -115,6 +115,7 @@
   .sec-tile[data-sec="look"]  { --g1:#fb923c; --g2:#f59e0b; --g3:#ec4899; }
   .sec-tile[data-sec="life"]  { --g1:#6be3a4; --g2:#38bdf8; --g3:#a3e635; }
   .sec-tile[data-sec="money"] { --g1:#f87171; --g2:#fb923c; --g3:#ec4899; }
+  .sec-tile[data-sec="system"] { --g1:#60a5fa; --g2:#22d3ee; --g3:#6366f1; }
 </style>
 </head>
 <body>
@@ -126,6 +127,13 @@
     <div class="hero">
       <div class="day-ring">
         <svg viewBox="0 0 200 200">
+          <defs>
+            <linearGradient id="dayGrad" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="192" y2="192">
+              <stop id="dayGradStop1" offset="0%" stop-color="#ffd89e"></stop>
+              <stop id="dayGradStop2" offset="50%" stop-color="#f3714f"></stop>
+              <stop id="dayGradStop3" offset="100%" stop-color="#7b5bb0"></stop>
+            </linearGradient>
+          </defs>
           <circle class="ring-track" cx="100" cy="100" r="92"></circle>
           <circle class="ring-fill" id="dayFill" cx="100" cy="100" r="92"></circle>
         </svg>
@@ -196,7 +204,7 @@ var SUN = [
   [37.5,[255,183,106]], [50,  [255,149, 89]], [62.5,[243,111, 79]],
   [75,  [226, 93,122]], [87.5,[123, 91,176]], [100, [ 47, 58,102]]
 ];
-function sunColor(pct){
+function sunColorArr(pct){
   for (var i=0;i<SUN.length-1;i++){
     var a=SUN[i], b=SUN[i+1];
     if (pct>=a[0] && pct<=b[0]){
@@ -204,10 +212,14 @@ function sunColor(pct){
       var r=Math.round(a[1][0]+(b[1][0]-a[1][0])*t);
       var g=Math.round(a[1][1]+(b[1][1]-a[1][1])*t);
       var bl=Math.round(a[1][2]+(b[1][2]-a[1][2])*t);
-      return 'rgb('+r+','+g+','+bl+')';
+      return [r,g,bl];
     }
   }
-  return 'rgb(47,58,102)';
+  return [47,58,102];
+}
+function sunColor(pct){
+  var c = sunColorArr(pct);
+  return 'rgb('+c[0]+','+c[1]+','+c[2]+')';
 }
 function updateDayRing(){
   var now=new Date();
@@ -222,6 +234,8 @@ function updateDayRing(){
     fill.setAttribute('stroke-dashoffset', DAY_C);
     fill.setAttribute('stroke', '#4d4b47');
     pctEl.textContent='—'; phaseEl.textContent='SLEEPING';
+    pctEl.style.backgroundImage=''; pctEl.style.webkitBackgroundClip=''; pctEl.style.backgroundClip='';
+    pctEl.style.webkitTextFillColor=''; pctEl.style.color='';
     statusEl.textContent='😴 Still sleeping';
     var toWake=WAKE_HOUR-hrs;
     remainEl.textContent=Math.floor(toWake)+'h '+Math.round((toWake%1)*60)+'m until wake-up';
@@ -229,10 +243,22 @@ function updateDayRing(){
   }
   var pct=Math.min(100,(hrs-WAKE_HOUR)/(SLEEP_HOUR-WAKE_HOUR)*100);
   var col=sunColor(pct);
+  var pctA=sunColorArr(Math.max(0,pct-18));
+  var pctB=sunColorArr(pct);
+  var pctC=sunColorArr(Math.min(100,pct+18));
+  var colA='rgb('+pctA[0]+','+pctA[1]+','+pctA[2]+')';
+  var colB='rgb('+pctB[0]+','+pctB[1]+','+pctB[2]+')';
+  var colC='rgb('+pctC[0]+','+pctC[1]+','+pctC[2]+')';
+  var stop1=document.getElementById('dayGradStop1'), stop2=document.getElementById('dayGradStop2'), stop3=document.getElementById('dayGradStop3');
+  if (stop1) stop1.setAttribute('stop-color', colA);
+  if (stop2) stop2.setAttribute('stop-color', colB);
+  if (stop3) stop3.setAttribute('stop-color', colC);
   fill.setAttribute('stroke-dashoffset', DAY_C*(1-pct/100));
-  fill.setAttribute('stroke', col);
+  fill.setAttribute('stroke', 'url(#dayGrad)');
   pctEl.textContent=Math.round(pct)+'%';
-  pctEl.style.color=col;
+  pctEl.style.backgroundImage='linear-gradient(135deg,'+colA+','+colB+','+colC+')';
+  pctEl.style.webkitBackgroundClip='text'; pctEl.style.backgroundClip='text';
+  pctEl.style.webkitTextFillColor='transparent'; pctEl.style.color='transparent';
 
   var phase,status;
   if (pct<25){ phase='MORNING'; status='☀️ Morning — fresh start'; }
@@ -337,6 +363,19 @@ var COLOR_MONEY = [248,113,113];
 
 function rgba(c,a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
 function mixColor(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t]; }
+
+/* ---- per-domain gradient palettes: 3-stop harmonious colour families ---- */
+var BODY_PAL   = [[167,139,250],[236,72,153],[96,165,250]];
+var LOOK_PAL   = [[251,146,60],[245,158,11],[249,168,212]];
+var LIFE_PAL   = [[107,227,164],[45,212,191],[190,242,100]];
+var MONEY_PAL  = [[248,113,113],[251,146,60],[236,72,153]];
+var SYSTEM_PAL = [[96,165,250],[34,211,238],[99,102,241]];
+function paletteColor(pal, t){
+  t = Math.max(0, Math.min(1, t));
+  if (t <= 0.5) return mixColor(pal[0], pal[1], t/0.5);
+  return mixColor(pal[1], pal[2], (t-0.5)/0.5);
+}
+
 function bloom(ctx,x,y,r,color,alpha){
   if (r <= 0) return;
   var g = ctx.createRadialGradient(x,y,0,x,y,r);
@@ -398,6 +437,17 @@ function initState(sec, t0){
     var coins=[];
     for (i=0;i<4;i++){ coins.push({ active:false, x:0, y:0, vy:0, rot:0, bounces:0 }); }
     return { candles:candles, sparks:sparks, coins:coins, nextCandleAt:t0+1400, nextCoinAt:t0+6000+Math.random()*6000 };
+  }
+  if (sec==='system'){
+    var nodes=[];
+    for (i=0;i<16;i++){
+      nodes.push({
+        x:0.08+Math.random()*0.84, y:0.15+Math.random()*0.7,
+        vx:(Math.random()-0.5)*0.00004, vy:(Math.random()-0.5)*0.00004,
+        phase:Math.random()*Math.PI*2
+      });
+    }
+    return { nodes:nodes, pulse:null, nextPulseAt:t0+3000+Math.random()*4000 };
   }
   return {};
 }
@@ -463,7 +513,6 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
 
   /* foreground: orbiters with comet trails — always the full set of 4 (pct text still tracks real pillars) */
   var orbiterCount = 4;
-  var tint = [ [200,170,255],[170,200,255],[255,180,220],[190,255,210],[220,190,255],[180,220,255] ];
   for (i=0;i<orbiterCount;i++){
     var orbitR = coreR*2.0 + i*(minWH*0.085);
     var ang = now*0.0006*(1+i*0.35) + i*1.9;
@@ -476,7 +525,7 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
     if (!trail){ trail = []; state.trails[i] = trail; }
     trail.push({ x:px, y:py });
     if (trail.length>7) trail.shift();
-    var tcol = tint[i%tint.length];
+    var tcol = paletteColor(BODY_PAL, i/(orbiterCount-1||1));
     for (var tI=0;tI<trail.length;tI++){
       var ta = (tI/trail.length)*(0.62+0.18*life);
       ctx.fillStyle = rgba(tcol, ta*0.6);
@@ -490,32 +539,32 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
   /* periodic radial burst rings at full life */
   if (life>=0.999){
     var ringCyc = (now*0.00045)%1;
-    ctx.strokeStyle = rgba(COLOR_BODY, (1-ringCyc)*0.35);
+    ctx.strokeStyle = rgba(paletteColor(BODY_PAL, ringCyc), (1-ringCyc)*0.35);
     ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.arc(cx,cy,coreR*(1.2+ringCyc*4),0,Math.PI*2); ctx.stroke();
   }
 
   if (burst){
-    drawBurst(ctx, cx, cy, Math.min(1,(now-burst.start)/900), COLOR_BODY, minWH*0.55);
+    drawBurst(ctx, cx, cy, Math.min(1,(now-burst.start)/900), paletteColor(BODY_PAL,0.5), minWH*0.55);
   }
 }
 
 function drawLook(ctx, w, h, life, now, extra, state, burst){
   if (reduceMotion) now = 0;
   var horizonY = h*0.82, minWH = Math.min(w,h), i;
-  /* effLife: the sun/sky's OWN progress, floored high so the sky is always a bright warm dawn, never a dark night */
-  var effLife = 0.55+0.45*life;
+  /* effLife: the sun's own progress, floored low so the sky stays mostly dark — warm colour concentrated near the horizon and the sun, never flooding the tile */
+  var effLife = 0.18+0.30*life;
 
-  var nightTop=[26,18,30], nightBot=[36,24,30];
-  var dawnTop=[120,54,22], dawnBot=COLOR_LOOK;
+  var nightTop=[8,7,10], nightMid=[20,14,16], dawnBot=COLOR_LOOK;
   var skyGrad = ctx.createLinearGradient(0,0,0,horizonY);
-  skyGrad.addColorStop(0, rgba(mixColor(nightTop,dawnTop,effLife), 0.85));
-  skyGrad.addColorStop(1, rgba(mixColor(nightBot,dawnBot,effLife), 0.85));
+  skyGrad.addColorStop(0, rgba(nightTop, 0.92));
+  skyGrad.addColorStop(0.62, rgba(mixColor(nightTop,nightMid,effLife), 0.85));
+  skyGrad.addColorStop(1, rgba(mixColor(nightMid,dawnBot,effLife*0.85), 0.55+0.18*effLife));
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0,0,w,horizonY);
 
   /* background: stars fading as sun rises */
-  var starVis = Math.max(0, 1-effLife*1.3);
+  var starVis = Math.max(0, 1-effLife*1.1);
   if (starVis>0.01){
     for (i=0;i<state.stars.length;i++){
       var st = state.stars[i];
@@ -525,13 +574,13 @@ function drawLook(ctx, w, h, life, now, extra, state, burst){
     }
   }
 
-  /* midground: layered drifting clouds — always present, spread across the whole sky */
+  /* midground: faint drifting clouds — thin and translucent, not opaque shapes */
   for (i=0;i<state.clouds.length;i++){
     var c = state.clouds[i];
     var cx2 = ((c.x + now*0.00002*c.speed) % 1.3 - 0.15) * w;
     var cy2 = c.y*horizonY;
-    var cw2 = minWH*0.26*c.scale;
-    ctx.fillStyle = rgba([255,255,255], 0.22+0.10*life);
+    var cw2 = minWH*0.19*c.scale;
+    ctx.fillStyle = rgba([255,255,255], 0.09+0.05*life);
     ctx.beginPath();
     ctx.ellipse(cx2, cy2, cw2, cw2*0.42, 0, 0, Math.PI*2);
     ctx.ellipse(cx2+cw2*0.5, cy2+cw2*0.08, cw2*0.65, cw2*0.34, 0, 0, Math.PI*2);
@@ -543,42 +592,49 @@ function drawLook(ctx, w, h, life, now, extra, state, burst){
     var mx = ((i*0.13 + now*0.00003*(1+ (i%3)*0.4)) % 1) * w;
     var my = horizonY * (0.08 + ((i*37)%100)/100 * 0.55);
     var mtw = Math.sin(now*0.0012+i*1.3)*0.5+0.5;
-    ctx.fillStyle = rgba([255,235,200], 0.18+0.28*mtw);
-    ctx.beginPath(); ctx.arc(mx,my,1.4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = rgba([255,235,200], 0.10+0.16*mtw);
+    ctx.beginPath(); ctx.arc(mx,my,1.2,0,Math.PI*2); ctx.fill();
   }
 
   /* ground + horizon reflection */
-  ctx.fillStyle = 'rgba(10,7,5,0.32)';
+  ctx.fillStyle = 'rgba(6,5,6,0.4)';
   ctx.fillRect(0,horizonY,w,h-horizonY);
   var reflGrad = ctx.createLinearGradient(0,horizonY,0,horizonY+minWH*0.18);
-  reflGrad.addColorStop(0, rgba(COLOR_LOOK, 0.19+0.13*effLife));
-  reflGrad.addColorStop(1, rgba(COLOR_LOOK, 0));
+  reflGrad.addColorStop(0, rgba(paletteColor(LOOK_PAL,0.35), 0.16+0.14*effLife));
+  reflGrad.addColorStop(1, rgba(paletteColor(LOOK_PAL,0.35), 0));
   ctx.fillStyle = reflGrad;
   ctx.fillRect(0,horizonY,w,minWH*0.18);
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.beginPath(); ctx.moveTo(0,horizonY); ctx.lineTo(w,horizonY); ctx.stroke();
 
-  /* foreground: sun — big central focal point, at least ~55% risen, rising further with life */
+  /* foreground: sun — a small luminous point of light, not a solid disc */
   var sunX = w/2;
-  var sunYbottom = horizonY+minWH*0.10, sunYtop = h*0.34;
+  var sunYbottom = horizonY+minWH*0.06, sunYtop = h*0.40;
   var sunY = sunYbottom + (sunYtop-sunYbottom)*effLife;
-  var sunR = (minWH*0.09 + effLife*minWH*0.045) * 1.4;
+  var sunR = minWH*0.045 + effLife*minWH*0.02;
 
-  bloom(ctx, sunX, sunY, sunR*3.3, COLOR_LOOK, 0.50+0.30*effLife);
+  bloom(ctx, sunX, sunY, sunR*6.5, paletteColor(LOOK_PAL,0.15), 0.20+0.16*effLife);
+  bloom(ctx, sunX, sunY, sunR*3.0, paletteColor(LOOK_PAL,0.35), 0.32+0.20*effLife);
 
-  /* rays always present, rotating and brightening with life */
-  var rays=12;
+  /* rays: thin, faint, short */
+  var rays=8;
   for (i=0;i<rays;i++){
     var ang = (i/rays)*Math.PI*2 + now*0.00018;
-    var rlen = sunR*(2.2+effLife*1.4);
-    ctx.strokeStyle = rgba(COLOR_LOOK, 0.40+0.18*effLife);
-    ctx.lineWidth = 1.6;
+    var rlen = sunR*(1.6+effLife*0.9);
+    ctx.strokeStyle = rgba(paletteColor(LOOK_PAL, i/rays), 0.20+0.12*effLife);
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(sunX+Math.cos(ang)*sunR*1.1, sunY+Math.sin(ang)*sunR*1.1);
     ctx.lineTo(sunX+Math.cos(ang)*rlen, sunY+Math.sin(ang)*rlen);
     ctx.stroke();
   }
-  ctx.fillStyle = rgba(COLOR_LOOK, 0.7+0.3*effLife);
+
+  /* soft radial core — luminous falloff instead of a flat opaque circle */
+  var sunGrad = ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,sunR);
+  sunGrad.addColorStop(0, rgba([255,246,224], 0.9));
+  sunGrad.addColorStop(0.55, rgba(paletteColor(LOOK_PAL,0.25), 0.65+0.15*effLife));
+  sunGrad.addColorStop(1, rgba(paletteColor(LOOK_PAL,0.5), 0));
+  ctx.fillStyle = sunGrad;
   ctx.beginPath(); ctx.arc(sunX,sunY,sunR,0,Math.PI*2); ctx.fill();
 
   if (life>=0.85){
@@ -586,8 +642,8 @@ function drawLook(ctx, w, h, life, now, extra, state, burst){
       var cyc = (now*0.0006+i*0.7)%1;
       var sx = w*0.18+i*(w*0.16);
       var sy = horizonY - cyc*(horizonY-h*0.1);
-      ctx.fillStyle = rgba([255,240,210], (1-cyc)*0.55);
-      ctx.beginPath(); ctx.arc(sx,sy,1.6,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = rgba([255,240,210], (1-cyc)*0.4);
+      ctx.beginPath(); ctx.arc(sx,sy,1.3,0,Math.PI*2); ctx.fill();
     }
   }
 
@@ -614,7 +670,7 @@ function drawLook(ctx, w, h, life, now, extra, state, burst){
   }
 
   if (burst){
-    drawBurst(ctx, sunX, sunY, Math.min(1,(now-burst.start)/900), COLOR_LOOK, minWH*0.5);
+    drawBurst(ctx, sunX, sunY, Math.min(1,(now-burst.start)/900), paletteColor(LOOK_PAL,0.3), minWH*0.5);
   }
 }
 
@@ -683,7 +739,8 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
     var sway = Math.sin(now*0.0018+i*1.1)*swayAmt;
     var kind = i%3;
     var stemH = minWH*(0.16+0.05*(i%3))*1.4;
-    ctx.strokeStyle = rgba(COLOR_LIFE, 0.76+0.24*life);
+    var plantCol = paletteColor(LIFE_PAL, i/Math.max(1,plantCount-1));
+    ctx.strokeStyle = rgba(plantCol, 0.76+0.24*life);
     ctx.lineWidth = 2.2;
     ctx.beginPath();
     ctx.moveTo(px, groundY);
@@ -691,7 +748,7 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
     ctx.stroke();
 
     if (kind===0){
-      ctx.fillStyle = rgba(COLOR_LIFE, 0.75+0.25*life);
+      ctx.fillStyle = rgba(plantCol, 0.75+0.25*life);
       ctx.beginPath(); ctx.ellipse(px+sway*0.7, groundY-stemH*0.6, 5, 2.6, sway*0.05, 0, Math.PI*2); ctx.fill();
       if (life>=0.7){
         var petalA = Math.min(1,(life-0.7)/0.3), pi;
@@ -706,11 +763,11 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
       for (li=0;li<3;li++){
         var ly = groundY-stemH*(0.3+li*0.25);
         var lx = px+sway*(0.3+li*0.2)+(li%2===0?4:-4);
-        ctx.fillStyle = rgba(COLOR_LIFE, 0.70+0.25*life);
+        ctx.fillStyle = rgba(plantCol, 0.70+0.25*life);
         ctx.beginPath(); ctx.ellipse(lx, ly, 4.2, 2, sway*0.05, 0, Math.PI*2); ctx.fill();
       }
     } else {
-      ctx.fillStyle = rgba(COLOR_LIFE, 0.70+0.25*life);
+      ctx.fillStyle = rgba(plantCol, 0.70+0.25*life);
       ctx.beginPath(); ctx.arc(px+sway*0.5, groundY-stemH*0.85, 6.5, 0, Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.arc(px+sway*0.5-4, groundY-stemH*0.7, 4.5, 0, Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.arc(px+sway*0.5+4, groundY-stemH*0.7, 4.5, 0, Math.PI*2); ctx.fill();
@@ -774,132 +831,174 @@ function drawLife(ctx, w, h, life, now, extra, state, burst){
   ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(w,groundY); ctx.stroke();
 
   if (burst){
-    drawBurst(ctx, w*0.5, groundY-minWH*0.15, Math.min(1,(now-burst.start)/900), COLOR_LIFE, minWH*0.5);
+    drawBurst(ctx, w*0.5, groundY-minWH*0.15, Math.min(1,(now-burst.start)/900), paletteColor(LIFE_PAL,0.4), minWH*0.5);
   }
 }
 
 function drawMoney(ctx, w, h, life, now, extra, state, burst){
   if (reduceMotion) now = 0;
   var minWH = Math.min(w,h);
-  var baseY = h*0.80, i;
+  var baseY = h*0.78, i;
 
-  /* full-tile ambient red glow so the top isn't empty */
-  var ambGrad = ctx.createLinearGradient(0,0,0,h);
-  ambGrad.addColorStop(0, rgba(COLOR_MONEY, 0.10+0.06*life));
-  ambGrad.addColorStop(1, rgba(COLOR_MONEY, 0.22+0.10*life));
-  ctx.fillStyle = ambGrad;
-  ctx.fillRect(0,0,w,h);
-
-  /* background: trading grid — brighter, texture across the whole tile */
-  ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+  /* subtle structure grid — no full-tile colour fill, the tile stays near-black glass */
+  ctx.strokeStyle = 'rgba(255,255,255,0.045)';
   ctx.lineWidth = 1;
-  var gridN=5, gi;
+  var gridN=4, gi;
   for (gi=1; gi<gridN; gi++){
-    var gy = (h*0.06) + (baseY-h*0.06)*(gi/gridN);
+    var gy = (h*0.10) + (baseY-h*0.10)*(gi/gridN);
     ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(w,gy); ctx.stroke();
   }
 
-  /* ambient embers drifting up across the whole square */
-  for (i=0;i<7;i++){
-    var emX = ((i*0.15 + now*0.00003*(1+(i%3)*0.4)) % 1) * w;
-    var emY = h - ((now*0.00004*(1+(i%2)*0.3) + i*0.2) % 1) * h;
-    var emTw = Math.sin(now*0.0013+i*1.6)*0.5+0.5;
-    ctx.fillStyle = rgba([255,180,140], 0.14+0.22*emTw);
-    ctx.beginPath(); ctx.arc(emX,emY,1.3,0,Math.PI*2); ctx.fill();
+  /* sparse ambient embers — a little life, never a wash */
+  for (i=0;i<4;i++){
+    var emX = ((i*0.27 + now*0.00003*(1+(i%3)*0.4)) % 1) * w;
+    var emY = h - ((now*0.00003*(1+(i%2)*0.3) + i*0.31) % 1) * h;
+    var emTw = Math.sin(now*0.0012+i*1.8)*0.5+0.5;
+    ctx.fillStyle = rgba(paletteColor(MONEY_PAL, 0.2+i*0.18), 0.10+0.16*emTw);
+    ctx.beginPath(); ctx.arc(emX,emY,1.1,0,Math.PI*2); ctx.fill();
   }
 
-  /* midground: scrolling candlestick chart — taller, reaching into the middle of the tile */
+  /* hero: scrolling candlestick chart — thin candles, breathing room, palette gradient left to right */
   if (!reduceMotion && now > state.nextCandleAt){
-    state.candles.push({ h:16+Math.random()*14+life*10, up:Math.random() < (0.45+life*0.3) });
+    state.candles.push({ h:10+Math.random()*10+life*8, up:Math.random() < (0.45+life*0.3) });
     state.candles.shift();
-    state.nextCandleAt = now + 1400;
+    state.nextCandleAt = now + 1500;
   }
   var candles = state.candles, n = candles.length, priceTop=[];
-  var cw = w/(n*1.6);
+  var cw = Math.max(1.5, w/(n*2.4));
   for (i=0;i<n;i++){
     var c = candles[i];
     var x = (i+0.6)*(w/n);
     var trend = (i/n)*life;
-    var bodyH = c.h + trend*22;
-    var topY = baseY - bodyH - trend*(minWH*0.16);
-    var col = c.up ? COLOR_LIFE : COLOR_MONEY;
-    ctx.fillStyle = rgba(col, 0.45+0.25*life);
+    var bodyH = c.h + trend*16;
+    var topY = baseY - bodyH - trend*(minWH*0.14);
+    var t = i/Math.max(1,n-1);
+    var col = paletteColor(MONEY_PAL, t);
+    var alpha = c.up ? (0.55+0.25*life) : (0.32+0.18*life);
+    ctx.fillStyle = rgba(col, alpha);
     ctx.fillRect(x-cw/2, topY, cw, bodyH);
-    ctx.strokeStyle = rgba(col, 0.65);
-    ctx.beginPath(); ctx.moveTo(x, topY-4); ctx.lineTo(x, topY+bodyH+4); ctx.stroke();
+    ctx.strokeStyle = rgba(col, alpha+0.15);
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, topY-3); ctx.lineTo(x, topY+bodyH+3); ctx.stroke();
     priceTop.push({ x:x, y:topY });
   }
-  ctx.strokeStyle = rgba(COLOR_MONEY, 0.55+0.25*life);
-  ctx.lineWidth = 1.6;
+  var trendCol = paletteColor(MONEY_PAL, 0.5);
+  ctx.strokeStyle = rgba(trendCol, 0.45+0.22*life);
+  ctx.lineWidth = 1.3;
   ctx.beginPath();
   for (i=0;i<priceTop.length;i++){ if (i===0) ctx.moveTo(priceTop[i].x,priceTop[i].y); else ctx.lineTo(priceTop[i].x,priceTop[i].y); }
   ctx.stroke();
 
-  /* foreground: flame, big central focal point — baseline ~1.5x taller than before */
-  var fx=w/2, fy=baseY-minWH*0.34;
-  var flameH = minWH*(0.22+life*0.14);
-  var flick = Math.sin(now*0.01)*0.15+1;
-  bloom(ctx, fx, fy, flameH*2.2, COLOR_MONEY, 0.38+0.22*life);
-  ctx.save();
-  ctx.translate(fx,fy);
-  var fgrad = ctx.createLinearGradient(0,flameH*flick,0,-flameH*0.3);
-  fgrad.addColorStop(0, rgba(COLOR_MONEY, 0.34+0.23*life));
-  fgrad.addColorStop(0.5, rgba([251,191,110], 0.4+0.35*life));
-  fgrad.addColorStop(1, rgba([255,235,160], 0.30+0.20*life));
-  ctx.fillStyle = fgrad;
-  ctx.beginPath();
-  ctx.moveTo(0, flameH*flick);
-  ctx.quadraticCurveTo(minWH*0.09, flameH*0.1, 0, -flameH*flick);
-  ctx.quadraticCurveTo(-minWH*0.09, flameH*0.1, 0, flameH*flick);
-  ctx.fill();
-  ctx.restore();
+  /* small soft glow at the current price point — replaces the old dominant flame */
+  if (priceTop.length){
+    var last = priceTop[priceTop.length-1];
+    bloom(ctx, last.x, last.y, minWH*0.16, paletteColor(MONEY_PAL, 0.15), 0.28+0.16*life);
+  }
 
   if (!reduceMotion){
     var sp, spi;
     for (spi=0; spi<state.sparks.length; spi++){
       sp = state.sparks[spi];
-      if (!sp.active && Math.random() < 0.045+life*0.035){
-        sp.active=true; sp.x=fx+(Math.random()-0.5)*6; sp.y=fy; sp.vx=(Math.random()-0.5)*0.3; sp.vy=-(0.5+Math.random()*0.8)*(0.84+life*0.56); sp.life=1;
+      if (!sp.active && Math.random() < 0.012+life*0.012){
+        var sx0 = priceTop.length ? priceTop[priceTop.length-1].x : w*0.8;
+        var sy0 = priceTop.length ? priceTop[priceTop.length-1].y : baseY;
+        sp.active=true; sp.x=sx0; sp.y=sy0; sp.vx=(Math.random()-0.5)*0.25; sp.vy=-(0.3+Math.random()*0.5); sp.life=1;
       }
       if (!sp.active) continue;
-      sp.x += sp.vx; sp.y += sp.vy; sp.life -= 0.018;
+      sp.x += sp.vx; sp.y += sp.vy; sp.life -= 0.02;
       if (sp.life<=0){ sp.active=false; continue; }
-      ctx.fillStyle = rgba([255,200,120], sp.life*0.8);
-      ctx.beginPath(); ctx.arc(sp.x, sp.y, 1.2, 0, Math.PI*2); ctx.fill();
-    }
-  }
-
-  /* uptrend arrow + rising coins at high life */
-  if (life>=0.9){
-    ctx.strokeStyle = rgba(COLOR_LIFE, 0.6);
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(w*0.2, baseY-6); ctx.lineTo(w*0.8, baseY-minWH*0.3); ctx.stroke();
-  }
-
-  /* idle event + high-life reward: coin drop/bounce (shared pool) */
-  if (!reduceMotion){
-    if (now > state.nextCoinAt){
-      var slot, ci;
-      for (ci=0; ci<state.coins.length; ci++){ if (!state.coins[ci].active){ slot=state.coins[ci]; break; } }
-      if (slot){ slot.active=true; slot.x=w*(0.25+Math.random()*0.5); slot.y=h*0.1; slot.vy=0.2; slot.rot=0; slot.bounces=0; }
-      state.nextCoinAt = now + (life>=0.9 ? 3500+Math.random()*3000 : 8000+Math.random()*6000);
-    }
-    var co, coi;
-    for (coi=0; coi<state.coins.length; coi++){
-      co = state.coins[coi];
-      if (!co.active) continue;
-      co.y += co.vy; co.vy += 0.02; co.rot += 0.15;
-      if (co.y > baseY){ co.y=baseY; co.vy=-co.vy*0.5; co.bounces++; if (co.bounces>2) co.active=false; }
-      ctx.save();
-      ctx.translate(co.x, co.y); ctx.rotate(co.rot);
-      ctx.fillStyle = 'rgba(255,210,90,0.85)';
-      ctx.beginPath(); ctx.ellipse(0,0,4,4*Math.abs(Math.cos(co.rot)),0,0,Math.PI*2); ctx.fill();
-      ctx.restore();
+      ctx.fillStyle = rgba(paletteColor(MONEY_PAL,0.1), sp.life*0.55);
+      ctx.beginPath(); ctx.arc(sp.x, sp.y, 1, 0, Math.PI*2); ctx.fill();
     }
   }
 
   if (burst){
-    drawBurst(ctx, fx, fy, Math.min(1,(now-burst.start)/900), COLOR_MONEY, minWH*0.5);
+    var bx = priceTop.length ? priceTop[priceTop.length-1].x : w/2;
+    var by = priceTop.length ? priceTop[priceTop.length-1].y : baseY;
+    drawBurst(ctx, bx, by, Math.min(1,(now-burst.start)/900), paletteColor(MONEY_PAL,0.2), minWH*0.45);
+  }
+}
+
+function drawSystem(ctx, w, h, life, now, extra, state, burst){
+  if (reduceMotion) now = 0;
+  var minWH = Math.min(w,h), i, j;
+
+  /* subtle structure grid — dark base, blue light only */
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  var gridN=4, gi;
+  for (gi=1; gi<gridN; gi++){
+    var gx = (w/gridN)*gi;
+    ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,h); ctx.stroke();
+  }
+
+  /* drift the constellation nodes slowly, bouncing within soft bounds */
+  var nodes = state.nodes;
+  for (i=0;i<nodes.length;i++){
+    var nd = nodes[i];
+    if (!reduceMotion){
+      nd.x += nd.vx; nd.y += nd.vy;
+      if (nd.x<0.05||nd.x>0.95) nd.vx *= -1;
+      if (nd.y<0.10||nd.y>0.90) nd.vy *= -1;
+    }
+  }
+
+  /* connections between nearby nodes — faint palette-coloured lines */
+  for (i=0;i<nodes.length;i++){
+    for (j=i+1;j<nodes.length;j++){
+      var a=nodes[i], b=nodes[j];
+      var dx=(a.x-b.x)*w, dy=(a.y-b.y)*h;
+      var dist=Math.sqrt(dx*dx+dy*dy);
+      var maxDist = minWH*0.5;
+      if (dist < maxDist){
+        var t = (a.x+b.x)/2;
+        var edgeCol = paletteColor(SYSTEM_PAL, t);
+        var alpha = (1-dist/maxDist)*(0.18+0.10*life);
+        ctx.strokeStyle = rgba(edgeCol, alpha);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(a.x*w, a.y*h); ctx.lineTo(b.x*w, b.y*h);
+        ctx.stroke();
+      }
+    }
+  }
+
+  /* nodes: soft glowing points */
+  for (i=0;i<nodes.length;i++){
+    var n2 = nodes[i];
+    var tw = Math.sin(now*0.0012+n2.phase)*0.5+0.5;
+    var nx = n2.x*w, ny = n2.y*h;
+    var col2 = paletteColor(SYSTEM_PAL, n2.x);
+    bloom(ctx, nx, ny, minWH*0.05, col2, 0.16+0.14*tw);
+    ctx.fillStyle = rgba(col2, 0.55+0.25*tw);
+    ctx.beginPath(); ctx.arc(nx, ny, 1.6, 0, Math.PI*2); ctx.fill();
+  }
+
+  /* idle event: a data pulse travelling along a random edge */
+  if (!reduceMotion){
+    if (!state.pulse && now > state.nextPulseAt && nodes.length>1){
+      var ia = Math.floor(Math.random()*nodes.length);
+      var ib = Math.floor(Math.random()*nodes.length);
+      if (ib===ia) ib = (ib+1)%nodes.length;
+      state.pulse = { a:nodes[ia], b:nodes[ib], start:now };
+      state.nextPulseAt = now + 3500+Math.random()*3500;
+    }
+    if (state.pulse){
+      var pel = (now-state.pulse.start)/1600;
+      if (pel>=1){ state.pulse = null; }
+      else {
+        var pa=state.pulse.a, pb=state.pulse.b;
+        var px = (pa.x+(pb.x-pa.x)*pel)*w, py = (pa.y+(pb.y-pa.y)*pel)*h;
+        var pcol = paletteColor(SYSTEM_PAL, pel);
+        bloom(ctx, px, py, minWH*0.045, pcol, 0.5);
+        ctx.fillStyle = rgba(pcol, 0.9);
+        ctx.beginPath(); ctx.arc(px, py, 1.8, 0, Math.PI*2); ctx.fill();
+      }
+    }
+  }
+
+  if (burst){
+    drawBurst(ctx, w/2, h/2, Math.min(1,(now-burst.start)/900), paletteColor(SYSTEM_PAL,0.3), minWH*0.45);
   }
 }
 
@@ -915,6 +1014,24 @@ var SECTIONS = [
 var PLANETS = {};
 var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 var rafHandle = null;
+var sysCanvasEl = null, sysFit = null, sysState = null;
+
+function initSystemCanvas(){
+  sysCanvasEl = document.getElementById('sysCanvas');
+  if (!sysCanvasEl) return;
+  sysFit = fitCanvas(sysCanvasEl);
+  sysState = initState('system', nowMs());
+}
+function drawSystemOnce(now){
+  if (!sysCanvasEl || !sysFit) return;
+  now = now || nowMs();
+  try {
+    sysFit.ctx.clearRect(0,0,sysFit.w,sysFit.h);
+    drawSystem(sysFit.ctx, sysFit.w, sysFit.h, 1, now, {}, sysState, null);
+  } catch (err) {
+    sysFit.ctx.clearRect(0,0,sysFit.w,sysFit.h);
+  }
+}
 
 function fitCanvas(canvas){
   var rect = canvas.getBoundingClientRect();
@@ -1041,6 +1158,8 @@ function drawAllOnce(now){
 
     if (p.burst && now-p.burst.start > 900) p.burst = null;
   }
+
+  drawSystemOnce(now);
 }
 
 function animLoop(now){
@@ -1061,6 +1180,7 @@ function refitAll(){
     var fit = fitCanvas(p.canvas);
     p.ctx = fit.ctx; p.w = fit.w; p.h = fit.h;
   }
+  if (sysCanvasEl) sysFit = fitCanvas(sysCanvasEl);
   drawAllOnce();
 }
 window.addEventListener('resize', refitAll);
@@ -1086,6 +1206,7 @@ function tick(){
 /* ---------- boot ---------- */
 updateClock(); updateDayRing();
 buildTiles();
+initSystemCanvas();
 (function(){
   var st = document.getElementById('sysTile');
   if (st) {
