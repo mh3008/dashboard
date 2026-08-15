@@ -173,6 +173,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="sync.js" defer></script>
 <script src="topbar.js" defer></script>
+<script src="plants-data.js"></script>
 <script>
 function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
 function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -201,24 +202,6 @@ function hexToRgba(hex, a){
 var STORE_KEY = 'plants:data';
 function mistKey(date){ return 'plants:mist:'+date; }
 
-var PLANTS = [
-  { id:'peace', name:'Peace Lily', latin:'Spathiphyllum', emoji:'🌿', soakDays:7, hue:'#6be3a4',
-    mist:'Mist fronds daily — loves humidity. Soil can stay lightly moist.',
-    tips:['Low-to-medium indirect light, tolerates shade','Drooping leaves mean thirsty — it recovers fast','Drench until water runs out the bottom, empty the saucer'] },
-  { id:'areca', name:'Areca Palm', latin:'Dypsis lutescens', emoji:'🌴', soakDays:6, hue:'#38bdf8',
-    mist:'Mist fronds daily — brown tips mean the air is too dry.',
-    tips:['Bright indirect light, not harsh direct sun','Thirstiest plant here — keep the root ball consistently moist, never let it dry fully','Soak deeply every 6 days; surface spraying alone leaves the lower roots dry'] },
-  { id:'dracaena', name:'Dracaena Marginata', latin:'Dracaena marginata', emoji:'🌱', soakDays:14, hue:'#a3e635',
-    mist:'Light mist is fine — not essential.',
-    tips:['Bright indirect light','Let soil dry between soaks','Sensitive to fluoride in tap water — filtered is better'] },
-  { id:'aloe', name:'Aloe Vera', latin:'Aloe barbadensis', emoji:'🌵', soakDays:21, hue:'#facc15',
-    mist:'Light mist only. Never let water sit in the leaf rosette — it rots.',
-    tips:['Full sun windowsill is ideal','Soak deeply then let it go completely dry for weeks','Well-draining pot — never leave it standing in water','Underwatering is far safer than overwatering'] },
-  { id:'haworthia', name:'Haworthia', latin:'Haworthia fasciata', emoji:'🪴', soakDays:21, hue:'#5eead4',
-    mist:'Mist the soil, not the centre. Water pooling in the rosette rots the crown.',
-    tips:['Bright light, tolerates direct sun','Extremely drought tolerant','Soak fully then leave completely dry until the soil has no moisture at all','Slow grower — that is normal'] }
-];
-
 /* ============================================================
    MIGRATION — 'lastWatered' -> 'lastSoak', 'yucca' -> 'areca'.
    Non-destructive: never overwrites an existing lastSoak, never
@@ -245,7 +228,7 @@ function migrateData(){
 
 function loadData(){
   var d = migrateData();
-  PLANTS.forEach(function(p){ if (!d[p.id]) d[p.id] = { lastSoak:null }; });
+  window.LO_PLANTS.forEach(function(p){ if (!d[p.id]) d[p.id] = { lastSoak:null }; });
   return d;
 }
 function saveData(d){ storeSet(STORE_KEY, d); }
@@ -272,28 +255,16 @@ function ringSvg(pct, col){
     '</svg>';
 }
 
-function plantCard(p, data){
-  var rec = data[p.id] || {};
-  var last = rec.lastSoak;
-  var today = todayStr();
-  var sinceSoak = last ? dayDiff(last, today) : null;
-  var daysLeft = (sinceSoak != null) ? p.soakDays - sinceSoak : null;
-  var justSoaked = (last === today);
+function plantCard(p){
+  var st = window.LO_PLANT_STATE(p.id);
+  var last = st.lastSoak;
+  var sinceSoak = st.daysSince;
+  var daysLeft = st.daysLeft;
+  var justSoaked = (st.status === 'soaked-today');
+  var statusClass = (st.status === 'overdue') ? 'overdue' : ((st.status === 'due' || st.status === 'never') ? 'due' : 'ok');
+  var statusText = st.statusText;
 
-  var statusClass, statusText;
-  if (!last){
-    statusClass = 'due'; statusText = 'never soaked — soak now';
-  } else if (justSoaked){
-    statusClass = 'ok'; statusText = 'soaked today ✓';
-  } else if (daysLeft != null && daysLeft <= 0){
-    statusClass = 'overdue'; statusText = Math.abs(daysLeft) + ' day' + (Math.abs(daysLeft)===1?'':'s') + ' overdue';
-  } else if (daysLeft != null && daysLeft <= 2){
-    statusClass = 'due'; statusText = 'due ' + (daysLeft === 0 ? 'today' : (daysLeft === 1 ? 'tomorrow' : 'in ' + daysLeft + ' days'));
-  } else {
-    statusClass = 'ok'; statusText = daysLeft + ' days until next soak';
-  }
-
-  var pct = !last ? 100 : Math.min(100, (sinceSoak / p.soakDays) * 100);
+  var pct = st.pct;
   var ringCol = pct >= 100 ? 'var(--danger)' : (pct >= 75 ? 'var(--warning)' : 'var(--success)');
   var overdue = !last || (daysLeft != null && daysLeft <= 0);
   var ringNum = overdue ? '!' : daysLeft;
@@ -428,25 +399,22 @@ function renderMistHeat(){
 }
 
 function render(){
-  var data = loadData();
+  loadData();
   var mistToday = loadMist(todayStr());
   renderMistPips(mistToday.count);
 
   var list = document.getElementById('pltList'); list.innerHTML = '';
-  var dueCount = 0, okCount = 0, overdueCount = 0;
-  PLANTS.forEach(function(p){
-    var built = plantCard(p, data);
-    if (built.statusClass === 'overdue') overdueCount++;
-    else if (built.statusClass === 'due') dueCount++;
-    else okCount++;
+  window.LO_PLANTS.forEach(function(p){
+    var built = plantCard(p);
     list.appendChild(built.el);
   });
 
+  var counts = window.LO_PLANT_COUNTS();
   var sum = document.getElementById('pltSummary');
   var parts = [];
-  if (overdueCount) parts.push('<b>' + overdueCount + '</b> overdue');
-  if (dueCount) parts.push('<b>' + dueCount + '</b> due soon');
-  if (okCount) parts.push('<b>' + okCount + '</b> happy');
+  if (counts.overdue) parts.push('<b>' + counts.overdue + '</b> overdue');
+  if (counts.due) parts.push('<b>' + counts.due + '</b> due soon');
+  if (counts.ok) parts.push('<b>' + counts.ok + '</b> happy');
   sum.innerHTML = parts.length ? parts.join(' · ') : 'All good — nothing needs water.';
 
   renderMistHeat();

@@ -7,35 +7,521 @@
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="theme.css" rel="stylesheet">
 <style>
-  .hub-head { display:flex; align-items:center; gap:14px; margin-bottom:4px; }
-  .hub-icon { font-size:30px; color:var(--accent); }
-  .hub-name { font-size:24px; font-weight:800; letter-spacing:-0.02em; }
-  .hub-sub  { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
-  .app-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
-  .app-tile { display:flex; flex-direction:column; align-items:center; gap:10px; padding:22px 14px;
-    border-radius:var(--radius); background:var(--card); border:1px solid var(--hair);
-    cursor:pointer; text-decoration:none; transition:background .2s, border-color .2s, transform .12s; }
-  .app-tile:hover { background:var(--card-2); border-color:rgba(249,115,22,0.3); }
-  .app-tile:active { transform:scale(0.97); }
-  .app-tile i { font-size:28px; color:var(--accent-lt); }
-  .app-tile span { font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-1); }
-  .app-tile.soon { opacity:0.4; }
-  .app-tile.soon i { color:var(--text-3); }
+  /* ============================================================
+     GLASS MODULE CARDS — same visual language as physical.html:
+     frosted glass, animated iridescent gradient rim.
+     ============================================================ */
+  .mod-card {
+    position: relative; border-radius: 20px; padding:20px;
+    background: var(--m-bg, rgba(107,227,164,0.05));
+    border: 1px solid var(--m-bd, rgba(107,227,164,0.16));
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+    opacity: 0; transform: translateY(14px);
+    transition: opacity .5s ease-out, transform .5s ease-out;
+  }
+  .mod-card.lo-visible { opacity: 1; transform: translateY(0); }
+  .mod-card::after {
+    content:''; position:absolute; inset:0; border-radius:20px; padding:1.5px;
+    background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3), var(--g2), var(--g1));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: bodyBorderShift 8s ease infinite;
+    opacity: 0.65; pointer-events: none; z-index: 2;
+  }
+  @keyframes bodyBorderShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mod-card::after { animation: none; }
+    .mod-card { transition: none; opacity: 1; transform: none; }
+  }
+  .mod-life { --g1:#6be3a4; --g2:#38bdf8; --g3:#a3e635; --m-bg:rgba(107,227,164,0.045); --m-bd:rgba(107,227,164,0.18); --m-accent:#6be3a4; }
+
+  /* ---- HERO ---- */
+  .body-hero { padding: 22px; margin-bottom: 12px; }
+  .hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; position:relative; z-index:1; }
+  .body-title-wrap { display:flex; align-items:center; gap:12px; }
+  .body-hero-icon { font-size:28px; color:#6be3a4; }
+  .body-title {
+    font-size:32px; font-weight:800; letter-spacing:-0.03em; line-height:1;
+    background: linear-gradient(120deg, #6be3a4, #38bdf8, #a3e635, #6be3a4);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    animation: lifeTitleShift 10s ease infinite;
+  }
+  @keyframes lifeTitleShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
+  .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
+
+  .pillar-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; position:relative; z-index:1; }
+  .pillar-chip {
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--hair);
+    transition:background .2s, border-color .2s, box-shadow .2s;
+  }
+  .pillar-chip i { font-size:18px; color:var(--text-3); transition:color .2s; }
+  .pillar-chip span { font-size:9.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); transition:color .2s; }
+  .pillar-chip.hit { background:rgba(107,227,164,0.12); border-color:rgba(107,227,164,0.45); box-shadow:0 0 16px rgba(107,227,164,0.25); }
+  .pillar-chip.hit i, .pillar-chip.hit span { color:#d8f5e4; }
+
+  .pillar-bar { height:8px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; margin:16px 0 8px; position:relative; z-index:1; }
+  .pillar-fill {
+    height:100%; width:0; border-radius:999px;
+    background:linear-gradient(90deg,#6be3a4,#38bdf8,#a3e635); background-size:200% 100%;
+    transition:width .5s cubic-bezier(.22,1,.36,1);
+  }
+  .pillar-summary { font-family:var(--mono); font-size:12px; color:var(--text-2); font-weight:700; position:relative; z-index:1; }
+
+  /* ---- shared module head ---- */
+  .mod-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; position:relative; z-index:1; }
+  .mod-title { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+  .mod-title i { color:var(--m-accent); font-size:20px; }
+  .mod-count { font-family:var(--mono); font-size:13px; color:var(--text-2); }
+  .mod-count.all-done { color:var(--success); }
+  .mod-count b { color:var(--text-1); font-weight:800; }
+  .mod-body { position:relative; z-index:1; }
+  .block-lbl { font-family:var(--mono); font-size:9.5px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); }
+
+  .mod-footer-link {
+    display:block; text-align:center; margin-top:14px; padding-top:12px; border-top:1px solid var(--hair);
+    font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text-2); text-decoration:none;
+    position:relative; z-index:1; transition:color .16s;
+  }
+  .mod-footer-link:hover { color:var(--text-1); }
+
+  /* ---- TASKS ---- */
+  .task-bar { height:6px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; margin-bottom:12px; position:relative; z-index:1; }
+  .task-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#6be3a4,#38bdf8); transition:width .4s cubic-bezier(.22,1,.36,1); }
+  .item-list { display:flex; flex-direction:column; gap:8px; position:relative; z-index:1; }
+  .item {
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); transition:background .18s, opacity .18s; cursor:pointer;
+    touch-action: manipulation; -webkit-user-select:none; user-select:none;
+  }
+  .item:hover { background:var(--card-2); }
+  .item.done { opacity:0.5; background:rgba(107,227,164,0.06); }
+  .item.done .item-txt { text-decoration:line-through; text-decoration-color:rgba(255,255,255,0.4); }
+  .cb { width:22px; height:22px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.18);
+    background:rgba(0,0,0,0.2); flex-shrink:0; position:relative; transition:background .18s, box-shadow .18s, border-color .18s; }
+  .item.done .cb { background:#6be3a4; border-color:#6be3a4; box-shadow:0 0 12px rgba(107,227,164,0.4); }
+  .item.done .cb::after { content:''; position:absolute; left:7px; top:3px; width:5px; height:10px;
+    border:solid #0a0a0b; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  .item-txt { font-size:14px; }
+  .td-empty { text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px; padding:20px 0 6px; position:relative; z-index:1; }
+
+  /* ---- PLANTS (inline, compact) ---- */
+  .lp-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid var(--hair); position:relative; z-index:1; }
+  .lp-row:first-child { border-top:none; padding-top:0; }
+  .lp-ring-wrap { position:relative; width:44px; height:44px; flex-shrink:0; }
+  .lp-ring { width:44px; height:44px; transform:rotate(-90deg); display:block; }
+  .lp-ring-track { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:4; }
+  .lp-ring-fill { fill:none; stroke-width:4; stroke-linecap:round; }
+  .lp-info { flex:1; min-width:0; }
+  .lp-emoji { font-size:16px; margin-right:6px; }
+  .lp-name { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .lp-status { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
+  .lp-soak { flex-shrink:0; font-family:var(--mono); font-size:11px; font-weight:700; padding:8px 12px; border-radius:10px; cursor:pointer;
+    border:1px solid rgba(56,189,248,0.3); background:rgba(56,189,248,0.08); color:#38bdf8; transition:background .16s, border-color .16s; }
+  .lp-soak:hover { background:rgba(56,189,248,0.16); border-color:rgba(56,189,248,0.5); }
+  .lp-soak.just { background:rgba(107,227,164,0.12); border-color:rgba(107,227,164,0.4); color:var(--success); pointer-events:none; }
+
+  /* ---- TILE GRID (nav) ---- */
+  .tile-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:12px; }
+  .tile {
+    aspect-ratio:1/1; padding:16px; display:flex; flex-direction:column;
+    text-decoration:none; color:inherit; cursor:pointer;
+    transition: opacity .5s ease-out, transform .5s ease-out, border-color .2s;
+  }
+  .tile-top { display:flex; align-items:center; gap:8px; position:relative; z-index:1; }
+  .tile-top i { font-size:18px; color:var(--m-accent); }
+  .tile-top span { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .tile-stat {
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--mono); font-size:15px; font-weight:800; color:var(--text-2);
+    position:relative; z-index:1;
+  }
+  .tile.soon { opacity:0.4; pointer-events:none; }
+  .tile-wide { grid-column:1/-1; aspect-ratio:auto; flex-direction:row; align-items:center; justify-content:space-between; padding:18px 20px; }
+  .tile-wide .tile-stat { flex:none; }
+
+  /* ---- CONSISTENCY ---- */
+  .cons-overall { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; position:relative; z-index:1; }
+  .cons-overall-num {
+    font-size:38px; font-weight:800; letter-spacing:-0.03em;
+    background:linear-gradient(120deg,#6be3a4,#38bdf8,#a3e635); background-size:200% 200%;
+    -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+  }
+  .cons-overall-lbl { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .heat-row { display:flex; align-items:center; gap:10px; position:relative; z-index:1; }
+  .heat-label { width:52px; flex-shrink:0; font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-2); }
+  .heat-grid { display:grid; grid-template-columns:repeat(30, 1fr); gap:3px; flex:1; }
+  .heat-cell {
+    aspect-ratio:1/1; border-radius:3px; background:rgba(255,255,255,0.05); cursor:pointer;
+    transition:transform .1s, outline-color .15s;
+    outline:1.5px solid transparent; outline-offset:1px;
+  }
+  .heat-cell:hover { transform:scale(1.3); }
+  .heat-cell.sel { outline-color:var(--text-1); }
+  .heat-streak { font-family:var(--mono); font-size:9px; color:var(--text-3); flex-shrink:0; width:64px; text-align:right; line-height:1.5; }
+  .heat-streak b { color:var(--text-1); }
+  .cons-detail { font-family:var(--mono); font-size:11px; color:var(--text-2); margin-top:16px; min-height:14px; position:relative; z-index:1; }
+  .cons-detail b { color:var(--text-1); font-weight:800; }
 </style>
 </head>
 <body>
+
 <div class="wrap">
-  <div class="hub-head"><i class="ti ti-home hub-icon"></i><div class="hub-name">Life</div></div>
-  <div class="hub-sub">Life admin · tasks · plants · house · car.</div>
-  <div class="app-grid">
-    <a class="app-tile" href="todos.html"><i class="ti ti-checkbox"></i><span>Tasks</span></a>
-    <a class="app-tile" href="plants.html"><i class="ti ti-plant-2"></i><span>Plants</span></a>
-    <a class="app-tile" href="car.html"><i class="ti ti-car"></i><span>Car</span></a>
-    <a class="app-tile" href="house.html"><i class="ti ti-building"></i><span>House</span></a>
+
+  <!-- HERO -->
+  <div class="card mod-card mod-life body-hero" id="heroCard">
+    <div class="hero-top">
+      <div class="body-title-wrap">
+        <i class="ti ti-home body-hero-icon"></i>
+        <div class="body-title">Life</div>
+      </div>
+      <div class="body-date" id="heroDate">—</div>
+    </div>
+    <div class="pillar-row" id="pillarRow"></div>
+    <div class="pillar-bar"><div class="pillar-fill" id="pillarFill"></div></div>
+    <div class="pillar-summary" id="pillarSummary">0 / 3 clear</div>
   </div>
+
+  <!-- TODAY'S TASKS -->
+  <div class="section-title">Today's Tasks</div>
+  <div class="card mod-card mod-life" id="tasksCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-checkbox"></i> Tasks</div>
+      <div class="mod-count" id="taskCount">0 / 0</div>
+    </div>
+    <div class="mod-body">
+      <div class="task-bar"><div class="task-fill" id="taskFill"></div></div>
+      <div class="item-list" id="taskList"></div>
+      <a class="mod-footer-link" href="todos.html">Manage tasks →</a>
+    </div>
+  </div>
+
+  <!-- PLANTS -->
+  <div class="section-title">Plants</div>
+  <div class="card mod-card mod-life" id="lifePlantsCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-plant-2"></i> Plants</div>
+      <div class="mod-count" id="lifePlantsSummary">—</div>
+    </div>
+    <div class="mod-body">
+      <div id="lifePlantsList"></div>
+      <a class="mod-footer-link" href="plants.html">All plants →</a>
+    </div>
+  </div>
+
+  <!-- NAV TILES -->
+  <div class="section-title">More</div>
+  <div class="tile-grid">
+    <a class="mod-card mod-life tile soon" href="uni.html" id="tileUni">
+      <div class="tile-top"><i class="ti ti-school"></i><span>Uni</span></div>
+      <div class="tile-stat">Coming soon</div>
+    </a>
+    <a class="mod-card mod-life tile" href="car.html" id="tileCar">
+      <div class="tile-top"><i class="ti ti-car"></i><span>Car</span></div>
+      <div class="tile-stat">Maintenance &amp; mods</div>
+    </a>
+    <a class="mod-card mod-life tile tile-wide" href="house.html" id="tileHouse">
+      <div class="tile-top"><i class="ti ti-building"></i><span>House</span></div>
+      <div class="tile-stat">Bills &amp; admin</div>
+    </a>
+  </div>
+
+  <!-- CONSISTENCY -->
+  <div class="section-title">Consistency</div>
+  <div class="card mod-card mod-life" id="taskConsCard">
+    <div class="cons-overall">
+      <div class="cons-overall-num" id="taskConsOverallNum">0%</div>
+      <div class="cons-overall-lbl">task execution — last 30 days</div>
+    </div>
+    <div class="mod-body">
+      <div class="heat-row">
+        <div class="heat-label">Tasks</div>
+        <div class="heat-grid" id="taskHeatGrid"></div>
+        <div class="heat-streak" id="taskHeatStreak"></div>
+      </div>
+    </div>
+    <div class="cons-detail" id="taskConsDetail">Tap a day to see the breakdown.</div>
+  </div>
+
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="sync.js" defer></script>
 <script src="topbar.js" defer></script>
+<script src="plants-data.js"></script>
+<script>
+/* ============================================================
+   SHARED HELPERS — identical conventions to every other page.
+   ============================================================ */
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function lastNDates(n){
+  var base=new Date(); if(base.getHours()<6) base.setDate(base.getDate()-1);
+  var out=[];
+  for(var i=n-1;i>=0;i--){ var d=new Date(base.getFullYear(),base.getMonth(),base.getDate()-i);
+    out.push(d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())); }
+  return out;
+}
+function fmtFull(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}); }
+
+/* due/hit logic for recurring tasks — mirrors index.html's buildLife() exactly */
+function tasksDueForDate(date){
+  var defs = storeGet('todos:defs'); if (!Array.isArray(defs)) defs = [];
+  var wd = new Date(date+'T12:00').getDay();
+  return defs.filter(function(t){ return t.days && t.days.indexOf(wd) !== -1; });
+}
+function tasksHitForDate(date){
+  var due = tasksDueForDate(date);
+  if (!due.length) return true;
+  var comp = storeGet('todos:'+date) || {};
+  return due.every(function(t){ return !!comp[t.id]; });
+}
+
+var Life = {}; /* module registry — each section publishes { refresh: fn } here */
+
+/* ============================================================
+   HERO — Tasks / Plants / Uni chips.
+   ============================================================ */
+var CHIP_DEFS = [
+  { key:'tasks',  label:'Tasks',  icon:'ti-checkbox' },
+  { key:'plants', label:'Plants', icon:'ti-plant-2' },
+  { key:'uni',    label:'Uni',    icon:'ti-school' }
+];
+var chipEls = {};
+(function buildHero(){
+  var row = document.getElementById('pillarRow');
+  CHIP_DEFS.forEach(function(cd){
+    var chip = document.createElement('div'); chip.className = 'pillar-chip';
+    chip.innerHTML = '<i class="ti '+cd.icon+'"></i><span>'+cd.label+'</span>';
+    row.appendChild(chip);
+    chipEls[cd.key] = chip;
+  });
+  document.getElementById('heroDate').textContent = fmtFull(getActiveDateString());
+})();
+function updateHero(){
+  var date = getActiveDateString();
+  document.getElementById('heroDate').textContent = fmtFull(date);
+  var hits = 0;
+  var tHit = tasksHitForDate(date); if (tHit) hits++;
+  var pHit = window.LO_PLANT_COUNTS().overdue === 0; if (pHit) hits++;
+  chipEls.tasks.classList.toggle('hit', tHit);
+  chipEls.plants.classList.toggle('hit', pHit);
+  chipEls.uni.classList.toggle('hit', false);
+  document.getElementById('pillarFill').style.width = (hits/3*100)+'%';
+  document.getElementById('pillarSummary').textContent = hits+' / 3 clear';
+}
+
+/* ============================================================
+   TASKS — today's due recurring tasks, tickable inline. Rows are
+   built ONCE; a tap only toggles a class in place (no rebuild),
+   so ticking stays instant even with a 30-day heatmap on the
+   same page.
+   ============================================================ */
+(function(){
+  var dueTasks = [];
+  var heatDebounce = null;
+
+  function build(){
+    var date = getActiveDateString();
+    dueTasks = tasksDueForDate(date);
+    var comp = storeGet('todos:'+date) || {};
+    var list = document.getElementById('taskList'); list.innerHTML = '';
+    if (!dueTasks.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'Nothing due today.';
+      list.appendChild(e);
+    } else {
+      dueTasks.forEach(function(t){
+        var row = document.createElement('div'); row.className = 'item' + (comp[t.id] ? ' done' : '');
+        row.innerHTML = '<span class="cb"></span><span class="item-txt">' + t.name + '</span>';
+        row.addEventListener('click', function(){ toggleTask(t.id, row); });
+        list.appendChild(row);
+      });
+    }
+    updateCount();
+  }
+
+  function updateCount(){
+    var date = getActiveDateString();
+    var comp = storeGet('todos:'+date) || {};
+    var done = dueTasks.filter(function(t){ return comp[t.id]; }).length;
+    var total = dueTasks.length;
+    var cnt = document.getElementById('taskCount');
+    cnt.textContent = done + ' / ' + total;
+    cnt.classList.toggle('all-done', total > 0 && done === total);
+    document.getElementById('taskFill').style.width = (total ? (done/total*100) : 100) + '%';
+  }
+
+  function toggleTask(id, row){
+    var date = getActiveDateString();
+    var comp = storeGet('todos:'+date) || {};
+    comp[id] = !comp[id];
+    storeSet('todos:'+date, comp);
+    row.classList.toggle('done', !!comp[id]);
+    updateCount();
+    updateHero();
+    if (heatDebounce) clearTimeout(heatDebounce);
+    heatDebounce = setTimeout(function(){ if (Life.consistency) Life.consistency.refresh(); }, 400);
+  }
+
+  build();
+  Life.tasks = { refresh: build };
+})();
+
+/* ============================================================
+   PLANTS — compact at-a-glance row per plant, backed by the
+   shared plants-data.js module so this always agrees with
+   plants.html.
+   ============================================================ */
+function miniRingSvg(pct, col){
+  var r=18, c=2*Math.PI*r;
+  var clamped = Math.min(100, Math.max(0, pct));
+  var off = c*(1-clamped/100);
+  return '<svg class="lp-ring" viewBox="0 0 44 44">'+
+    '<circle class="lp-ring-track" cx="22" cy="22" r="'+r+'"></circle>'+
+    '<circle class="lp-ring-fill" cx="22" cy="22" r="'+r+'" stroke="'+col+'" stroke-dasharray="'+c.toFixed(2)+'" stroke-dashoffset="'+off.toFixed(2)+'"></circle>'+
+    '</svg>';
+}
+(function(){
+  function render(){
+    var host = document.getElementById('lifePlantsList'); host.innerHTML = '';
+    window.LO_PLANTS.forEach(function(p){
+      var st = window.LO_PLANT_STATE(p.id);
+      var justSoaked = (st.status === 'soaked-today');
+      var ringCol = st.pct >= 100 ? 'var(--danger)' : (st.pct >= 75 ? 'var(--warning)' : 'var(--success)');
+
+      var row = document.createElement('div'); row.className = 'lp-row';
+
+      var ringWrap = document.createElement('div'); ringWrap.className = 'lp-ring-wrap';
+      ringWrap.innerHTML = miniRingSvg(st.pct, ringCol);
+      row.appendChild(ringWrap);
+
+      var info = document.createElement('div'); info.className = 'lp-info';
+      info.innerHTML = '<span class="lp-emoji">'+p.emoji+'</span><span class="lp-name">'+p.name+'</span><div class="lp-status">'+st.statusText+'</div>';
+      row.appendChild(info);
+
+      var btn = document.createElement('div'); btn.className = 'lp-soak' + (justSoaked ? ' just' : '');
+      btn.textContent = justSoaked ? 'Done ✓' : 'Soak';
+      if (!justSoaked){
+        (function(pid){
+          btn.addEventListener('click', function(){
+            window.LO_PLANT_SOAK(pid);
+            render();
+            updateHero();
+          });
+        })(p.id);
+      }
+      row.appendChild(btn);
+
+      host.appendChild(row);
+    });
+
+    var counts = window.LO_PLANT_COUNTS();
+    var sum = document.getElementById('lifePlantsSummary');
+    var parts = [];
+    if (counts.overdue) parts.push('<b>' + counts.overdue + '</b> overdue');
+    if (counts.due) parts.push('<b>' + counts.due + '</b> due soon');
+    if (counts.ok) parts.push('<b>' + counts.ok + '</b> happy');
+    sum.innerHTML = parts.length ? parts.join(' · ') : 'all happy';
+  }
+  render();
+  Life.plants = { refresh: render };
+})();
+
+/* ============================================================
+   CONSISTENCY — 30-day heatmap of task completion. A day with
+   no due tasks counts as a hit.
+   ============================================================ */
+(function(){
+  var HEAT_N = 30;
+  var cells = [], dates = [];
+  var selIdx = -1;
+
+  function build(){
+    dates = lastNDates(HEAT_N);
+    var host = document.getElementById('taskHeatGrid'); host.innerHTML = '';
+    cells = [];
+    dates.forEach(function(date, idx){
+      var cell = document.createElement('div'); cell.className = 'heat-cell';
+      cell.setAttribute('data-idx', idx);
+      cell.addEventListener('click', function(){
+        selIdx = (selIdx === idx) ? -1 : idx;
+        updateSelection();
+      });
+      host.appendChild(cell);
+      cells.push(cell);
+    });
+  }
+
+  function updateSelection(){
+    cells.forEach(function(c, idx){ c.classList.toggle('sel', idx === selIdx); });
+    var detail = document.getElementById('taskConsDetail');
+    if (selIdx < 0){ detail.textContent = 'Tap a day to see the breakdown.'; return; }
+    var date = dates[selIdx];
+    var due = tasksDueForDate(date);
+    var comp = storeGet('todos:'+date) || {};
+    var done = due.filter(function(t){ return comp[t.id]; }).length;
+    detail.innerHTML = '<b>' + fmtFull(date) + '</b> · ' + done + '/' + due.length + ' tasks';
+  }
+
+  function refresh(){
+    dates = lastNDates(HEAT_N);
+    var hits = 0, curStreak = 0, bestStreak = 0, run = 0, i;
+    for (i=0;i<dates.length;i++){
+      var hit = tasksHitForDate(dates[i]);
+      if (hit){ hits++; run++; if (run > bestStreak) bestStreak = run; } else { run = 0; }
+      cells[i].style.background = hit ? 'rgba(107,227,164,0.85)' : 'rgba(255,255,255,0.05)';
+      cells[i].style.boxShadow = hit ? '0 0 5px rgba(107,227,164,0.55)' : 'none';
+    }
+    for (i=dates.length-1;i>=0;i--){ if (tasksHitForDate(dates[i])) curStreak++; else break; }
+    document.getElementById('taskHeatStreak').innerHTML = '<b>' + curStreak + '</b> now<br>' + bestStreak + ' best';
+    var overallPct = Math.round(hits / dates.length * 100);
+    document.getElementById('taskConsOverallNum').textContent = overallPct + '%';
+    updateSelection();
+  }
+
+  build();
+  refresh();
+  Life.consistency = { refresh: refresh };
+})();
+
+/* ============================================================
+   BOOT — hero, sync/focus refresh, staggered entry animation.
+   ============================================================ */
+updateHero();
+
+function refreshAllModules(){
+  updateHero();
+  if (Life.tasks) Life.tasks.refresh();
+  if (Life.plants) Life.plants.refresh();
+  if (Life.consistency) Life.consistency.refresh();
+}
+window.addEventListener('lo-sync-applied', refreshAllModules);
+window.addEventListener('focus', refreshAllModules);
+
+(function(){
+  var cards = document.querySelectorAll('.mod-card');
+  Array.prototype.forEach.call(cards, function(c, idx){ c.style.transitionDelay = (idx*50)+'ms'; });
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      Array.prototype.forEach.call(cards, function(c){ c.classList.add('lo-visible'); });
+    });
+  });
+})();
+</script>
 </body>
 </html>
