@@ -7,36 +7,457 @@
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="theme.css" rel="stylesheet">
 <style>
-  .hub-head { display:flex; align-items:center; gap:14px; margin-bottom:4px; }
-  .hub-icon { font-size:30px; color:#60a5fa; }
-  .hub-name { font-size:24px; font-weight:800; letter-spacing:-0.02em; }
-  .hub-sub  { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
-  .app-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
-  .app-tile { display:flex; flex-direction:column; align-items:center; gap:10px; padding:22px 14px;
-    border-radius:var(--radius); background:var(--card); border:1px solid var(--hair);
-    cursor:pointer; text-decoration:none; transition:background .2s, border-color .2s, transform .12s; }
-  .app-tile:hover { background:var(--card-2); border-color:rgba(96,165,250,0.3); }
-  .app-tile:active { transform:scale(0.97); }
-  .app-tile i { font-size:28px; color:#60a5fa; }
-  .app-tile span { font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-1); }
-  .app-tile.soon { opacity:0.4; }
-  .app-tile.soon i { color:var(--text-3); }
+  /* ============================================================
+     GLASS MODULE CARDS — same visual language as physical.html:
+     frosted glass, animated iridescent gradient rim.
+     ============================================================ */
+  .mod-card {
+    position: relative; border-radius: 20px; padding:20px;
+    background: var(--m-bg, rgba(96,165,250,0.05));
+    border: 1px solid var(--m-bd, rgba(96,165,250,0.16));
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+    opacity: 0; transform: translateY(14px);
+    transition: opacity .5s ease-out, transform .5s ease-out;
+  }
+  .mod-card.lo-visible { opacity: 1; transform: translateY(0); }
+  .mod-card::after {
+    content:''; position:absolute; inset:0; border-radius:20px; padding:1.5px;
+    background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3), var(--g2), var(--g1));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: bodyBorderShift 8s ease infinite;
+    opacity: 0.65; pointer-events: none; z-index: 2;
+  }
+  @keyframes bodyBorderShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mod-card::after { animation: none; }
+    .mod-card { transition: none; opacity: 1; transform: none; }
+  }
+  .mod-system { --g1:#60a5fa; --g2:#22d3ee; --g3:#6366f1; --m-bg:rgba(96,165,250,0.045); --m-bd:rgba(96,165,250,0.18); --m-accent:#60a5fa; }
+
+  /* ---- HERO ---- */
+  .body-hero { padding: 22px; margin-bottom: 12px; }
+  .hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; position:relative; z-index:1; }
+  .body-title-wrap { display:flex; align-items:center; gap:12px; }
+  .body-hero-icon { font-size:28px; color:#60a5fa; }
+  .body-title {
+    font-size:32px; font-weight:800; letter-spacing:-0.03em; line-height:1;
+    background: linear-gradient(120deg, #60a5fa, #22d3ee, #6366f1, #60a5fa);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    animation: systemTitleShift 10s ease infinite;
+  }
+  @keyframes systemTitleShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
+  .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
+
+  .pillar-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; position:relative; z-index:1; }
+  .pillar-chip {
+    display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 6px; border-radius:14px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--hair);
+  }
+  .pillar-chip i { font-size:16px; color:var(--m-accent); }
+  .chip-val { font-family:var(--mono); font-size:13px; font-weight:800; color:var(--text-1); font-variant-numeric:tabular-nums; }
+  .chip-lbl { font-size:8.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); }
+
+  .pillar-bar { height:8px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; margin:16px 0 8px; position:relative; z-index:1; }
+  .pillar-fill {
+    height:100%; width:0; border-radius:999px;
+    background:linear-gradient(90deg,#60a5fa,#22d3ee,#6366f1); background-size:200% 100%;
+    transition:width .5s cubic-bezier(.22,1,.36,1);
+  }
+  .pillar-summary { font-family:var(--mono); font-size:12px; color:var(--text-2); font-weight:700; position:relative; z-index:1; }
+
+  /* ---- TILE GRID (nav) ---- */
+  .tile-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:12px; }
+  .tile {
+    aspect-ratio:1/1; padding:16px; display:flex; flex-direction:column;
+    text-decoration:none; color:inherit; cursor:pointer;
+    transition: opacity .5s ease-out, transform .5s ease-out, border-color .2s;
+  }
+  .tile-top { display:flex; align-items:center; gap:8px; position:relative; z-index:1; }
+  .tile-top i { font-size:18px; color:var(--m-accent); }
+  .tile-top span { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .tile-stat {
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--mono); font-size:15px; font-weight:800; color:var(--text-2);
+    position:relative; z-index:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%;
+  }
+  .tile.hit { border-color: color-mix(in srgb, var(--g1) 55%, transparent); }
+  .tile.hit .tile-stat { color: var(--g1); }
+  .tile-wide { grid-column:1/-1; aspect-ratio:auto; height:110px; margin-top:4px; }
+
+  /* ---- CONSISTENCY ---- */
+  .cons-overall { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; position:relative; z-index:1; }
+  .cons-overall-num {
+    font-size:38px; font-weight:800; letter-spacing:-0.03em;
+    background:linear-gradient(120deg,#60a5fa,#22d3ee,#6366f1); background-size:200% 200%;
+    -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+  }
+  .cons-overall-lbl { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .mod-body { position:relative; z-index:1; }
+  .heat-row { display:flex; align-items:center; gap:10px; position:relative; z-index:1; }
+  .heat-label { width:52px; flex-shrink:0; font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-2); }
+  .heat-grid { display:grid; grid-template-columns:repeat(30, 1fr); gap:3px; flex:1; }
+  .heat-cell {
+    aspect-ratio:1/1; border-radius:3px; background:rgba(255,255,255,0.05); cursor:pointer;
+    transition:transform .1s, outline-color .15s;
+    outline:1.5px solid transparent; outline-offset:1px;
+  }
+  .heat-cell:hover { transform:scale(1.3); }
+  .heat-cell.sel { outline-color:var(--text-1); }
+  .heat-streak { font-family:var(--mono); font-size:9px; color:var(--text-3); flex-shrink:0; width:64px; text-align:right; line-height:1.5; }
+  .heat-streak b { color:var(--text-1); }
+  .cons-detail { font-family:var(--mono); font-size:11px; color:var(--text-2); margin-top:16px; min-height:14px; position:relative; z-index:1; }
+  .cons-detail b { color:var(--text-1); font-weight:800; }
 </style>
 </head>
 <body>
+
 <div class="wrap">
-  <div class="hub-head"><i class="ti ti-settings hub-icon"></i><div class="hub-name">System</div></div>
-  <div class="hub-sub">Todos · streaks · goals · countdowns · weekly.</div>
-  <div class="app-grid">
-    <a class="app-tile" href="todos.html"><i class="ti ti-checkbox"></i><span>Todos</span></a>
-    <a class="app-tile" href="streaks.html"><i class="ti ti-flame"></i><span>Streaks</span></a>
-    <a class="app-tile" href="goals.html"><i class="ti ti-target-arrow"></i><span>Goals</span></a>
-    <a class="app-tile" href="countdowns.html"><i class="ti ti-hourglass"></i><span>Countdowns</span></a>
-    <a class="app-tile" href="weekly.html"><i class="ti ti-calendar-week"></i><span>Weekly</span></a>
+
+  <!-- HERO -->
+  <div class="card mod-card mod-system body-hero" id="heroCard">
+    <div class="hero-top">
+      <div class="body-title-wrap">
+        <i class="ti ti-settings body-hero-icon"></i>
+        <div class="body-title">System</div>
+      </div>
+      <div class="body-date" id="heroDate">—</div>
+    </div>
+    <div class="pillar-row" id="pillarRow">
+      <div class="pillar-chip">
+        <i class="ti ti-target-arrow"></i>
+        <span class="chip-val" id="chipGoalsVal">0/0</span>
+        <span class="chip-lbl">Goals</span>
+      </div>
+      <div class="pillar-chip">
+        <i class="ti ti-flame"></i>
+        <span class="chip-val" id="chipStreakVal">0d</span>
+        <span class="chip-lbl">Streak</span>
+      </div>
+      <div class="pillar-chip">
+        <i class="ti ti-hourglass"></i>
+        <span class="chip-val" id="chipNextVal">—</span>
+        <span class="chip-lbl">Next</span>
+      </div>
+    </div>
+    <div class="pillar-bar"><div class="pillar-fill" id="pillarFill"></div></div>
+    <div class="pillar-summary" id="pillarSummary">No goals set</div>
   </div>
+
+  <!-- TILES -->
+  <div class="section-title">Pages</div>
+  <div class="tile-grid">
+    <a class="mod-card mod-system tile" href="todos.html" id="tileTodos">
+      <div class="tile-top"><i class="ti ti-checkbox"></i><span>Todos</span></div>
+      <div class="tile-stat" id="tileTodosStat">—</div>
+    </a>
+    <a class="mod-card mod-system tile" href="streaks.html" id="tileStreaks">
+      <div class="tile-top"><i class="ti ti-flame"></i><span>Streaks</span></div>
+      <div class="tile-stat" id="tileStreaksStat">—</div>
+    </a>
+    <a class="mod-card mod-system tile" href="goals.html" id="tileGoals">
+      <div class="tile-top"><i class="ti ti-target-arrow"></i><span>Goals</span></div>
+      <div class="tile-stat" id="tileGoalsStat">—</div>
+    </a>
+    <a class="mod-card mod-system tile" href="countdowns.html" id="tileCountdowns">
+      <div class="tile-top"><i class="ti ti-hourglass"></i><span>Countdowns</span></div>
+      <div class="tile-stat" id="tileCountdownsStat">—</div>
+    </a>
+    <a class="mod-card mod-system tile tile-wide" href="weekly.html" id="tileWeekly">
+      <div class="tile-top"><i class="ti ti-calendar-week"></i><span>Weekly</span></div>
+      <div class="tile-stat" id="tileWeeklyStat">—</div>
+    </a>
+  </div>
+
+  <!-- CONSISTENCY -->
+  <div class="section-title">Consistency</div>
+  <div class="card mod-card mod-system" id="consCard">
+    <div class="cons-overall">
+      <div class="cons-overall-num" id="consOverallNum">0%</div>
+      <div class="cons-overall-lbl">goals hit — last 30 days</div>
+    </div>
+    <div class="mod-body">
+      <div class="heat-row">
+        <div class="heat-label">Goals</div>
+        <div class="heat-grid" id="heatGrid"></div>
+        <div class="heat-streak" id="heatStreak"></div>
+      </div>
+    </div>
+    <div class="cons-detail" id="consDetail">Tap a day to see the breakdown.</div>
+  </div>
+
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="sync.js" defer></script>
 <script src="topbar.js" defer></script>
+<script>
+/* ============================================================
+   SHARED HELPERS — identical conventions to every other page.
+   ============================================================ */
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function fmtDate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return fmtDate(d); }
+function fmtFull(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}); }
+function lastNDates(n){
+  var base=new Date(); if(base.getHours()<6) base.setDate(base.getDate()-1);
+  var out=[];
+  for(var i=n-1;i>=0;i--){ var d=new Date(base.getFullYear(),base.getMonth(),base.getDate()-i);
+    out.push(fmtDate(d)); }
+  return out;
+}
+function dayDiff(a,b){
+  var pa=a.split('-'),pb=b.split('-');
+  var da=new Date(+pa[0],+pa[1]-1,+pa[2]), db=new Date(+pb[0],+pb[1]-1,+pb[2]);
+  return Math.round((db-da)/86400000);
+}
+function shiftStr(dstr, delta){ var p=dstr.split('-'); var d=new Date(+p[0],+p[1]-1,+p[2]); d.setDate(d.getDate()+delta); return fmtDate(d); }
+/* countdowns.html uses a PLAIN, non-adjusted "today" (no pre-6am shift) —
+   this must stay separate from getActiveDateString() above so the nearest
+   countdown here always agrees with countdowns.html's own calculation. */
+function countdownTodayStr(){ var d=new Date(); return fmtDate(d); }
+
+/* ============================================================
+   STREAKS — replicated exactly from streaks.html so the two
+   pages can never disagree. SUPPS_DONE is 13, copied verbatim
+   from streaks.html — NOT the 16 that index.html's Body pillar
+   uses; these two "supps complete" thresholds are deliberately
+   different and must be kept in sync with their own source page.
+   ============================================================ */
+var SUPPS_TOTAL = 16;
+var SUPPS_DONE = 13;
+function stepsGoal(){ var g=storeGet('steps:goal'); return (typeof g==='number' && g>0) ? g : 15000; }
+function sleepTarget(){ var t=storeGet('sleep:target'); return (typeof t==='number' && t>0) ? t : 8; }
+function toMin(t){ if(!t||t.indexOf(':')<0) return null; var p=t.split(':'); return (+p[0])*60+(+p[1]); }
+function durMins(bed,wake){ var b=toMin(bed),w=toMin(wake); if(b==null||w==null) return null; if(w<=b) w+=1440; return w-b; }
+
+var HABITS = [
+  { id:'gym',   done:function(dt){ var s=storeGet('gym:'+dt)||{}; return !!s.done; } },
+  { id:'steps', done:function(dt){ var s=storeGet('steps:'+dt)||{}; return (s.count||0)>=stepsGoal(); } },
+  { id:'sleep', done:function(dt){ var s=storeGet('sleep:'+dt)||{}; var m=durMins(s.bed,s.wake); return m!=null && (m/60)>=sleepTarget(); } },
+  { id:'supps', done:function(dt){ var s=storeGet('supps:'+dt)||{}; var t=0,k; for(k in s){ if(s.hasOwnProperty(k)&&s[k]) t++; } return t>=SUPPS_DONE; } }
+];
+
+function doneSetFor(hab){
+  var set={}, i, k, m, re=new RegExp('^'+hab.id+':(\\d{4}-\\d{2}-\\d{2})$');
+  for(i=0;i<localStorage.length;i++){
+    k=localStorage.key(i); if(!k) continue;
+    m=k.match(re); if(!m) continue;
+    if(hab.done(m[1])) set[m[1]]=true;
+  }
+  return set;
+}
+function computeStreaks(set){
+  var dates=[], d; for(d in set){ if(set.hasOwnProperty(d)) dates.push(d); }
+  dates.sort();
+  var best=0, run=0, prev=null, i;
+  for(i=0;i<dates.length;i++){
+    if(prev!=null && dayDiff(prev,dates[i])===1) run++; else run=1;
+    if(run>best) best=run; prev=dates[i];
+  }
+  var cur=0, day=getActiveDateString(), pendingToday=false;
+  if(!set[day]){ pendingToday=true; day=shiftStr(day,-1); }
+  while(set[day]){ cur++; day=shiftStr(day,-1); }
+  return { cur:cur, best:best, pending:pendingToday };
+}
+function longestLiveStreak(){
+  var max = 0;
+  HABITS.forEach(function(hab){
+    var st = computeStreaks(doneSetFor(hab));
+    if (st.cur > max) max = st.cur;
+  });
+  return max;
+}
+
+/* ============================================================
+   GOALS — a day counts as a hit only if goals were set AND every
+   entry is done. A day with no goals set is a miss, not a skip.
+   ============================================================ */
+function goalsForDate(date){ var g = storeGet('goals:'+date); return Array.isArray(g) ? g : []; }
+function goalsHitForDate(date){
+  var goals = goalsForDate(date);
+  if (!goals.length) return false;
+  return goals.every(function(g){ return g.done === true; });
+}
+
+/* ============================================================
+   TODOS — due/done for a date, mirrors index.html's buildLife().
+   ============================================================ */
+function tasksDueForDate(date){
+  var defs = storeGet('todos:defs'); if (!Array.isArray(defs)) defs=[];
+  var wd = new Date(date+'T12:00').getDay();
+  return defs.filter(function(t){ return t.days && t.days.indexOf(wd) !== -1; });
+}
+function tasksStatusForDate(date){
+  var due = tasksDueForDate(date);
+  var comp = storeGet('todos:'+date) || {};
+  var done = due.filter(function(t){ return comp[t.id]; }).length;
+  return { done:done, total:due.length };
+}
+
+/* ============================================================
+   COUNTDOWNS — nearest upcoming, plain-date convention (see
+   countdownTodayStr() above).
+   ============================================================ */
+function loadCountdowns(){ var list = storeGet('countdowns:list'); return Array.isArray(list) ? list : []; }
+function nearestCountdown(){
+  var list = loadCountdowns();
+  var today = countdownTodayStr();
+  var upcoming = [];
+  list.forEach(function(c){
+    var d = dayDiff(today, c.date);
+    if (d >= 0) upcoming.push({ name:c.name, days:d });
+  });
+  upcoming.sort(function(a,b){ return a.days - b.days; });
+  return upcoming.length ? upcoming[0] : null;
+}
+
+var System = {}; /* module registry — each section publishes { refresh: fn } here */
+
+/* ============================================================
+   HERO — Goals / Streak / Next chips, today's goals progress bar.
+   ============================================================ */
+function updateHero(){
+  var date = getActiveDateString();
+  document.getElementById('heroDate').textContent = fmtFull(date);
+
+  var goals = goalsForDate(date);
+  var total = goals.length;
+  var done = goals.filter(function(g){ return g.done === true; }).length;
+  var pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('pillarFill').style.width = pct + '%';
+  document.getElementById('pillarSummary').textContent = total ? (done + ' / ' + total + ' goals done') : 'No goals set';
+  document.getElementById('chipGoalsVal').textContent = done + '/' + total;
+
+  var maxStreak = longestLiveStreak();
+  document.getElementById('chipStreakVal').textContent = maxStreak + 'd';
+
+  var next = nearestCountdown();
+  document.getElementById('chipNextVal').textContent = next ? (next.days + 'd') : '—';
+}
+
+/* ============================================================
+   TILES — nav grid, live stat per page.
+   ============================================================ */
+function updateTiles(){
+  var date = getActiveDateString();
+
+  var todosStatus = tasksStatusForDate(date);
+  var todosHit = (todosStatus.total === 0) || (todosStatus.done === todosStatus.total);
+  document.getElementById('tileTodosStat').textContent = todosStatus.total ? (todosStatus.done + ' / ' + todosStatus.total + ' tasks') : 'All clear';
+  document.getElementById('tileTodos').classList.toggle('hit', todosHit);
+
+  var maxStreak = longestLiveStreak();
+  document.getElementById('tileStreaksStat').textContent = maxStreak > 0 ? (maxStreak + ' day' + (maxStreak===1?'':'s')) : 'None live';
+  document.getElementById('tileStreaks').classList.toggle('hit', maxStreak > 0);
+
+  var goals = goalsForDate(date);
+  var gTotal = goals.length, gDone = goals.filter(function(g){ return g.done === true; }).length;
+  document.getElementById('tileGoalsStat').textContent = gTotal ? (gDone + ' / ' + gTotal + ' done') : 'None set';
+  document.getElementById('tileGoals').classList.toggle('hit', goalsHitForDate(date));
+
+  var next = nearestCountdown();
+  document.getElementById('tileCountdownsStat').textContent = next ? (next.days + 'd · ' + next.name) : 'None upcoming';
+
+  var wd = new Date(date+'T12:00').getDay();
+  var WD_LABEL = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var wdPos = wd === 0 ? 7 : wd;
+  document.getElementById('tileWeeklyStat').textContent = WD_LABEL[wd] + ' · day ' + wdPos + ' / 7';
+}
+updateTiles();
+System.tiles = { refresh: updateTiles };
+
+/* ============================================================
+   CONSISTENCY — 30-day heatmap of goals-hit days.
+   ============================================================ */
+(function(){
+  var HEAT_N = 30;
+  var cells = [], dates = [];
+  var selIdx = -1;
+
+  function build(){
+    dates = lastNDates(HEAT_N);
+    var host = document.getElementById('heatGrid'); host.innerHTML = '';
+    cells = [];
+    dates.forEach(function(date, idx){
+      var cell = document.createElement('div'); cell.className = 'heat-cell';
+      cell.setAttribute('data-idx', idx);
+      cell.addEventListener('click', function(){
+        selIdx = (selIdx === idx) ? -1 : idx;
+        updateSelection();
+      });
+      host.appendChild(cell);
+      cells.push(cell);
+    });
+  }
+
+  function updateSelection(){
+    cells.forEach(function(c, idx){ c.classList.toggle('sel', idx === selIdx); });
+    var detail = document.getElementById('consDetail');
+    if (selIdx < 0){ detail.textContent = 'Tap a day to see the breakdown.'; return; }
+    var date = dates[selIdx];
+    var goals = goalsForDate(date);
+    var done = goals.filter(function(g){ return g.done === true; }).length;
+    detail.innerHTML = '<b>' + fmtFull(date) + '</b> · ' + done + ' / ' + goals.length + ' goals done';
+  }
+
+  function refresh(){
+    dates = lastNDates(HEAT_N);
+    var hits = 0, curStreak = 0, bestStreak = 0, run = 0, i;
+    for (i=0;i<dates.length;i++){
+      var hit = goalsHitForDate(dates[i]);
+      if (hit){ hits++; run++; if (run > bestStreak) bestStreak = run; } else { run = 0; }
+      if (hit){ cells[i].style.background = 'rgba(96,165,250,0.85)'; cells[i].style.boxShadow = '0 0 5px rgba(96,165,250,0.55)'; }
+      else { cells[i].style.background = 'rgba(255,255,255,0.05)'; cells[i].style.boxShadow = 'none'; }
+    }
+    for (i=dates.length-1;i>=0;i--){ if (goalsHitForDate(dates[i])) curStreak++; else break; }
+    document.getElementById('heatStreak').innerHTML = '<b>' + curStreak + '</b> now<br>' + bestStreak + ' best';
+    var overallPct = Math.round(hits / dates.length * 100);
+    document.getElementById('consOverallNum').textContent = overallPct + '%';
+    updateSelection();
+  }
+
+  build();
+  refresh();
+  System.consistency = { refresh: refresh };
+})();
+
+/* ============================================================
+   BOOT — hero, sync/focus refresh, staggered entry animation.
+   ============================================================ */
+updateHero();
+
+function refreshAllModules(){
+  updateHero();
+  if (System.tiles) System.tiles.refresh();
+  if (System.consistency) System.consistency.refresh();
+}
+window.addEventListener('lo-sync-applied', refreshAllModules);
+window.addEventListener('focus', refreshAllModules);
+
+(function(){
+  var cards = document.querySelectorAll('.mod-card');
+  Array.prototype.forEach.call(cards, function(c, idx){ c.style.transitionDelay = (idx*50)+'ms'; });
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      Array.prototype.forEach.call(cards, function(c){ c.classList.add('lo-visible'); });
+    });
+  });
+})();
+</script>
 </body>
 </html>
