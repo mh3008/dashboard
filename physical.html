@@ -3,40 +3,620 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Physical · Life OS</title>
+<title>Body · Life OS</title>
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="theme.css" rel="stylesheet">
 <style>
-  .hub-head { display:flex; align-items:center; gap:14px; margin-bottom:4px; }
-  .hub-icon { font-size:30px; color:var(--accent); }
-  .hub-name { font-size:24px; font-weight:800; letter-spacing:-0.02em; }
-  .hub-sub  { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
-  .app-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
-  .app-tile { display:flex; flex-direction:column; align-items:center; gap:10px; padding:22px 14px;
-    border-radius:var(--radius); background:var(--card); border:1px solid var(--hair);
-    cursor:pointer; text-decoration:none; transition:background .2s, border-color .2s, transform .12s; }
-  .app-tile:hover { background:var(--card-2); border-color:rgba(249,115,22,0.3); }
-  .app-tile:active { transform:scale(0.97); }
-  .app-tile i { font-size:28px; color:var(--accent-lt); }
-  .app-tile span { font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-1); }
-  .app-tile.soon { opacity:0.4; }
-  .app-tile.soon i { color:var(--text-3); }
+  /* ============================================================
+     GLASS MODULE CARDS — same visual language as the home page:
+     frosted glass, animated iridescent gradient rim, colour as light.
+     Purple family: violet(supps) / magenta(gym) / indigo(sleep) / lilac(steps).
+     ============================================================ */
+  .mod-card {
+    position: relative; border-radius: 20px;
+    background: var(--m-bg, rgba(167,139,250,0.05));
+    border: 1px solid var(--m-bd, rgba(167,139,250,0.16));
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+    opacity: 0; transform: translateY(14px);
+    transition: opacity .5s ease-out, transform .5s ease-out;
+  }
+  .mod-card.lo-visible { opacity: 1; transform: translateY(0); }
+  .mod-card::after {
+    content:''; position:absolute; inset:0; border-radius:20px; padding:1.5px;
+    background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3), var(--g2), var(--g1));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: bodyBorderShift 8s ease infinite;
+    opacity: 0.65; pointer-events: none; z-index: 2;
+  }
+  @keyframes bodyBorderShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mod-card::after { animation: none; }
+    .mod-card { transition: none; opacity: 1; transform: none; }
+  }
+
+  .mod-hero    { --g1:#a78bfa; --g2:#ec4899; --g3:#60a5fa; --m-bg:rgba(167,139,250,0.045); --m-bd:rgba(167,139,250,0.18); --m-accent:#a78bfa; }
+  .mod-supps   { --g1:#a78bfa; --g2:#ec4899; --g3:#60a5fa; --m-bg:rgba(167,139,250,0.05);  --m-bd:rgba(167,139,250,0.18); --m-accent:#a78bfa; }
+  .mod-gym     { --g1:#e879f9; --g2:#ec4899; --g3:#a78bfa; --m-bg:rgba(232,121,249,0.05);  --m-bd:rgba(232,121,249,0.18); --m-accent:#e879f9; }
+  .mod-sleep   { --g1:#818cf8; --g2:#60a5fa; --g3:#a78bfa; --m-bg:rgba(129,140,248,0.05);  --m-bd:rgba(129,140,248,0.18); --m-accent:#818cf8; }
+  .mod-steps   { --g1:#c4b5fd; --g2:#a78bfa; --g3:#ec4899; --m-bg:rgba(196,181,253,0.05);  --m-bd:rgba(196,181,253,0.18); --m-accent:#c4b5fd; }
+  .mod-cons    { --g1:#a78bfa; --g2:#818cf8; --g3:#ec4899; --m-bg:rgba(167,139,250,0.045); --m-bd:rgba(167,139,250,0.16); --m-accent:#a78bfa; }
+
+  /* ---- HERO ---- */
+  .body-hero { padding: 22px; margin-bottom: 12px; }
+  .hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; position:relative; z-index:1; }
+  .body-title-wrap { display:flex; align-items:center; gap:12px; }
+  .body-hero-icon { font-size:28px; color:#a78bfa; }
+  .body-title {
+    font-size:32px; font-weight:800; letter-spacing:-0.03em; line-height:1;
+    background: linear-gradient(120deg, #a78bfa, #ec4899, #60a5fa, #a78bfa);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    animation: bodyTitleShift 10s ease infinite;
+  }
+  @keyframes bodyTitleShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
+  .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
+
+  .pillar-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; position:relative; z-index:1; }
+  .pillar-chip {
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--hair);
+    transition:background .2s, border-color .2s, box-shadow .2s;
+  }
+  .pillar-chip i { font-size:18px; color:var(--text-3); transition:color .2s; }
+  .pillar-chip span { font-size:9.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); transition:color .2s; }
+  .pillar-chip.hit { background:rgba(167,139,250,0.12); border-color:rgba(167,139,250,0.45); box-shadow:0 0 16px rgba(167,139,250,0.25); }
+  .pillar-chip.hit i, .pillar-chip.hit span { color:#d8cbff; }
+
+  .pillar-bar { height:8px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; margin:16px 0 8px; position:relative; z-index:1; }
+  .pillar-fill {
+    height:100%; width:0; border-radius:999px;
+    background:linear-gradient(90deg,#a78bfa,#ec4899,#60a5fa); background-size:200% 100%;
+    transition:width .5s cubic-bezier(.22,1,.36,1);
+  }
+  .pillar-summary { font-family:var(--mono); font-size:12px; color:var(--text-2); font-weight:700; position:relative; z-index:1; }
+
+  /* ---- shared module head ---- */
+  .mod-card { padding:20px; }
+  .mod-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; position:relative; z-index:1; }
+  .mod-title { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+  .mod-title i { color:var(--m-accent); font-size:20px; }
+  .mod-count { font-family:var(--mono); font-size:13px; color:var(--text-2); }
+  .mod-count.all-done { color:var(--success); }
+  .mod-body { position:relative; z-index:1; }
+  .block-lbl { font-family:var(--mono); font-size:9.5px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-3); }
+
+  /* ---- TILE GRID (nav) ---- */
+  .tile-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:12px; }
+  .tile {
+    aspect-ratio:1/1; padding:16px; display:flex; flex-direction:column;
+    text-decoration:none; color:inherit; cursor:pointer;
+    transition: opacity .5s ease-out, transform .5s ease-out, border-color .2s;
+  }
+  .tile-top { display:flex; align-items:center; gap:8px; position:relative; z-index:1; }
+  .tile-top i { font-size:18px; color:var(--m-accent); }
+  .tile-top span { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .tile-stat {
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--mono); font-size:15px; font-weight:800; color:var(--text-2);
+    position:relative; z-index:1;
+  }
+  .tile.hit { border-color: color-mix(in srgb, var(--g1) 55%, transparent); }
+  .tile.hit .tile-stat { color: var(--g1); }
+
+  /* ---- CONSISTENCY ---- */
+  .cons-overall { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
+  .cons-overall-num {
+    font-size:38px; font-weight:800; letter-spacing:-0.03em;
+    background:linear-gradient(120deg,#a78bfa,#818cf8,#ec4899); background-size:200% 200%;
+    -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+  }
+  .cons-overall-lbl { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .heat-row { display:flex; align-items:center; gap:10px; margin-top:14px; }
+  .heat-label { width:52px; flex-shrink:0; font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-2); }
+  .heat-grid { display:grid; grid-template-columns:repeat(30, 1fr); gap:3px; flex:1; }
+  .heat-cell {
+    aspect-ratio:1/1; border-radius:3px; background:rgba(255,255,255,0.05); cursor:pointer;
+    transition:transform .1s, outline-color .15s;
+    outline:1.5px solid transparent; outline-offset:1px;
+  }
+  .heat-cell:hover { transform:scale(1.3); }
+  .heat-cell.sel { outline-color:var(--text-1); }
+  .heat-streak { font-family:var(--mono); font-size:9px; color:var(--text-3); flex-shrink:0; width:64px; text-align:right; line-height:1.5; }
+  .heat-streak b { color:var(--text-1); }
+  .cons-detail { font-family:var(--mono); font-size:11px; color:var(--text-2); margin-top:16px; min-height:14px; position:relative; z-index:1; }
+  .cons-detail b { color:var(--text-1); font-weight:800; }
+
+  .trend-wrap { width:100%; margin-top:4px; position:relative; z-index:1; }
+  .trend-wrap svg { width:100%; height:auto; display:block; }
+  .trend-read { font-family:var(--mono); font-size:11px; color:var(--text-2); text-align:center; margin-top:12px; min-height:14px; position:relative; z-index:1; }
+  .trend-read b { color:var(--text-1); font-weight:800; }
+
+  .cons-sub-grid { display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
+  @media (min-width: 640px) { .cons-sub-grid { grid-template-columns:1fr 1fr; } }
 </style>
 </head>
 <body>
+
 <div class="wrap">
-  <div class="hub-head"><i class="ti ti-activity hub-icon"></i><div class="hub-name">Physical</div></div>
-  <div class="hub-sub">Train the body. Supps · gym · sleep · steps.</div>
-  <div class="app-grid">
-    <a class="app-tile" href="supps.html"><i class="ti ti-pill"></i><span>Supps</span></a>
-    <a class="app-tile" href="gym.html"><i class="ti ti-barbell"></i><span>Gym</span></a>
-    <a class="app-tile" href="sleep.html"><i class="ti ti-moon"></i><span>Sleep</span></a>
-    <a class="app-tile" href="steps.html"><i class="ti ti-walk"></i><span>Steps</span></a>
-    <a class="app-tile soon" href="javascript:void(0)" onclick="loToast('Football — coming soon')"><i class="ti ti-ball-football"></i><span>Football</span></a>
+
+  <!-- HERO -->
+  <div class="card mod-card mod-hero body-hero" id="heroCard">
+    <div class="hero-top">
+      <div class="body-title-wrap">
+        <i class="ti ti-activity body-hero-icon"></i>
+        <div class="body-title">Body</div>
+      </div>
+      <div class="body-date" id="heroDate">—</div>
+    </div>
+    <div class="pillar-row" id="pillarRow"></div>
+    <div class="pillar-bar"><div class="pillar-fill" id="pillarFill"></div></div>
+    <div class="pillar-summary" id="pillarSummary">0 / 4 pillars hit</div>
   </div>
+
+  <!-- TILES -->
+  <div class="section-title">Track</div>
+  <div class="tile-grid">
+    <a class="mod-card mod-supps tile" href="supps.html" id="tileSupps">
+      <div class="tile-top"><i class="ti ti-pill"></i><span>Supps</span></div>
+      <div class="tile-stat" id="tileSuppsStat">0 / 16</div>
+    </a>
+    <a class="mod-card mod-gym tile" href="gym.html" id="tileGym">
+      <div class="tile-top"><i class="ti ti-barbell"></i><span>Gym</span></div>
+      <div class="tile-stat" id="tileGymStat">Not logged</div>
+    </a>
+    <a class="mod-card mod-sleep tile" href="sleep.html" id="tileSleep">
+      <div class="tile-top"><i class="ti ti-moon"></i><span>Sleep</span></div>
+      <div class="tile-stat" id="tileSleepStat">Not logged</div>
+    </a>
+    <a class="mod-card mod-steps tile" href="steps.html" id="tileSteps">
+      <div class="tile-top"><i class="ti ti-walk"></i><span>Steps</span></div>
+      <div class="tile-stat" id="tileStepsStat">0</div>
+    </a>
+  </div>
+
+  <!-- CONSISTENCY -->
+  <div class="section-title">Consistency</div>
+  <div class="card mod-card mod-cons" id="consCard">
+    <div class="cons-overall">
+      <div class="cons-overall-num" id="consOverallNum">0%</div>
+      <div class="cons-overall-lbl">overall execution — last 30 days</div>
+    </div>
+    <div class="mod-body" id="heatHost"></div>
+    <div class="cons-detail" id="consDetail">Tap a day to see the breakdown.</div>
+  </div>
+
+  <div class="cons-sub-grid">
+    <div class="card mod-card mod-sleep">
+      <div class="block-lbl" style="margin-bottom:6px;">Sleep — 7 nights</div>
+      <div class="trend-wrap" id="sleepTrendWrap"></div>
+      <div class="trend-read" id="sleepTrendRead"></div>
+    </div>
+    <div class="card mod-card mod-steps">
+      <div class="block-lbl" style="margin-bottom:6px;">Steps — 7 days</div>
+      <div class="trend-wrap" id="stepsTrendWrap"></div>
+      <div class="trend-read" id="stepsTrendRead"></div>
+    </div>
+  </div>
+
+  <div class="card mod-card mod-gym" style="margin-top:12px;">
+    <div class="block-lbl" style="margin-bottom:6px;">Gym volume — recent sessions</div>
+    <div class="trend-wrap" id="gymTrendWrap"></div>
+    <div class="trend-read" id="gymTrendRead"></div>
+  </div>
+
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="sync.js" defer></script>
 <script src="topbar.js" defer></script>
+<script>
+/* ============================================================
+   SHARED HELPERS — identical conventions to every other page.
+   ============================================================ */
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function toMin(t){ if(!t||t.indexOf(':')<0) return null; var p=t.split(':'); return (+p[0])*60+(+p[1]); }
+function durMins(bed,wake){ var b=toMin(bed),w=toMin(wake); if(b==null||w==null) return null; if(w<=b) w+=1440; return w-b; }
+function fmtDur(m){ return Math.floor(m/60)+'h '+pad2(m%60)+'m'; }
+function fmtNum(n){ return Number(n||0).toLocaleString('en-GB'); }
+function num(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
+function sessAllEx(sess){
+  var out = [];
+  if (sess && sess.bySplit && typeof sess.bySplit === 'object'){
+    Object.keys(sess.bySplit).forEach(function(k){
+      if (Array.isArray(sess.bySplit[k])) out = out.concat(sess.bySplit[k]);
+    });
+  }
+  if (sess && Array.isArray(sess.exercises)) out = out.concat(sess.exercises);
+  return out;
+}
+function getStepsGoal(){ var g=storeGet('steps:goal'); return (typeof g==='number' && g>0) ? g : 15000; }
+function getSleepTarget(){ var t=storeGet('sleep:target'); return (typeof t==='number' && t>0) ? t : 8; }
+function lastNDates(n){
+  var base=new Date(); if(base.getHours()<6) base.setDate(base.getDate()-1);
+  var out=[];
+  for(var i=n-1;i>=0;i--){ var d=new Date(base.getFullYear(),base.getMonth(),base.getDate()-i);
+    out.push(d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())); }
+  return out;
+}
+function fmtFull(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}); }
+var QUAL = ['','Poor','Meh','OK','Good','Great'];
+
+var SUPPS_TOTAL = 16;
+
+/* pillar "hit" logic — mirrors index.html's buildBody() exactly so the
+   home page Body tile and this page always agree */
+function pillarHit(key, date){
+  if (key==='supps'){
+    var s=storeGet('supps:'+date)||{}, taken=0, k;
+    for (k in s){ if (s.hasOwnProperty(k) && s[k]) taken++; }
+    return taken >= SUPPS_TOTAL;
+  }
+  if (key==='gym'){ return !!(storeGet('gym:'+date)||{}).done; }
+  if (key==='sleep'){ var sl=storeGet('sleep:'+date)||{}; return !!(sl.bed || sl.wake); }
+  if (key==='steps'){ var stp=storeGet('steps:'+date)||{}; return (stp.count||0) >= getStepsGoal(); }
+  return false;
+}
+
+var Body = {}; /* module registry — each section publishes { refresh: fn } here */
+
+/* ============================================================
+   HERO — 4-pillar summary, updates instantly whenever any
+   module below writes new data (see notifyDataChanged()).
+   ============================================================ */
+var PILLAR_DEFS = [
+  { key:'supps', label:'Supps', icon:'ti-pill' },
+  { key:'gym',   label:'Gym',   icon:'ti-barbell' },
+  { key:'sleep', label:'Sleep', icon:'ti-moon' },
+  { key:'steps', label:'Steps', icon:'ti-walk' }
+];
+var pillarChips = {};
+(function buildHero(){
+  var row = document.getElementById('pillarRow');
+  PILLAR_DEFS.forEach(function(pd){
+    var chip = document.createElement('div'); chip.className = 'pillar-chip';
+    chip.innerHTML = '<i class="ti '+pd.icon+'"></i><span>'+pd.label+'</span>';
+    row.appendChild(chip);
+    pillarChips[pd.key] = chip;
+  });
+  document.getElementById('heroDate').textContent = fmtFull(getActiveDateString());
+})();
+function updateHero(){
+  var date = getActiveDateString();
+  document.getElementById('heroDate').textContent = fmtFull(date);
+  var hits = 0;
+  PILLAR_DEFS.forEach(function(pd){
+    var on = pillarHit(pd.key, date);
+    if (on) hits++;
+    pillarChips[pd.key].classList.toggle('hit', on);
+  });
+  document.getElementById('pillarFill').style.width = (hits/4*100)+'%';
+  document.getElementById('pillarSummary').textContent = hits+' / 4 pillars hit';
+}
+
+/* ============================================================
+   TILES — 2x2 nav grid to the four logging pages, live stat
+   lines that mirror pillarHit() so this page and index.html
+   always agree with each other.
+   ============================================================ */
+function updateTiles(){
+  var date = getActiveDateString();
+
+  var sd = storeGet('supps:'+date) || {}, taken=0, k;
+  for (k in sd){ if (sd.hasOwnProperty(k) && sd[k]) taken++; }
+  document.getElementById('tileSuppsStat').textContent = taken + ' / ' + SUPPS_TOTAL;
+  document.getElementById('tileSupps').classList.toggle('hit', pillarHit('supps', date));
+
+  var gymDone = !!(storeGet('gym:'+date)||{}).done;
+  document.getElementById('tileGymStat').textContent = gymDone ? 'Done' : 'Not logged';
+  document.getElementById('tileGym').classList.toggle('hit', pillarHit('gym', date));
+
+  var sl = storeGet('sleep:'+date) || {};
+  var m = durMins(sl.bed, sl.wake);
+  document.getElementById('tileSleepStat').textContent = (m==null) ? 'Not logged' : fmtDur(m);
+  document.getElementById('tileSleep').classList.toggle('hit', pillarHit('sleep', date));
+
+  var stp = storeGet('steps:'+date) || {};
+  document.getElementById('tileStepsStat').textContent = fmtNum(stp.count||0);
+  document.getElementById('tileSteps').classList.toggle('hit', pillarHit('steps', date));
+}
+updateTiles();
+Body.tiles = { refresh: updateTiles };
+
+/* ============================================================
+   CONSISTENCY — 30-day heatmap per pillar, streaks, overall %,
+   plus recent-sessions/nights/days trend charts for gym, sleep
+   and steps. Built once, refreshed in place like every other
+   module.
+   ============================================================ */
+(function(){
+  var HEAT_N = 30;
+  var CONS_DEFS = [
+    { key:'supps', label:'Supps', color:'#a78bfa' },
+    { key:'gym',   label:'Gym',   color:'#e879f9' },
+    { key:'sleep', label:'Sleep', color:'#818cf8' },
+    { key:'steps', label:'Steps', color:'#c4b5fd' }
+  ];
+  var heatRows = {}; /* key -> { cells:[el...], streakEl } */
+  var selIdx = -1;
+  var dates = [];
+
+  function hexToRgb(hex){
+    var h = hex.replace('#','');
+    return [parseInt(h.substr(0,2),16), parseInt(h.substr(2,2),16), parseInt(h.substr(4,2),16)];
+  }
+
+  function buildHeat(){
+    dates = lastNDates(HEAT_N);
+    var host = document.getElementById('heatHost');
+    host.innerHTML = '';
+    CONS_DEFS.forEach(function(pd){
+      var row = document.createElement('div'); row.className = 'heat-row';
+      var lbl = document.createElement('div'); lbl.className = 'heat-label'; lbl.textContent = pd.label;
+      var grid = document.createElement('div'); grid.className = 'heat-grid';
+      var cells = [];
+      dates.forEach(function(date, idx){
+        var cell = document.createElement('div'); cell.className = 'heat-cell';
+        cell.setAttribute('data-idx', idx);
+        cell.addEventListener('click', function(){
+          selIdx = (selIdx===idx) ? -1 : idx;
+          updateSelection();
+        });
+        grid.appendChild(cell);
+        cells.push(cell);
+      });
+      var streak = document.createElement('div'); streak.className = 'heat-streak';
+      row.appendChild(lbl); row.appendChild(grid); row.appendChild(streak);
+      host.appendChild(row);
+      heatRows[pd.key] = { cells:cells, streakEl:streak, color:pd.color };
+    });
+  }
+
+  function updateSelection(){
+    var allCells = document.querySelectorAll('.heat-cell');
+    Array.prototype.forEach.call(allCells, function(c){
+      c.classList.toggle('sel', +c.getAttribute('data-idx') === selIdx);
+    });
+    var detail = document.getElementById('consDetail');
+    if (selIdx < 0){ detail.textContent = 'Tap a day to see the breakdown.'; return; }
+    var date = dates[selIdx];
+    var parts = CONS_DEFS.map(function(pd){ return pd.label + (pillarHit(pd.key, date) ? ' ✓' : ' ✗'); });
+    detail.innerHTML = '<b>'+fmtFull(date)+'</b> · '+parts.join(' · ');
+  }
+
+  function refresh(){
+    dates = lastNDates(HEAT_N);
+    var totalHits = 0;
+    CONS_DEFS.forEach(function(pd){
+      var rgb = hexToRgb(pd.color);
+      var row = heatRows[pd.key];
+      var hits = 0, curStreak = 0, bestStreak = 0, run = 0, i;
+      for (i=0;i<dates.length;i++){
+        var hit = pillarHit(pd.key, dates[i]);
+        if (hit){ hits++; run++; if (run>bestStreak) bestStreak=run; } else { run=0; }
+        row.cells[i].style.background = hit ? 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0.85)' : 'rgba(255,255,255,0.05)';
+        row.cells[i].style.boxShadow = hit ? '0 0 5px rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0.55)' : 'none';
+      }
+      for (i=dates.length-1;i>=0;i--){ if (pillarHit(pd.key, dates[i])) curStreak++; else break; }
+      row.streakEl.innerHTML = '<b>'+curStreak+'</b> now<br>'+bestStreak+' best';
+      totalHits += hits;
+    });
+    var overallPct = Math.round(totalHits / (CONS_DEFS.length * dates.length) * 100);
+    document.getElementById('consOverallNum').textContent = overallPct + '%';
+    updateSelection();
+    renderGymTrend();
+    renderSleepTrend();
+    renderStepsTrend();
+  }
+
+  /* gym volume — last 7-14 logged sessions */
+  var gymTrendSel = -1;
+  function gymSessions(limit){
+    var out = [];
+    for (var i=0;i<localStorage.length;i++){
+      var k = localStorage.key(i);
+      if (!k || k.indexOf('gym:')!==0) continue;
+      var date = k.slice(4);
+      var sess = storeGet(k); if (!sess) continue;
+      var ex = sessAllEx(sess);
+      var vol = 0;
+      ex.forEach(function(e){ (e.sets||[]).forEach(function(st){ vol += num(st.weight)*num(st.reps); }); });
+      if (vol > 0 || sess.finished) out.push({ date:date, vol:vol });
+    }
+    out.sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+    return out.slice(-limit);
+  }
+  function renderGymTrend(){
+    var sessions = gymSessions(10);
+    var wrap = document.getElementById('gymTrendWrap'), read = document.getElementById('gymTrendRead');
+    if (!sessions.length){
+      wrap.innerHTML = '';
+      read.textContent = 'Log a session to see your volume trend.';
+      return;
+    }
+    var maxV = 1;
+    sessions.forEach(function(s){ if (s.vol > maxV) maxV = s.vol; });
+    var W=320,H=170, padL=6,padR=6,padT=10,padB=24;
+    var innerW=W-padL-padR, innerH=H-padT-padB;
+    var slot=innerW/sessions.length, bw=slot*0.56;
+    function yFor(v){ return padT + innerH*(1-v/maxV); }
+    var svg='<svg viewBox="0 0 '+W+' '+H+'"><defs>';
+    svg+='<linearGradient id="gbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e879f9" stop-opacity="0.95"/><stop offset="1" stop-color="#e879f9" stop-opacity="0.42"/></linearGradient>';
+    svg+='</defs>';
+    sessions.forEach(function(s,i){
+      var cx=padL+slot*i+slot/2;
+      var lbl=new Date(s.date+'T12:00').toLocaleDateString('en-GB',{weekday:'short'}).slice(0,2);
+      var x=(cx-bw/2);
+      var by=yFor(s.vol), bh=Math.max(2,(padT+innerH-by));
+      var sel = (i===gymTrendSel)?' stroke="var(--text-1)" stroke-width="1.5"':'';
+      svg+='<rect class="gbar" data-idx="'+i+'" x="'+x.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="4" fill="url(#gbg)"'+sel+' style="cursor:pointer"/>';
+      svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-9)+'" text-anchor="middle" fill="'+(i===gymTrendSel?'var(--text-1)':'var(--text-3)')+'" font-family="monospace" font-size="8.5">'+lbl+'</text>';
+    });
+    svg+='</svg>';
+    wrap.innerHTML = svg;
+    if (gymTrendSel>=0 && sessions[gymTrendSel]){
+      var sn=sessions[gymTrendSel];
+      read.innerHTML = '<b>'+fmtFull(sn.date)+'</b> · '+Math.round(sn.vol)+' kg volume';
+    } else {
+      var avg = sessions.reduce(function(a,b){ return a+b.vol; },0)/sessions.length;
+      read.innerHTML = 'Avg <b>'+Math.round(avg)+' kg</b> over '+sessions.length+' session'+(sessions.length===1?'':'s')+' · tap a bar';
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#gymTrendWrap .gbar'), function(b){
+      b.addEventListener('click', function(){ var i=+b.getAttribute('data-idx'); gymTrendSel=(gymTrendSel===i?-1:i); renderGymTrend(); });
+    });
+  }
+
+  /* sleep — 7-night duration trend */
+  var sleepTrendSel = -1;
+  function nightData(date){
+    var s=storeGet('sleep:'+date)||{};
+    var m=durMins(s.bed, s.wake);
+    return { date:date, mins:m, hours:(m==null?null:m/60), quality:s.quality||0 };
+  }
+  function renderSleepTrend(){
+    var tgt=getSleepTarget();
+    var nights=lastNDates(7).map(nightData);
+    var logged=nights.filter(function(n){ return n.hours!=null; });
+    var maxH=Math.max(tgt+1, 9);
+    nights.forEach(function(n){ if(n.hours!=null && n.hours>maxH) maxH=n.hours; });
+    var W=320,H=170, padL=6,padR=6,padT=10,padB=24;
+    var innerW=W-padL-padR, innerH=H-padT-padB;
+    var slot=innerW/nights.length, bw=slot*0.56;
+    function yFor(h){ return padT + innerH*(1-h/maxH); }
+    var svg='<svg viewBox="0 0 '+W+' '+H+'"><defs>';
+    svg+='<linearGradient id="sbg-hit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#818cf8" stop-opacity="0.95"/><stop offset="1" stop-color="#818cf8" stop-opacity="0.42"/></linearGradient>';
+    svg+='<linearGradient id="sbg-miss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b5470" stop-opacity="0.8"/><stop offset="1" stop-color="#5b5470" stop-opacity="0.35"/></linearGradient>';
+    svg+='</defs>';
+    var ty=yFor(tgt);
+    svg+='<line x1="'+padL+'" y1="'+ty.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+ty.toFixed(1)+'" stroke="rgba(255,255,255,0.18)" stroke-dasharray="3 3"/>';
+    svg+='<text x="'+(W-padR)+'" y="'+(ty-4).toFixed(1)+'" text-anchor="end" fill="var(--text-3)" font-family="monospace" font-size="8">'+(+tgt.toFixed(1))+'h</text>';
+    nights.forEach(function(n,i){
+      var cx=padL+slot*i+slot/2;
+      var lbl=new Date(n.date+'T12:00').toLocaleDateString('en-GB',{weekday:'short'}).slice(0,2);
+      var x=(cx-bw/2);
+      if(n.hours==null){
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+innerH-3).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>';
+      } else {
+        var by=yFor(n.hours), bh=Math.max(2,(padT+innerH-by));
+        var gid = n.hours>=tgt?'sbg-hit':'sbg-miss';
+        var sel = (i===sleepTrendSel)?' stroke="var(--text-1)" stroke-width="1.5"':'';
+        svg+='<rect class="tbar" data-idx="'+i+'" x="'+x.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="4" fill="url(#'+gid+')"'+sel+' style="cursor:pointer"/>';
+      }
+      svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-9)+'" text-anchor="middle" fill="'+(i===sleepTrendSel?'var(--text-1)':'var(--text-3)')+'" font-family="monospace" font-size="8.5">'+lbl+'</text>';
+    });
+    svg+='</svg>';
+    document.getElementById('sleepTrendWrap').innerHTML=svg;
+    var read=document.getElementById('sleepTrendRead');
+    if(sleepTrendSel>=0 && nights[sleepTrendSel] && nights[sleepTrendSel].hours!=null){
+      var sn=nights[sleepTrendSel];
+      var full=fmtFull(sn.date);
+      read.innerHTML='<b>'+full+'</b> · '+fmtDur(sn.mins)+(sn.quality?' · '+QUAL[sn.quality]:'');
+    } else if(logged.length){
+      var avg=logged.reduce(function(a,b){ return a+b.mins; },0)/logged.length;
+      read.innerHTML='Avg <b>'+fmtDur(Math.round(avg))+'</b> over '+logged.length+' night'+(logged.length===1?'':'s')+' · tap a bar';
+    } else {
+      read.textContent='Log a few nights to see your trend.';
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#sleepTrendWrap .tbar'), function(b){
+      b.addEventListener('click', function(){ var i=+b.getAttribute('data-idx'); sleepTrendSel=(sleepTrendSel===i?-1:i); renderSleepTrend(); });
+    });
+  }
+
+  /* steps — 7-day count trend */
+  var stepsTrendSel = -1;
+  function dayData(date){ var s=storeGet('steps:'+date)||{}; var c=(typeof s.count==='number')?s.count:null; return { date:date, count:c }; }
+  function renderStepsTrend(){
+    var goal=getStepsGoal();
+    var days=lastNDates(7).map(dayData);
+    var logged=days.filter(function(d){ return d.count!=null && d.count>0; });
+    var maxV=goal;
+    days.forEach(function(d){ if(d.count!=null && d.count>maxV) maxV=d.count; });
+    if(maxV<=0) maxV=goal;
+    var W=320,H=170, padL=6,padR=6,padT=10,padB=24;
+    var innerW=W-padL-padR, innerH=H-padT-padB;
+    var slot=innerW/days.length, bw=slot*0.56;
+    function yFor(v){ return padT + innerH*(1-v/maxV); }
+    var svg='<svg viewBox="0 0 '+W+' '+H+'"><defs>';
+    svg+='<linearGradient id="pbg-hit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c4b5fd" stop-opacity="0.95"/><stop offset="1" stop-color="#c4b5fd" stop-opacity="0.42"/></linearGradient>';
+    svg+='<linearGradient id="pbg-miss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b5470" stop-opacity="0.8"/><stop offset="1" stop-color="#5b5470" stop-opacity="0.35"/></linearGradient>';
+    svg+='</defs>';
+    var gy=yFor(goal);
+    svg+='<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+gy.toFixed(1)+'" stroke="rgba(255,255,255,0.18)" stroke-dasharray="3 3"/>';
+    svg+='<text x="'+(W-padR)+'" y="'+(gy-4).toFixed(1)+'" text-anchor="end" fill="var(--text-3)" font-family="monospace" font-size="8">'+(Math.round(goal/1000))+'k</text>';
+    days.forEach(function(d,i){
+      var cx=padL+slot*i+slot/2;
+      var lbl=new Date(d.date+'T12:00').toLocaleDateString('en-GB',{weekday:'short'}).slice(0,2);
+      var x=(cx-bw/2);
+      if(d.count==null || d.count<=0){
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+(padT+innerH-3).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>';
+      } else {
+        var by=yFor(d.count), bh=Math.max(2,(padT+innerH-by));
+        var gid = d.count>=goal?'pbg-hit':'pbg-miss';
+        var sel = (i===stepsTrendSel)?' stroke="var(--text-1)" stroke-width="1.5"':'';
+        svg+='<rect class="tbar" data-idx="'+i+'" x="'+x.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="4" fill="url(#'+gid+')"'+sel+' style="cursor:pointer"/>';
+      }
+      svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-9)+'" text-anchor="middle" fill="'+(i===stepsTrendSel?'var(--text-1)':'var(--text-3)')+'" font-family="monospace" font-size="8.5">'+lbl+'</text>';
+    });
+    svg+='</svg>';
+    document.getElementById('stepsTrendWrap').innerHTML=svg;
+    var read=document.getElementById('stepsTrendRead');
+    if(stepsTrendSel>=0 && days[stepsTrendSel] && days[stepsTrendSel].count!=null && days[stepsTrendSel].count>0){
+      var dn=days[stepsTrendSel];
+      var full=fmtFull(dn.date);
+      read.innerHTML='<b>'+full+'</b> · '+fmtNum(dn.count)+' steps';
+    } else if(logged.length){
+      var avg=logged.reduce(function(a,b){ return a+b.count; },0)/logged.length;
+      read.innerHTML='Avg <b>'+fmtNum(Math.round(avg))+'</b> over '+logged.length+' day'+(logged.length===1?'':'s')+' · tap a bar';
+    } else {
+      read.textContent='Log a few days to see your trend.';
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#stepsTrendWrap .tbar'), function(b){
+      b.addEventListener('click', function(){ var i=+b.getAttribute('data-idx'); stepsTrendSel=(stepsTrendSel===i?-1:i); renderStepsTrend(); });
+    });
+  }
+
+  buildHeat();
+  refresh();
+  Body.consistency = { refresh: refresh };
+})();
+
+/* ============================================================
+   BOOT — hero, sync/focus refresh, staggered entry animation.
+   ============================================================ */
+updateHero();
+
+function refreshAllModules(){
+  updateHero();
+  if (Body.tiles) Body.tiles.refresh();
+  if (Body.consistency) Body.consistency.refresh();
+}
+window.addEventListener('lo-sync-applied', refreshAllModules);
+window.addEventListener('focus', refreshAllModules);
+
+(function(){
+  var cards = document.querySelectorAll('.mod-card');
+  Array.prototype.forEach.call(cards, function(c, idx){ c.style.transitionDelay = (idx*50)+'ms'; });
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      Array.prototype.forEach.call(cards, function(c){ c.classList.add('lo-visible'); });
+    });
+  });
+})();
+</script>
 </body>
 </html>
