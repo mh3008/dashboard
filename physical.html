@@ -47,6 +47,7 @@
   .mod-gym     { --g1:#e879f9; --g2:#ec4899; --g3:#a78bfa; --m-bg:rgba(232,121,249,0.05);  --m-bd:rgba(232,121,249,0.18); --m-accent:#e879f9; }
   .mod-sleep   { --g1:#818cf8; --g2:#60a5fa; --g3:#a78bfa; --m-bg:rgba(129,140,248,0.05);  --m-bd:rgba(129,140,248,0.18); --m-accent:#818cf8; }
   .mod-steps   { --g1:#c4b5fd; --g2:#a78bfa; --g3:#ec4899; --m-bg:rgba(196,181,253,0.05);  --m-bd:rgba(196,181,253,0.18); --m-accent:#c4b5fd; }
+  .mod-groom   { --g1:#fb923c; --g2:#f59e0b; --g3:#ec4899; --m-bg:rgba(251,146,60,0.05);   --m-bd:rgba(251,146,60,0.18);  --m-accent:#fb923c; }
   .mod-cons    { --g1:#a78bfa; --g2:#818cf8; --g3:#ec4899; --m-bg:rgba(167,139,250,0.045); --m-bd:rgba(167,139,250,0.16); --m-accent:#a78bfa; }
 
   /* ---- HERO ---- */
@@ -69,7 +70,7 @@
   @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
   .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
 
-  .pillar-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; position:relative; z-index:1; }
+  .pillar-row { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; position:relative; z-index:1; }
   .pillar-chip {
     display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
     background:rgba(255,255,255,0.03); border:1px solid var(--hair);
@@ -115,6 +116,7 @@
   }
   .tile.hit { border-color: color-mix(in srgb, var(--g1) 55%, transparent); }
   .tile.hit .tile-stat { color: var(--g1); }
+  .tile-wide { grid-column:1/-1; aspect-ratio:auto; height:110px; margin-top:4px; }
 
   /* ---- CONSISTENCY ---- */
   .cons-overall { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
@@ -184,6 +186,10 @@
     <a class="mod-card mod-steps tile" href="steps.html" id="tileSteps">
       <div class="tile-top"><i class="ti ti-walk"></i><span>Steps</span></div>
       <div class="tile-stat" id="tileStepsStat">0</div>
+    </a>
+    <a class="mod-card mod-groom tile tile-wide" href="appearance.html" id="tileGroom">
+      <div class="tile-top"><i class="ti ti-sparkles"></i><span>Grooming</span></div>
+      <div class="tile-stat" id="tileGroomStat">0 / 11</div>
     </a>
   </div>
 
@@ -259,6 +265,13 @@ var QUAL = ['','Poor','Meh','OK','Good','Great'];
 
 var SUPPS_TOTAL = 16;
 
+/* duplicated from index.html — keep both in sync */
+var HYG_TOTAL = 11;
+var HYG_GROUPS = [
+  { id:'AM', label:'AM', items:['Warm water face rinse','Moisturise (Purito)','Brush teeth','Tongue scrape','Deodorant','Hair — leave-in + style'] },
+  { id:'PM', label:'PM', items:['Shower','Cleanse (Anua)','Moisturise (Purito)','Brush teeth','Tongue scrape'] }
+];
+
 /* pillar "hit" logic — mirrors index.html's buildBody() exactly so the
    home page Body tile and this page always agree */
 function pillarHit(key, date){
@@ -270,6 +283,15 @@ function pillarHit(key, date){
   if (key==='gym'){ return !!(storeGet('gym:'+date)||{}).done; }
   if (key==='sleep'){ var sl=storeGet('sleep:'+date)||{}; return !!(sl.bed || sl.wake); }
   if (key==='steps'){ var stp=storeGet('steps:'+date)||{}; return (stp.count||0) >= getStepsGoal(); }
+  if (key==='groom'){
+    var hyg=storeGet('hygiene:'+date)||{}, groomCount=0;
+    HYG_GROUPS.forEach(function(g){
+      g.items.forEach(function(name, idx){
+        if (hyg[g.id+':'+idx]) groomCount++;
+      });
+    });
+    return groomCount === HYG_TOTAL;
+  }
   return false;
 }
 
@@ -283,7 +305,8 @@ var PILLAR_DEFS = [
   { key:'supps', label:'Supps', icon:'ti-pill' },
   { key:'gym',   label:'Gym',   icon:'ti-barbell' },
   { key:'sleep', label:'Sleep', icon:'ti-moon' },
-  { key:'steps', label:'Steps', icon:'ti-walk' }
+  { key:'steps', label:'Steps', icon:'ti-walk' },
+  { key:'groom', label:'Groom', icon:'ti-sparkles' }
 ];
 var pillarChips = {};
 (function buildHero(){
@@ -305,8 +328,8 @@ function updateHero(){
     if (on) hits++;
     pillarChips[pd.key].classList.toggle('hit', on);
   });
-  document.getElementById('pillarFill').style.width = (hits/4*100)+'%';
-  document.getElementById('pillarSummary').textContent = hits+' / 4 pillars hit';
+  document.getElementById('pillarFill').style.width = (hits/5*100)+'%';
+  document.getElementById('pillarSummary').textContent = hits+' / 5 pillars hit';
 }
 
 /* ============================================================
@@ -334,6 +357,15 @@ function updateTiles(){
   var stp = storeGet('steps:'+date) || {};
   document.getElementById('tileStepsStat').textContent = fmtNum(stp.count||0);
   document.getElementById('tileSteps').classList.toggle('hit', pillarHit('steps', date));
+
+  var hyg = storeGet('hygiene:'+date) || {}, groomCount = 0;
+  HYG_GROUPS.forEach(function(g){
+    g.items.forEach(function(name, idx){
+      if (hyg[g.id+':'+idx]) groomCount++;
+    });
+  });
+  document.getElementById('tileGroomStat').textContent = groomCount + ' / ' + HYG_TOTAL;
+  document.getElementById('tileGroom').classList.toggle('hit', pillarHit('groom', date));
 }
 updateTiles();
 Body.tiles = { refresh: updateTiles };
@@ -350,7 +382,8 @@ Body.tiles = { refresh: updateTiles };
     { key:'supps', label:'Supps', color:'#a78bfa' },
     { key:'gym',   label:'Gym',   color:'#e879f9' },
     { key:'sleep', label:'Sleep', color:'#818cf8' },
-    { key:'steps', label:'Steps', color:'#c4b5fd' }
+    { key:'steps', label:'Steps', color:'#c4b5fd' },
+    { key:'groom', label:'Groom', color:'#fb923c' }
   ];
   var heatRows = {}; /* key -> { cells:[el...], streakEl } */
   var selIdx = -1;

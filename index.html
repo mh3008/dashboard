@@ -304,9 +304,17 @@ function buildBody(date){
   var stepsCount = stp.count||0, goal = stepsGoal();
   var stepsHit = stepsCount >= goal;
 
-  var pillars = (gymDone?1:0) + (suppsHit?1:0) + (stepsHit?1:0) + (sleepDone?1:0);
-  var pct = pillars * 25;
-  var line = pillars + '/4 pillars hit';
+  var hyg=storeGet('hygiene:'+date)||{}, groomCount=0;
+  HYG_GROUPS.forEach(function(g){
+    g.items.forEach(function(name, idx){
+      if (hyg[g.id+':'+idx]) groomCount++;
+    });
+  });
+  var groomDone = groomCount === HYG_TOTAL;
+
+  var pillars = (gymDone?1:0) + (suppsHit?1:0) + (stepsHit?1:0) + (sleepDone?1:0) + (groomDone?1:0);
+  var pct = pillars * 20;
+  var line = pillars + '/5 pillars hit';
 
   return { pct:pct, life:pct/100, line:line, extra:{ pillars:pillars } };
 }
