@@ -233,13 +233,12 @@ function countdownTodayStr(){ var d=new Date(); return fmtDate(d); }
 
 /* ============================================================
    STREAKS — replicated exactly from streaks.html so the two
-   pages can never disagree. SUPPS_DONE is 13, copied verbatim
-   from streaks.html — NOT the 16 that index.html's Body pillar
-   uses; these two "supps complete" thresholds are deliberately
-   different and must be kept in sync with their own source page.
+   pages can never disagree. SUPPS_DONE is 16, copied verbatim
+   from streaks.html, matching the all-or-nothing Body pillar in
+   index.html and physical.html.
    ============================================================ */
 var SUPPS_TOTAL = 16;
-var SUPPS_DONE = 13;
+var SUPPS_DONE = 16;
 function stepsGoal(){ var g=storeGet('steps:goal'); return (typeof g==='number' && g>0) ? g : 15000; }
 function sleepTarget(){ var t=storeGet('sleep:target'); return (typeof t==='number' && t>0) ? t : 8; }
 function toMin(t){ if(!t||t.indexOf(':')<0) return null; var p=t.split(':'); return (+p[0])*60+(+p[1]); }

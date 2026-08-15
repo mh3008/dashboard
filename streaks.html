@@ -69,7 +69,7 @@ function dayDiff(a,b){ var pa=a.split('-'),pb=b.split('-'); var da=new Date(+pa[
 
 /* thresholds pulled from the same keys the other pages use */
 var SUPPS_TOTAL = 16;
-var SUPPS_DONE = 13;            /* supps counts if >=13 of 16 logged */
+var SUPPS_DONE = 16;            /* supps counts only if all 16 logged */
 function stepsGoal(){ var g=storeGet('steps:goal'); return (typeof g==='number' && g>0) ? g : 15000; }
 function sleepTarget(){ var t=storeGet('sleep:target'); return (typeof t==='number' && t>0) ? t : 8; }
 function toMin(t){ if(!t||t.indexOf(':')<0) return null; var p=t.split(':'); return (+p[0])*60+(+p[1]); }
