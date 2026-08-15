@@ -63,6 +63,8 @@
 <script>
 function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
 
 function loadQueue(){ return storeGet('learn:queue') || []; }
 function saveQueue(q){ localStorage.setItem('learn:queue', JSON.stringify(q)); }
@@ -86,7 +88,11 @@ function render(){
     var cb = document.createElement('span'); cb.className = 'lr-cb';
     cb.addEventListener('click', function(e){
       e.stopPropagation();
-      var q = loadQueue(); q[i].done = !q[i].done; saveQueue(q); render();
+      var q = loadQueue();
+      q[i].done = !q[i].done;
+      if (q[i].done){ q[i].doneDate = getActiveDateString(); }
+      else { delete q[i].doneDate; }
+      saveQueue(q); render();
     });
     var info = document.createElement('div'); info.className = 'lr-info';
     var nm = document.createElement('div'); nm.className = 'lr-name'; nm.textContent = item.name;

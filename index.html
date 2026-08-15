@@ -342,7 +342,7 @@ function buildMoney(date){
   var tradeToday = trades.some(function(t){ return t.date === date; });
 
   var queue = storeGet('learn:queue'); if(!Array.isArray(queue)) queue=[];
-  var learnAny = queue.some(function(q){ return !!q.done; });
+  var learnAny = queue.some(function(q){ return !!q.done && q.doneDate === date; });
 
   var hit = tradeToday || learnAny;
   var pct = hit ? 100 : 0;
