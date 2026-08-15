@@ -51,18 +51,39 @@ function activeDate(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate(
 
 var SUPPS_TOTAL = 16, HYG_TOTAL = 11;
 function stepsGoal(){ var g=storeGet('steps:goal'); return (typeof g==='number' && g>0) ? g : 15000; }
+var HYG_GROUPS = [
+  { id:'AM', label:'AM', items:['Warm water face rinse','Moisturise (Purito)','Brush teeth','Tongue scrape','Deodorant','Hair — leave-in + style'] },
+  { id:'PM', label:'PM', items:['Shower','Cleanse (Anua)','Moisturise (Purito)','Brush teeth','Tongue scrape'] }
+];
 
 function calcPhysical(date){
-  var s=storeGet('supps:'+date)||{}, taken=Object.keys(s).filter(function(k){return s[k];}).length;
-  var suppsPct = taken/SUPPS_TOTAL;
-  var gym=(storeGet('gym:'+date)||{}).done?1:0;
-  var sl=storeGet('sleep:'+date)||{}; var sleep=(sl.bed||sl.wake)?1:0;
-  var stp=storeGet('steps:'+date)||{}; var stepsPct=Math.min(1,(stp.count||0)/stepsGoal());
-  return Math.round((suppsPct+gym+sleep+stepsPct)/4*100);
+  var s=storeGet('supps:'+date)||{}, taken=0, k;
+  for(k in s){ if(s.hasOwnProperty(k) && s[k]) taken++; }
+  var suppsHit = taken >= SUPPS_TOTAL;
+
+  var gymDone = !!(storeGet('gym:'+date)||{}).done;
+
+  var sl=storeGet('sleep:'+date)||{};
+  var sleepDone = !!(sl.bed || sl.wake);
+
+  var stp=storeGet('steps:'+date)||{};
+  var stepsHit = (stp.count||0) >= stepsGoal();
+
+  var hyg=storeGet('hygiene:'+date)||{}, groomCount=0;
+  HYG_GROUPS.forEach(function(g){
+    g.items.forEach(function(name, idx){
+      if (hyg[g.id+':'+idx]) groomCount++;
+    });
+  });
+  var groomDone = groomCount === HYG_TOTAL;
+
+  var pillars = (gymDone?1:0) + (suppsHit?1:0) + (stepsHit?1:0) + (sleepDone?1:0) + (groomDone?1:0);
+  return pillars * 20;
 }
-function calcAppearance(date){
-  var h=storeGet('hygiene:'+date)||{}, done=Object.keys(h).filter(function(k){return h[k];}).length;
-  return Math.round(done/HYG_TOTAL*100);
+function calcMind(date){
+  var queue = storeGet('learn:queue'); if(!Array.isArray(queue)) queue=[];
+  var learnToday = queue.some(function(q){ return !!q.done && q.doneDate === date; });
+  return learnToday ? 100 : 0;
 }
 function calcLife(date){
   var defs=storeGet('todos:defs'); if(!Array.isArray(defs)) defs=[];
@@ -92,7 +113,7 @@ function render(){
   // header row
   var h0 = document.createElement('div'); h0.className='wk-cell wk-hdr'; h0.textContent='Day'; grid.appendChild(h0);
   var h1 = document.createElement('div'); h1.className='wk-cell wk-hdr'; h1.textContent='Body'; grid.appendChild(h1);
-  var h2 = document.createElement('div'); h2.className='wk-cell wk-hdr'; h2.textContent='Look'; grid.appendChild(h2);
+  var h2 = document.createElement('div'); h2.className='wk-cell wk-hdr'; h2.textContent='Mind'; grid.appendChild(h2);
   var h3 = document.createElement('div'); h3.className='wk-cell wk-hdr'; h3.textContent='Life'; grid.appendChild(h3);
 
   var totalP=0, totalA=0, totalL=0, count=0;
@@ -102,7 +123,7 @@ function render(){
     var isToday = (ds === todayStr);
     var extra = isToday ? ' wk-today' : '';
 
-    var pv=calcPhysical(ds), av=calcAppearance(ds), lv=calcLife(ds);
+    var pv=calcPhysical(ds), av=calcMind(ds), lv=calcLife(ds);
     totalP+=pv; totalA+=av; totalL+=lv; count++;
 
     var c0=document.createElement('div'); c0.className='wk-cell wk-day'+extra;

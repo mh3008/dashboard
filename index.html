@@ -12,7 +12,7 @@
 
   :root {
     --c-body:   #a78bfa; --c-body-glow:   rgba(167,139,250,0.35); --c-body-bg:   rgba(167,139,250,0.06); --c-body-bd:   rgba(167,139,250,0.18);
-    --c-look:   #fb923c; --c-look-glow:   rgba(251,146,60,0.35);  --c-look-bg:   rgba(251,146,60,0.06);  --c-look-bd:   rgba(251,146,60,0.18);
+    --c-mind:   #fb923c; --c-mind-glow:   rgba(251,146,60,0.35);  --c-mind-bg:   rgba(251,146,60,0.06);  --c-mind-bd:   rgba(251,146,60,0.18);
     --c-life:   #6be3a4; --c-life-glow:   rgba(107,227,164,0.35); --c-life-bg:   rgba(107,227,164,0.06); --c-life-bd:   rgba(107,227,164,0.18);
     --c-money:  #f87171; --c-money-glow:  rgba(248,113,113,0.35); --c-money-bg:  rgba(248,113,113,0.06); --c-money-bd:  rgba(248,113,113,0.18);
     --c-system: #60a5fa; --c-system-glow: rgba(96,165,250,0.35); --c-system-bg: rgba(96,165,250,0.06); --c-system-bd: rgba(96,165,250,0.18);
@@ -39,9 +39,9 @@
   .sec-tile[data-sec="body"]  { background:var(--c-body-bg);  border:1px solid var(--c-body-bd); }
   .sec-tile[data-sec="body"]::before  { background:radial-gradient(circle, var(--c-body) 0%, transparent 70%); }
   .sec-tile[data-sec="body"]:hover    { box-shadow:0 16px 40px var(--c-body-glow), inset 0 0 40px rgba(0,0,0,0.22); }
-  .sec-tile[data-sec="look"]  { background:var(--c-look-bg);  border:1px solid var(--c-look-bd); }
-  .sec-tile[data-sec="look"]::before  { background:radial-gradient(circle, var(--c-look) 0%, transparent 70%); }
-  .sec-tile[data-sec="look"]:hover    { box-shadow:0 16px 40px var(--c-look-glow), inset 0 0 40px rgba(0,0,0,0.22); }
+  .sec-tile[data-sec="mind"]  { background:var(--c-mind-bg);  border:1px solid var(--c-mind-bd); }
+  .sec-tile[data-sec="mind"]::before  { background:radial-gradient(circle, var(--c-mind) 0%, transparent 70%); }
+  .sec-tile[data-sec="mind"]:hover    { box-shadow:0 16px 40px var(--c-mind-glow), inset 0 0 40px rgba(0,0,0,0.22); }
   .sec-tile[data-sec="life"]  { background:var(--c-life-bg);  border:1px solid var(--c-life-bd); }
   .sec-tile[data-sec="life"]::before  { background:radial-gradient(circle, var(--c-life) 0%, transparent 70%); }
   .sec-tile[data-sec="life"]:hover    { box-shadow:0 16px 40px var(--c-life-glow), inset 0 0 40px rgba(0,0,0,0.22); }
@@ -70,7 +70,7 @@
   .sec-tile-top { position:relative; display:flex; align-items:center; gap:7px; z-index:1; }
   .sec-tile-icon { font-size:17px; }
   .sec-tile[data-sec="body"]  .sec-tile-icon, .sec-tile[data-sec="body"]  .sec-tile-name, .sec-tile[data-sec="body"]  .sec-tile-pct { color:var(--c-body); }
-  .sec-tile[data-sec="look"]  .sec-tile-icon, .sec-tile[data-sec="look"]  .sec-tile-name, .sec-tile[data-sec="look"]  .sec-tile-pct { color:var(--c-look); }
+  .sec-tile[data-sec="mind"]  .sec-tile-icon, .sec-tile[data-sec="mind"]  .sec-tile-name, .sec-tile[data-sec="mind"]  .sec-tile-pct { color:var(--c-mind); }
   .sec-tile[data-sec="life"]  .sec-tile-icon, .sec-tile[data-sec="life"]  .sec-tile-name, .sec-tile[data-sec="life"]  .sec-tile-pct { color:var(--c-life); }
   .sec-tile[data-sec="money"] .sec-tile-icon, .sec-tile[data-sec="money"] .sec-tile-name, .sec-tile[data-sec="money"] .sec-tile-pct { color:var(--c-money); }
   .sec-tile-name { font-size:12.5px; font-weight:800; letter-spacing:-0.01em; }
@@ -112,7 +112,7 @@
     .sec-tile::after { animation: none; background-position: 50% 50%; }
   }
   .sec-tile[data-sec="body"]  { --g1:#a78bfa; --g2:#ec4899; --g3:#60a5fa; }
-  .sec-tile[data-sec="look"]  { --g1:#fb923c; --g2:#f59e0b; --g3:#ec4899; }
+  .sec-tile[data-sec="mind"]  { --g1:#fb923c; --g2:#f59e0b; --g3:#ec4899; }
   .sec-tile[data-sec="life"]  { --g1:#6be3a4; --g2:#38bdf8; --g3:#a3e635; }
   .sec-tile[data-sec="money"] { --g1:#f87171; --g2:#fb923c; --g3:#ec4899; }
   .sec-tile[data-sec="system"] { --g1:#60a5fa; --g2:#22d3ee; --g3:#6366f1; }
@@ -319,17 +319,13 @@ function buildBody(date){
   return { pct:pct, life:pct/100, line:line, extra:{ pillars:pillars } };
 }
 
-/* ---------- LOOK (orange) — hygiene done/11 ---------- */
-function buildLook(date){
-  var h=storeGet('hygiene:'+date)||{};
-  var done=0;
-  HYG_GROUPS.forEach(function(g){
-    g.items.forEach(function(name, idx){
-      if (h[g.id+':'+idx]) done++;
-    });
-  });
-  var pct = Math.round(done/HYG_TOTAL*100);
-  return { pct:pct, life:pct/100, line: done+'/'+HYG_TOTAL, extra:{} };
+/* ---------- MIND (orange) — learn-queue item completed today ---------- */
+function buildMind(date){
+  var queue = storeGet('learn:queue'); if(!Array.isArray(queue)) queue=[];
+  var learnToday = queue.filter(function(q){ return !!q.done && q.doneDate === date; }).length;
+  var pct = learnToday > 0 ? 100 : 0;
+  var line = learnToday > 0 ? (learnToday + ' learned ✓') : 'Nothing yet';
+  return { pct:pct, life:pct/100, line:line, extra:{} };
 }
 
 /* ---------- LIFE (green) — today's due tasks done/due ---------- */
@@ -344,28 +340,23 @@ function buildLife(date){
   return { pct:pct, life:pct/100, line:line, extra:{ tasksDone:hdone, tasksTotal:due.length } };
 }
 
-/* ---------- MONEY (red) — did something today ---------- */
+/* ---------- MONEY (red) — trade logged today ---------- */
 function buildMoney(date){
   var trades = storeGet('trades:log'); if(!Array.isArray(trades)) trades=[];
   var tradeToday = trades.some(function(t){ return t.date === date; });
 
-  var queue = storeGet('learn:queue'); if(!Array.isArray(queue)) queue=[];
-  var learnAny = queue.some(function(q){ return !!q.done && q.doneDate === date; });
-
-  var hit = tradeToday || learnAny;
+  var hit = tradeToday;
   var pct = hit ? 100 : 0;
-  var line = (tradeToday && learnAny) ? 'Trade + learn ✓' :
-             tradeToday ? 'Trade logged ✓' :
-             learnAny ? 'Learn done ✓' : 'Nothing yet';
+  var line = tradeToday ? 'Trade logged ✓' : 'Nothing yet';
 
-  return { pct:pct, life:pct/100, line:line, extra:{ tradeToday:tradeToday, learnAny:learnAny } };
+  return { pct:pct, life:pct/100, line:line, extra:{ tradeToday:tradeToday } };
 }
 
 /* ============================================================
    VISUAL CONSTANTS + LOW-LEVEL DRAW HELPERS
    ============================================================ */
 var COLOR_BODY  = [167,139,250];
-var COLOR_LOOK  = [251,146,60];
+var COLOR_MIND  = [251,146,60];
 var COLOR_LIFE  = [107,227,164];
 var COLOR_MONEY = [248,113,113];
 
@@ -374,7 +365,7 @@ function mixColor(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(
 
 /* ---- per-domain gradient palettes: 3-stop harmonious colour families ---- */
 var BODY_PAL   = [[167,139,250],[236,72,153],[96,165,250]];
-var LOOK_PAL   = [[251,146,60],[245,158,11],[249,168,212]];
+var MIND_PAL   = [[251,146,60],[245,158,11],[249,168,212]];
 var LIFE_PAL   = [[107,227,164],[45,212,191],[190,242,100]];
 var MONEY_PAL  = [[248,113,113],[251,146,60],[236,72,153]];
 var SYSTEM_PAL = [[96,165,250],[34,211,238],[99,102,241]];
@@ -423,12 +414,16 @@ function initState(sec, t0){
     for (i=0;i<4;i++){ trails.push([]); }
     return { stars:stars, trails:trails, shoot:null, nextShootAt:t0+5000+Math.random()*7000 };
   }
-  if (sec==='look'){
-    var clouds=[];
-    for (i=0;i<3;i++){ clouds.push({ x:Math.random(), y:0.12+Math.random()*0.22, scale:0.7+Math.random()*0.6, speed:0.15+i*0.08 }); }
-    var stars2=[];
-    for (i=0;i<14;i++){ stars2.push({ x:Math.random(), y:Math.random()*0.7, r:0.4+Math.random()*0.9, phase:Math.random()*Math.PI*2 }); }
-    return { clouds:clouds, stars:stars2, bird:null, nextBirdAt:t0+6000+Math.random()*7000 };
+  if (sec==='mind'){
+    var mnodes=[];
+    for (i=0;i<20;i++){
+      mnodes.push({
+        x:0.08+Math.random()*0.84, y:0.15+Math.random()*0.7,
+        vx:(Math.random()-0.5)*0.00004, vy:(Math.random()-0.5)*0.00004,
+        phase:Math.random()*Math.PI*2
+      });
+    }
+    return { nodes:mnodes, pulse:null, nextPulseAt:t0+3000+Math.random()*4000 };
   }
   if (sec==='life'){
     var leaves=[];
@@ -557,128 +552,86 @@ function drawBody(ctx, w, h, life, now, extra, state, burst){
   }
 }
 
-function drawLook(ctx, w, h, life, now, extra, state, burst){
+function drawMind(ctx, w, h, life, now, extra, state, burst){
   if (reduceMotion) now = 0;
-  var horizonY = h*0.82, minWH = Math.min(w,h), i;
-  /* effLife: the sun's own progress, floored low so the sky stays mostly dark — warm colour concentrated near the horizon and the sun, never flooding the tile */
-  var effLife = 0.18+0.30*life;
+  var minWH = Math.min(w,h), i, j;
 
-  var nightTop=[8,7,10], nightMid=[20,14,16], dawnBot=COLOR_LOOK;
-  var skyGrad = ctx.createLinearGradient(0,0,0,horizonY);
-  skyGrad.addColorStop(0, rgba(nightTop, 0.92));
-  skyGrad.addColorStop(0.62, rgba(mixColor(nightTop,nightMid,effLife), 0.85));
-  skyGrad.addColorStop(1, rgba(mixColor(nightMid,dawnBot,effLife*0.85), 0.55+0.18*effLife));
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0,0,w,horizonY);
+  /* subtle structure grid — dark base, orange light only */
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  var gridN=4, gi;
+  for (gi=1; gi<gridN; gi++){
+    var gx = (w/gridN)*gi;
+    ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,h); ctx.stroke();
+  }
 
-  /* background: stars fading as sun rises */
-  var starVis = Math.max(0, 1-effLife*1.1);
-  if (starVis>0.01){
-    for (i=0;i<state.stars.length;i++){
-      var st = state.stars[i];
-      var tw = Math.sin(now*0.002+st.phase)*0.5+0.5;
-      ctx.fillStyle = rgba([230,230,255], starVis*(0.2+0.5*tw));
-      ctx.beginPath(); ctx.arc(st.x*w, st.y*horizonY, st.r, 0, Math.PI*2); ctx.fill();
+  /* drift the neural nodes slowly, bouncing within soft bounds */
+  var nodes = state.nodes;
+  for (i=0;i<nodes.length;i++){
+    var nd = nodes[i];
+    if (!reduceMotion){
+      nd.x += nd.vx; nd.y += nd.vy;
+      if (nd.x<0.05||nd.x>0.95) nd.vx *= -1;
+      if (nd.y<0.10||nd.y>0.90) nd.vy *= -1;
     }
   }
 
-  /* midground: faint drifting clouds — thin and translucent, not opaque shapes */
-  for (i=0;i<state.clouds.length;i++){
-    var c = state.clouds[i];
-    var cx2 = ((c.x + now*0.00002*c.speed) % 1.3 - 0.15) * w;
-    var cy2 = c.y*horizonY;
-    var cw2 = minWH*0.19*c.scale;
-    ctx.fillStyle = rgba([255,255,255], 0.09+0.05*life);
-    ctx.beginPath();
-    ctx.ellipse(cx2, cy2, cw2, cw2*0.42, 0, 0, Math.PI*2);
-    ctx.ellipse(cx2+cw2*0.5, cy2+cw2*0.08, cw2*0.65, cw2*0.34, 0, 0, Math.PI*2);
-    ctx.fill();
-  }
-
-  /* ambient light motes scattered across the upper sky */
-  for (i=0;i<8;i++){
-    var mx = ((i*0.13 + now*0.00003*(1+ (i%3)*0.4)) % 1) * w;
-    var my = horizonY * (0.08 + ((i*37)%100)/100 * 0.55);
-    var mtw = Math.sin(now*0.0012+i*1.3)*0.5+0.5;
-    ctx.fillStyle = rgba([255,235,200], 0.10+0.16*mtw);
-    ctx.beginPath(); ctx.arc(mx,my,1.2,0,Math.PI*2); ctx.fill();
-  }
-
-  /* ground + horizon reflection */
-  ctx.fillStyle = 'rgba(6,5,6,0.4)';
-  ctx.fillRect(0,horizonY,w,h-horizonY);
-  var reflGrad = ctx.createLinearGradient(0,horizonY,0,horizonY+minWH*0.18);
-  reflGrad.addColorStop(0, rgba(paletteColor(LOOK_PAL,0.35), 0.16+0.14*effLife));
-  reflGrad.addColorStop(1, rgba(paletteColor(LOOK_PAL,0.35), 0));
-  ctx.fillStyle = reflGrad;
-  ctx.fillRect(0,horizonY,w,minWH*0.18);
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.beginPath(); ctx.moveTo(0,horizonY); ctx.lineTo(w,horizonY); ctx.stroke();
-
-  /* foreground: sun — a small luminous point of light, not a solid disc */
-  var sunX = w/2;
-  var sunYbottom = horizonY+minWH*0.06, sunYtop = h*0.40;
-  var sunY = sunYbottom + (sunYtop-sunYbottom)*effLife;
-  var sunR = minWH*0.045 + effLife*minWH*0.02;
-
-  bloom(ctx, sunX, sunY, sunR*6.5, paletteColor(LOOK_PAL,0.15), 0.20+0.16*effLife);
-  bloom(ctx, sunX, sunY, sunR*3.0, paletteColor(LOOK_PAL,0.35), 0.32+0.20*effLife);
-
-  /* rays: thin, faint, short */
-  var rays=8;
-  for (i=0;i<rays;i++){
-    var ang = (i/rays)*Math.PI*2 + now*0.00018;
-    var rlen = sunR*(1.6+effLife*0.9);
-    ctx.strokeStyle = rgba(paletteColor(LOOK_PAL, i/rays), 0.20+0.12*effLife);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(sunX+Math.cos(ang)*sunR*1.1, sunY+Math.sin(ang)*sunR*1.1);
-    ctx.lineTo(sunX+Math.cos(ang)*rlen, sunY+Math.sin(ang)*rlen);
-    ctx.stroke();
-  }
-
-  /* soft radial core — luminous falloff instead of a flat opaque circle */
-  var sunGrad = ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,sunR);
-  sunGrad.addColorStop(0, rgba([255,246,224], 0.9));
-  sunGrad.addColorStop(0.55, rgba(paletteColor(LOOK_PAL,0.25), 0.65+0.15*effLife));
-  sunGrad.addColorStop(1, rgba(paletteColor(LOOK_PAL,0.5), 0));
-  ctx.fillStyle = sunGrad;
-  ctx.beginPath(); ctx.arc(sunX,sunY,sunR,0,Math.PI*2); ctx.fill();
-
-  if (life>=0.85){
-    for (i=0;i<5;i++){
-      var cyc = (now*0.0006+i*0.7)%1;
-      var sx = w*0.18+i*(w*0.16);
-      var sy = horizonY - cyc*(horizonY-h*0.1);
-      ctx.fillStyle = rgba([255,240,210], (1-cyc)*0.4);
-      ctx.beginPath(); ctx.arc(sx,sy,1.3,0,Math.PI*2); ctx.fill();
-    }
-  }
-
-  /* idle event: bird flight */
-  if (!reduceMotion){
-    if (!state.bird && now > state.nextBirdAt){
-      state.bird = { start:now, y:horizonY*(0.25+Math.random()*0.3), dir:Math.random()>0.5?1:-1 };
-      state.nextBirdAt = now + 8000+Math.random()*8000;
-    }
-    if (state.bird){
-      var bel = (now-state.bird.start)/3200;
-      if (bel>=1){ state.bird = null; }
-      else {
-        var bx = state.bird.dir>0 ? (-0.1+bel*1.2)*w : (1.1-bel*1.2)*w;
-        var by = state.bird.y + Math.sin(bel*Math.PI*4)*4;
-        var flap = Math.sin(now*0.02)*3;
-        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-        ctx.lineWidth = 1.3;
+  /* connections between nearby nodes — faint palette-coloured lines */
+  for (i=0;i<nodes.length;i++){
+    for (j=i+1;j<nodes.length;j++){
+      var a=nodes[i], b=nodes[j];
+      var dx=(a.x-b.x)*w, dy=(a.y-b.y)*h;
+      var dist=Math.sqrt(dx*dx+dy*dy);
+      var maxDist = minWH*0.5;
+      if (dist < maxDist){
+        var t = (a.x+b.x)/2;
+        var edgeCol = paletteColor(MIND_PAL, t);
+        var alpha = (1-dist/maxDist)*(0.18+0.10*life);
+        ctx.strokeStyle = rgba(edgeCol, alpha);
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(bx-4,by+flap); ctx.lineTo(bx,by); ctx.lineTo(bx+4,by+flap);
+        ctx.moveTo(a.x*w, a.y*h); ctx.lineTo(b.x*w, b.y*h);
         ctx.stroke();
       }
     }
   }
 
+  /* nodes: soft glowing points */
+  for (i=0;i<nodes.length;i++){
+    var n2 = nodes[i];
+    var tw = Math.sin(now*0.0012+n2.phase)*0.5+0.5;
+    var nx = n2.x*w, ny = n2.y*h;
+    var col2 = paletteColor(MIND_PAL, n2.x);
+    bloom(ctx, nx, ny, minWH*0.05, col2, 0.16+0.14*tw);
+    ctx.fillStyle = rgba(col2, 0.55+0.25*tw);
+    ctx.beginPath(); ctx.arc(nx, ny, 1.6, 0, Math.PI*2); ctx.fill();
+  }
+
+  /* idle event: a data pulse travelling along a random edge */
+  if (!reduceMotion){
+    if (!state.pulse && now > state.nextPulseAt && nodes.length>1){
+      var ia = Math.floor(Math.random()*nodes.length);
+      var ib = Math.floor(Math.random()*nodes.length);
+      if (ib===ia) ib = (ib+1)%nodes.length;
+      state.pulse = { a:nodes[ia], b:nodes[ib], start:now };
+      state.nextPulseAt = now + 3500+Math.random()*3500;
+    }
+    if (state.pulse){
+      var pel = (now-state.pulse.start)/1600;
+      if (pel>=1){ state.pulse = null; }
+      else {
+        var pa=state.pulse.a, pb=state.pulse.b;
+        var px = (pa.x+(pb.x-pa.x)*pel)*w, py = (pa.y+(pb.y-pa.y)*pel)*h;
+        var pcol = paletteColor(MIND_PAL, pel);
+        bloom(ctx, px, py, minWH*0.045, pcol, 0.5);
+        ctx.fillStyle = rgba(pcol, 0.9);
+        ctx.beginPath(); ctx.arc(px, py, 1.8, 0, Math.PI*2); ctx.fill();
+      }
+    }
+  }
+
   if (burst){
-    drawBurst(ctx, sunX, sunY, Math.min(1,(now-burst.start)/900), paletteColor(LOOK_PAL,0.3), minWH*0.5);
+    drawBurst(ctx, w/2, h/2, Math.min(1,(now-burst.start)/900), paletteColor(MIND_PAL,0.3), minWH*0.45);
   }
 }
 
@@ -1013,7 +966,7 @@ function drawSystem(ctx, w, h, life, now, extra, state, burst){
 /* ---------- SECTIONS ---------- */
 var SECTIONS = [
   { id:'body',  sec:'body',  href:'physical.html',   icon:'ti-activity',       name:'Body',  build:buildBody,  draw:drawBody  },
-  { id:'look',  sec:'look',  href:'appearance.html', icon:'ti-sparkles',       name:'Look',  build:buildLook,  draw:drawLook  },
+  { id:'mind',  sec:'mind',  href:'mind.html',       icon:'ti-brain',          name:'Mind',  build:buildMind,  draw:drawMind  },
   { id:'life',  sec:'life',  href:'life.html',       icon:'ti-home',           name:'Life',  build:buildLife,  draw:drawLife  },
   { id:'money', sec:'money', href:'money.html',      icon:'ti-currency-pound', name:'Money', build:buildMoney, draw:drawMoney }
 ];
