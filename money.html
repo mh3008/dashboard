@@ -7,33 +7,525 @@
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="theme.css" rel="stylesheet">
 <style>
-  .hub-head { display:flex; align-items:center; gap:14px; margin-bottom:4px; }
-  .hub-icon { font-size:30px; color:var(--accent); }
-  .hub-name { font-size:24px; font-weight:800; letter-spacing:-0.02em; }
-  .hub-sub  { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-bottom:18px; }
-  .app-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
-  .app-tile { display:flex; flex-direction:column; align-items:center; gap:10px; padding:22px 14px;
-    border-radius:var(--radius); background:var(--card); border:1px solid var(--hair);
-    cursor:pointer; text-decoration:none; transition:background .2s, border-color .2s, transform .12s; }
-  .app-tile:hover { background:var(--card-2); border-color:rgba(249,115,22,0.3); }
-  .app-tile:active { transform:scale(0.97); }
-  .app-tile i { font-size:28px; color:var(--accent-lt); }
-  .app-tile span { font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-1); }
-  .app-tile.soon { opacity:0.4; }
-  .app-tile.soon i { color:var(--text-3); }
+  /* ============================================================
+     GLASS MODULE CARDS — same visual language as life.html/
+     mind.html/physical.html: frosted glass, animated iridescent
+     gradient rim.
+     ============================================================ */
+  .mod-card {
+    position: relative; border-radius: 20px; padding:20px;
+    background: var(--m-bg, rgba(251,191,36,0.05));
+    border: 1px solid var(--m-bd, rgba(251,191,36,0.16));
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+    opacity: 0; transform: translateY(14px);
+    transition: opacity .5s ease-out, transform .5s ease-out;
+  }
+  .mod-card.lo-visible { opacity: 1; transform: translateY(0); }
+  .mod-card::after {
+    content:''; position:absolute; inset:0; border-radius:20px; padding:1.5px;
+    background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3), var(--g2), var(--g1));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: bodyBorderShift 8s ease infinite;
+    opacity: 0.65; pointer-events: none; z-index: 2;
+  }
+  @keyframes bodyBorderShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mod-card::after { animation: none; }
+    .mod-card { transition: none; opacity: 1; transform: none; }
+  }
+  .mod-money { --g1:#fbbf24; --g2:#f59e0b; --g3:#fb923c; --m-bg:rgba(251,191,36,0.045); --m-bd:rgba(251,191,36,0.18); --m-accent:#fbbf24; }
+
+  /* ---- HERO ---- */
+  .body-hero { padding: 22px; margin-bottom: 12px; }
+  .hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; position:relative; z-index:1; }
+  .body-title-wrap { display:flex; align-items:center; gap:12px; }
+  .body-hero-icon { font-size:28px; color:#fbbf24; }
+  .body-title {
+    font-size:32px; font-weight:800; letter-spacing:-0.03em; line-height:1;
+    background: linear-gradient(120deg, #fbbf24, #f59e0b, #fb923c, #fbbf24);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    animation: moneyTitleShift 10s ease infinite;
+  }
+  @keyframes moneyTitleShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
+  .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
+
+  /* stat cells + pos/neg/flat — reused verbatim from trades.html */
+  .stat-cells { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; position:relative; z-index:1; }
+  .scell { background:rgba(255,255,255,0.03); border:1px solid var(--hair); border-radius:12px; padding:12px 10px; text-align:center; }
+  .scell .sc-val { font-size:20px; font-weight:800; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .scell .sc-lbl { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-top:4px; }
+  .pos { color:var(--success); } .neg { color:var(--danger); } .flat { color:var(--text-3); }
+
+  .hero-empty { font-family:var(--mono); font-size:11px; color:var(--text-3); text-align:center; margin-top:12px; position:relative; z-index:1; }
+
+  .pillar-row { display:grid; grid-template-columns:repeat(1,1fr); gap:8px; margin-top:14px; position:relative; z-index:1; }
+  .pillar-chip {
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--hair);
+    transition:background .2s, border-color .2s, box-shadow .2s;
+  }
+  .pillar-chip i { font-size:18px; color:var(--text-3); transition:color .2s; }
+  .pillar-chip span { font-size:9.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); transition:color .2s; }
+  .pillar-chip.hit { background:rgba(251,191,36,0.12); border-color:rgba(251,191,36,0.45); box-shadow:0 0 16px rgba(251,191,36,0.25); }
+  .pillar-chip.hit i, .pillar-chip.hit span { color:#fff2cc; }
+
+  /* ---- shared module head ---- */
+  .mod-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; position:relative; z-index:1; }
+  .mod-title { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+  .mod-title i { color:var(--m-accent); font-size:20px; }
+  .mod-count { font-family:var(--mono); font-size:13px; color:var(--text-2); }
+  .mod-body { position:relative; z-index:1; }
+  .td-empty { text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px; padding:20px 0 6px; position:relative; z-index:1; }
+
+  .mod-footer-link {
+    display:block; text-align:center; margin-top:14px; padding-top:12px; border-top:1px solid var(--hair);
+    font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text-2); text-decoration:none;
+    position:relative; z-index:1; transition:color .16s;
+  }
+  .mod-footer-link:hover { color:var(--text-1); }
+
+  /* ---- EQUITY CURVE — reused verbatim from trades.html, .ctog.on recoloured gold ---- */
+  .curve-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; position:relative; z-index:1; }
+  .curve-lbl { font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); }
+  .curve-toggle { display:flex; gap:6px; }
+  .ctog { font-family:var(--mono); font-size:10px; font-weight:700; padding:4px 10px; border-radius:999px; cursor:pointer;
+    background:rgba(255,255,255,0.04); border:1px solid var(--hair); color:var(--text-2); }
+  .ctog.on { background:rgba(251,191,36,0.14); border-color:rgba(251,191,36,0.45); color:#fbbf24; }
+  .curve-wrap { width:100%; position:relative; z-index:1; }
+  .curve-wrap svg { width:100%; height:auto; display:block; }
+
+  /* ---- RECENT TRADES — reused verbatim from trades.html ---- */
+  .trow { display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:11px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--hair); margin-bottom:8px; cursor:pointer; transition:background .15s; }
+  .trow:hover { background:var(--card-2); }
+  .trow .t-main { flex:1; min-width:0; }
+  .trow .t-top { display:flex; align-items:center; gap:8px; }
+  .t-pair { font-weight:800; font-size:14px; }
+  .t-dir { font-family:var(--mono); font-size:9px; font-weight:800; letter-spacing:0.08em; padding:2px 6px; border-radius:5px; }
+  .t-dir.long { background:rgba(107,227,164,0.14); color:var(--success); }
+  .t-dir.short { background:rgba(255,107,107,0.14); color:var(--danger); }
+  .t-setup { font-family:var(--mono); font-size:10px; color:var(--text-3); }
+  .t-sub { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:3px; }
+  .t-r { font-family:var(--mono); font-weight:800; font-size:15px; text-align:right; min-width:56px; font-variant-numeric:tabular-nums; }
+  .t-pnl { font-family:var(--mono); font-size:10px; text-align:right; }
+
+  /* ---- TILE GRID (nav) ---- */
+  .tile-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:12px; }
+  .tile {
+    aspect-ratio:1/1; padding:16px; display:flex; flex-direction:column;
+    text-decoration:none; color:inherit; cursor:pointer;
+    transition: opacity .5s ease-out, transform .5s ease-out, border-color .2s;
+  }
+  .tile-top { display:flex; align-items:center; gap:8px; position:relative; z-index:1; }
+  .tile-top i { font-size:18px; color:var(--m-accent); }
+  .tile-top span { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .tile-stat {
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--mono); font-size:15px; font-weight:800; color:var(--text-2);
+    position:relative; z-index:1;
+  }
+  .tile.soon { opacity:0.4; pointer-events:none; }
+
+  /* ---- CONSISTENCY ---- */
+  .cons-overall { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; position:relative; z-index:1; }
+  .cons-overall-num {
+    font-size:38px; font-weight:800; letter-spacing:-0.03em;
+    background:linear-gradient(120deg,#fbbf24,#f59e0b,#fb923c); background-size:200% 200%;
+    -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+  }
+  .cons-overall-lbl { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .heat-row { display:flex; align-items:center; gap:10px; position:relative; z-index:1; }
+  .heat-label { width:52px; flex-shrink:0; font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-2); }
+  .heat-grid { display:grid; grid-template-columns:repeat(30, 1fr); gap:3px; flex:1; }
+  .heat-cell {
+    aspect-ratio:1/1; border-radius:3px; background:rgba(255,255,255,0.05); cursor:pointer;
+    transition:transform .1s, outline-color .15s;
+    outline:1.5px solid transparent; outline-offset:1px;
+  }
+  .heat-cell:hover { transform:scale(1.3); }
+  .heat-cell.sel { outline-color:var(--text-1); }
+  .heat-streak { font-family:var(--mono); font-size:9px; color:var(--text-3); flex-shrink:0; width:64px; text-align:right; line-height:1.5; }
+  .heat-streak b { color:var(--text-1); }
+  .cons-detail { font-family:var(--mono); font-size:11px; color:var(--text-2); margin-top:16px; min-height:14px; position:relative; z-index:1; }
+  .cons-detail b { color:var(--text-1); font-weight:800; }
 </style>
 </head>
 <body>
+
 <div class="wrap">
-  <div class="hub-head"><i class="ti ti-currency-pound hub-icon"></i><div class="hub-name">Money</div></div>
-  <div class="hub-sub">Build the bag. Trade journal · learn queue.</div>
-  <div class="app-grid">
-    <a class="app-tile" href="trades.html"><i class="ti ti-chart-candle"></i><span>Trade Journal</span></a>
-    <a class="app-tile" href="learn.html"><i class="ti ti-books"></i><span>Learn Queue</span></a>
+
+  <!-- HERO -->
+  <div class="card mod-card mod-money body-hero" id="heroCard">
+    <div class="hero-top">
+      <div class="body-title-wrap">
+        <i class="ti ti-currency-pound body-hero-icon"></i>
+        <div class="body-title">Money</div>
+      </div>
+      <div class="body-date" id="heroDate">—</div>
+    </div>
+    <div class="stat-cells" id="statCells"></div>
+    <div class="hero-empty" id="heroEmpty" style="display:none;">No trades logged yet.</div>
+    <div class="pillar-row" id="pillarRow"></div>
   </div>
+
+  <!-- EQUITY CURVE -->
+  <div class="section-title">Equity Curve</div>
+  <div class="card mod-card mod-money" id="curveCard">
+    <div class="curve-head">
+      <span class="curve-lbl">Equity Curve</span>
+      <div class="curve-toggle">
+        <span class="ctog on" data-mode="R" id="togR">R</span>
+        <span class="ctog" data-mode="GBP" id="togGBP">£</span>
+      </div>
+    </div>
+    <div class="curve-wrap" id="curveWrap"></div>
+    <a class="mod-footer-link" href="trades.html">Full journal →</a>
+  </div>
+
+  <!-- RECENT TRADES -->
+  <div class="section-title">Recent Trades</div>
+  <div class="card mod-card mod-money" id="recentCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-chart-candle"></i> Recent</div>
+    </div>
+    <div class="mod-body">
+      <div id="recentList"></div>
+      <a class="mod-footer-link" href="trades.html">All trades →</a>
+    </div>
+  </div>
+
+  <!-- NAV TILES -->
+  <div class="section-title">More</div>
+  <div class="tile-grid">
+    <a class="mod-card mod-money tile" href="trades.html" id="tileTrades">
+      <div class="tile-top"><i class="ti ti-chart-candle"></i><span>Trades</span></div>
+      <div class="tile-stat" id="tileTradesStat">0 logged</div>
+    </a>
+    <a class="mod-card mod-money tile soon" href="#" id="tileNetWorth">
+      <div class="tile-top"><i class="ti ti-wallet"></i><span>Net Worth</span></div>
+      <div class="tile-stat">Coming soon</div>
+    </a>
+    <a class="mod-card mod-money tile soon" href="#" id="tileSpending">
+      <div class="tile-top"><i class="ti ti-receipt"></i><span>Spending</span></div>
+      <div class="tile-stat">Coming soon</div>
+    </a>
+    <a class="mod-card mod-money tile soon" href="#" id="tileSubs">
+      <div class="tile-top"><i class="ti ti-repeat"></i><span>Subs</span></div>
+      <div class="tile-stat">Coming soon</div>
+    </a>
+  </div>
+
+  <!-- CONSISTENCY -->
+  <div class="section-title">Consistency</div>
+  <div class="card mod-card mod-money" id="moneyConsCard">
+    <div class="cons-overall">
+      <div class="cons-overall-num" id="moneyConsOverallNum">0%</div>
+      <div class="cons-overall-lbl">trading activity — last 30 days</div>
+    </div>
+    <div class="mod-body">
+      <div class="heat-row">
+        <div class="heat-label">Trades</div>
+        <div class="heat-grid" id="moneyHeatGrid"></div>
+        <div class="heat-streak" id="moneyHeatStreak"></div>
+      </div>
+    </div>
+    <div class="cons-detail" id="moneyConsDetail">Tap a day to see the breakdown.</div>
+  </div>
+
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="sync.js" defer></script>
 <script src="topbar.js" defer></script>
+<script>
+/* ============================================================
+   TRADE HELPERS — duplicated VERBATIM from trades.html so the
+   numbers on this page can never disagree with the journal.
+   Keep both copies in sync if the formulas ever change.
+   ============================================================ */
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+var LOG_KEY = 'trades:log';
+function loadTrades(){ var t=storeGet(LOG_KEY); return Array.isArray(t)?t:[]; }
+function rMult(t){ return t.risk>0 ? t.pnl/t.risk : 0; }
+function chrono(list){ return list.slice().sort(function(a,b){ return (a.date+a.id) < (b.date+b.id) ? -1 : 1; }); }
+function computeStats(list){
+  var n=list.length, wins=0, losses=0, be=0, totalR=0, totalPnl=0, gp=0, gl=0;
+  list.forEach(function(t){
+    var r=rMult(t); totalR+=r; totalPnl+=t.pnl;
+    if(t.pnl>0){ wins++; gp+=t.pnl; } else if(t.pnl<0){ losses++; gl+=Math.abs(t.pnl); } else be++;
+  });
+  return {
+    n:n, wins:wins, losses:losses, be:be,
+    winRate: n? wins/(wins+losses||1) : 0,
+    totalR: totalR, expectancy: n? totalR/n : 0,
+    totalPnl: totalPnl,
+    profitFactor: gl>0 ? gp/gl : (gp>0? Infinity : 0)
+  };
+}
+function fmtR(r){ return (r>=0?'+':'')+r.toFixed(2)+'R'; }
+function rClass(r){ return r>0?'pos':(r<0?'neg':'flat'); }
+/* equitySvg — also duplicated verbatim from trades.html */
+function equitySvg(list, mode){
+  var W=320, H=140, pad=8;
+  var vals=[0], cum=0;
+  chrono(list).forEach(function(t){ cum += (mode==='R'? rMult(t) : t.pnl); vals.push(cum); });
+  if (vals.length<2){
+    return '<svg viewBox="0 0 '+W+' '+H+'"><text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" fill="var(--text-3)" font-family="monospace" font-size="11">no trades yet</text></svg>';
+  }
+  var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
+  if (mn===mx){ mn-=1; mx+=1; }
+  var span=mx-mn;
+  var innerW=W-pad*2, innerH=H-pad*2;
+  function x(i){ return pad + innerW*(i/(vals.length-1)); }
+  function y(v){ return pad + innerH*(1-(v-mn)/span); }
+  var d='';
+  vals.forEach(function(v,i){ d += (i===0?'M':'L')+x(i).toFixed(1)+' '+y(v).toFixed(1)+' '; });
+  var last=vals[vals.length-1];
+  var col = last>0 ? 'var(--success)' : (last<0 ? 'var(--danger)' : 'var(--text-2)');
+  var zeroY = (0>=mn && 0<=mx) ? y(0).toFixed(1) : null;
+  var area = d + 'L'+x(vals.length-1).toFixed(1)+' '+(H-pad)+' L'+x(0).toFixed(1)+' '+(H-pad)+' Z';
+  var svg='<svg viewBox="0 0 '+W+' '+H+'">';
+  svg+='<defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+col+'" stop-opacity="0.28"/><stop offset="1" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>';
+  if (zeroY!==null) svg+='<line x1="'+pad+'" y1="'+zeroY+'" x2="'+(W-pad)+'" y2="'+zeroY+'" stroke="rgba(255,255,255,0.12)" stroke-dasharray="3 3"/>';
+  svg+='<path d="'+area+'" fill="url(#eg)"/>';
+  svg+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  svg+='<circle cx="'+x(vals.length-1).toFixed(1)+'" cy="'+y(last).toFixed(1)+'" r="3.5" fill="'+col+'"/>';
+  svg+='<text x="'+(W-pad)+'" y="14" text-anchor="end" fill="'+col+'" font-family="monospace" font-size="12" font-weight="700">'+(last>=0?'+':'')+(mode==='R'?last.toFixed(1)+'R':'£'+Math.round(last))+'</text>';
+  svg+='</svg>';
+  return svg;
+}
+
+/* ============================================================
+   SHARED HELPERS — identical conventions to every other page.
+   NOTE: trades use a plain calendar date with no pre-6am shift
+   (todayStr above, copied from trades.html, does not subtract
+   an hour like getActiveDateString does elsewhere). lastNDates
+   here deliberately does the same — do NOT swap in
+   getActiveDateString for anything trade-dated, or this page and
+   trades.html will disagree on which day a trade falls into.
+   ============================================================ */
+function lastNDates(n){
+  var base = new Date();
+  var out = [];
+  for (var i=n-1;i>=0;i--){ var d=new Date(base.getFullYear(),base.getMonth(),base.getDate()-i); out.push(d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())); }
+  return out;
+}
+function fmtFull(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}); }
+
+var Money = {}; /* module registry — each section publishes { refresh: fn } here */
+
+/* ============================================================
+   HERO — Net P&L / Total R / Win rate cells, "Logged today" chip.
+   ============================================================ */
+var CHIP_DEFS = [
+  { key:'logged', label:'Logged today', icon:'ti-chart-candle' }
+];
+var chipEls = {};
+(function buildHero(){
+  var row = document.getElementById('pillarRow');
+  CHIP_DEFS.forEach(function(cd){
+    var chip = document.createElement('div'); chip.className = 'pillar-chip';
+    chip.innerHTML = '<i class="ti '+cd.icon+'"></i><span>'+cd.label+'</span>';
+    row.appendChild(chip);
+    chipEls[cd.key] = chip;
+  });
+  document.getElementById('heroDate').textContent = fmtFull(todayStr());
+})();
+function updateHero(){
+  var all = loadTrades();
+  var date = todayStr();
+  document.getElementById('heroDate').textContent = fmtFull(date);
+
+  var cellsHost = document.getElementById('statCells');
+  var heroEmpty = document.getElementById('heroEmpty');
+  if (!all.length){
+    cellsHost.innerHTML = ['Net P&amp;L','Total R','Win rate'].map(function(lbl){
+      return '<div class="scell"><div class="sc-val flat">—</div><div class="sc-lbl">'+lbl+'</div></div>';
+    }).join('');
+    heroEmpty.style.display = 'block';
+  } else {
+    var s = computeStats(all);
+    var cells = [
+      ['Net P&amp;L', (s.totalPnl>=0?'+£':'-£')+Math.abs(Math.round(s.totalPnl)), rClass(s.totalPnl)],
+      ['Total R', fmtR(s.totalR), rClass(s.totalR)],
+      ['Win rate', Math.round(s.winRate*100)+'%', s.winRate>=0.5?'pos':(s.n?'neg':'flat')]
+    ];
+    cellsHost.innerHTML = cells.map(function(c){
+      return '<div class="scell"><div class="sc-val '+c[2]+'">'+c[1]+'</div><div class="sc-lbl">'+c[0]+'</div></div>';
+    }).join('');
+    heroEmpty.style.display = 'none';
+  }
+
+  var loggedToday = all.some(function(t){ return t.date === date; });
+  chipEls.logged.classList.toggle('hit', loggedToday);
+}
+
+/* ============================================================
+   EQUITY CURVE — R / £ toggle, read-only.
+   ============================================================ */
+(function(){
+  var curveMode = 'R';
+
+  function render(){
+    var all = loadTrades();
+    document.getElementById('curveWrap').innerHTML = equitySvg(all, curveMode);
+  }
+
+  document.getElementById('togR').addEventListener('click', function(){
+    curveMode = 'R'; this.classList.add('on'); document.getElementById('togGBP').classList.remove('on'); render();
+  });
+  document.getElementById('togGBP').addEventListener('click', function(){
+    curveMode = 'GBP'; this.classList.add('on'); document.getElementById('togR').classList.remove('on'); render();
+  });
+
+  render();
+  Money.curve = { refresh: render };
+})();
+
+/* ============================================================
+   RECENT TRADES — 5 most recent, newest first, read-only.
+   ============================================================ */
+(function(){
+  function render(){
+    var all = loadTrades();
+    var recent = all.slice().sort(function(a,b){ return (a.date+a.id) < (b.date+b.id) ? 1 : -1; }).slice(0,5);
+    var list = document.getElementById('recentList'); list.innerHTML = '';
+    if (!recent.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'No trades yet.';
+      list.appendChild(e);
+      return;
+    }
+    recent.forEach(function(t){
+      var r = rMult(t);
+      var row = document.createElement('div'); row.className = 'trow';
+      row.innerHTML =
+        '<div class="t-main"><div class="t-top">'+
+          '<span class="t-pair">'+t.pair+'</span>'+
+          '<span class="t-dir '+t.dir.toLowerCase()+'">'+t.dir.toUpperCase()+'</span>'+
+          (t.setup?'<span class="t-setup">'+t.setup+'</span>':'')+
+        '</div><div class="t-sub">'+t.date+(t.risk?' · risk £'+t.risk:'')+'</div></div>'+
+        '<div><div class="t-r '+rClass(r)+'">'+fmtR(r)+'</div>'+
+        '<div class="t-pnl '+rClass(t.pnl)+'">'+(t.pnl>=0?'+£':'-£')+Math.abs(t.pnl)+'</div></div>';
+      row.addEventListener('click', function(){ window.location.href = 'trades.html'; });
+      list.appendChild(row);
+    });
+  }
+  render();
+  Money.recent = { refresh: render };
+})();
+
+/* ============================================================
+   TILES — nav grid; Trades' stat mirrors the live log.
+   ============================================================ */
+function updateTiles(){
+  var all = loadTrades();
+  document.getElementById('tileTradesStat').textContent = all.length + ' logged';
+}
+updateTiles();
+Money.tiles = { refresh: updateTiles };
+
+/* ============================================================
+   CONSISTENCY — 30-day heatmap of trading days.
+   ============================================================ */
+(function(){
+  var HEAT_N = 30;
+  var cells = [], dates = [];
+  var selIdx = -1;
+
+  function tradesOnDate(date){
+    return loadTrades().filter(function(t){ return t.date === date; });
+  }
+
+  function build(){
+    dates = lastNDates(HEAT_N);
+    var host = document.getElementById('moneyHeatGrid'); host.innerHTML = '';
+    cells = [];
+    dates.forEach(function(date, idx){
+      var cell = document.createElement('div'); cell.className = 'heat-cell';
+      cell.setAttribute('data-idx', idx);
+      cell.addEventListener('click', function(){
+        selIdx = (selIdx === idx) ? -1 : idx;
+        updateSelection();
+      });
+      host.appendChild(cell);
+      cells.push(cell);
+    });
+  }
+
+  function updateSelection(){
+    cells.forEach(function(c, idx){ c.classList.toggle('sel', idx === selIdx); });
+    var detail = document.getElementById('moneyConsDetail');
+    if (selIdx < 0){ detail.textContent = 'Tap a day to see the breakdown.'; return; }
+    var date = dates[selIdx];
+    var dayTrades = tradesOnDate(date);
+    var totalR = 0;
+    dayTrades.forEach(function(t){ totalR += rMult(t); });
+    detail.innerHTML = '<b>' + fmtFull(date) + '</b> · ' + dayTrades.length + ' trade' + (dayTrades.length===1?'':'s') + ' · ' + fmtR(totalR);
+  }
+
+  function refresh(){
+    dates = lastNDates(HEAT_N);
+    var hits = 0, curStreak = 0, bestStreak = 0, run = 0, i;
+    for (i=0;i<dates.length;i++){
+      var n = tradesOnDate(dates[i]).length;
+      var hit = n >= 1;
+      if (hit){ hits++; run++; if (run > bestStreak) bestStreak = run; } else { run = 0; }
+      if (n >= 2){ cells[i].style.background = '#fbbf24'; cells[i].style.boxShadow = '0 0 5px rgba(251,191,36,0.6)'; }
+      else if (n >= 1){ cells[i].style.background = 'rgba(251,191,36,0.45)'; cells[i].style.boxShadow = 'none'; }
+      else { cells[i].style.background = 'rgba(255,255,255,0.05)'; cells[i].style.boxShadow = 'none'; }
+    }
+    for (i=dates.length-1;i>=0;i--){ if (tradesOnDate(dates[i]).length >= 1) curStreak++; else break; }
+    document.getElementById('moneyHeatStreak').innerHTML = '<b>' + curStreak + '</b> now<br>' + bestStreak + ' best';
+    var overallPct = Math.round(hits / dates.length * 100);
+    document.getElementById('moneyConsOverallNum').textContent = overallPct + '%';
+    updateSelection();
+  }
+
+  build();
+  refresh();
+  Money.consistency = { refresh: refresh };
+})();
+
+/* ============================================================
+   BOOT — hero, sync/focus refresh, staggered entry animation.
+   ============================================================ */
+updateHero();
+
+function refreshAllModules(){
+  updateHero();
+  if (Money.curve) Money.curve.refresh();
+  if (Money.recent) Money.recent.refresh();
+  if (Money.tiles) Money.tiles.refresh();
+  if (Money.consistency) Money.consistency.refresh();
+}
+window.addEventListener('lo-sync-applied', refreshAllModules);
+window.addEventListener('focus', refreshAllModules);
+
+(function(){
+  var cards = document.querySelectorAll('.mod-card');
+  Array.prototype.forEach.call(cards, function(c, idx){ c.style.transitionDelay = (idx*50)+'ms'; });
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      Array.prototype.forEach.call(cards, function(c){ c.classList.add('lo-visible'); });
+    });
+  });
+})();
+</script>
 </body>
 </html>
