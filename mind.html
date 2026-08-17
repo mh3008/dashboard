@@ -215,9 +215,9 @@
       <div class="tile-top"><i class="ti ti-school"></i><span>Uni</span></div>
       <div class="tile-stat" id="tileUniStat">0 due</div>
     </a>
-    <a class="mod-card mod-mind tile soon tile-wide" href="games.html" id="tileGames">
+    <a class="mod-card mod-mind tile tile-wide" href="games.html" id="tileGames">
       <div class="tile-top"><i class="ti ti-device-gamepad-2"></i><span>Games</span></div>
-      <div class="tile-stat">Coming soon</div>
+      <div class="tile-stat" id="tileGamesStat">0 playing</div>
     </a>
   </div>
 
@@ -300,7 +300,10 @@ function updateHero(){
   var uHit = !uniDeadlines.some(function(d){ return d.status !== 'done' && d.dueDate <= date; });
   if (uHit) hits++;
   chipEls.uni.classList.toggle('hit', uHit);
-  chipEls.games.classList.toggle('hit', false);
+  var gamesLog = storeGet('games:log'); if (!Array.isArray(gamesLog)) gamesLog = [];
+  var gHit = gamesLog.some(function(g){ return g.status === 'playing'; });
+  if (gHit) hits++;
+  chipEls.games.classList.toggle('hit', gHit);
   document.getElementById('pillarFill').style.width = (hits/3*100)+'%';
   document.getElementById('pillarSummary').textContent = hits+' / 3 clear';
 }
@@ -384,7 +387,7 @@ function updateHero(){
 })();
 
 /* ============================================================
-   TILES — nav grid; Learn's stat mirrors the live queue.
+   TILES — nav grid; Learn/Uni/Games stats mirror live data.
    ============================================================ */
 function updateTiles(){
   var undoneCount = loadQueue().filter(function(q){ return !q.done; }).length;
@@ -392,6 +395,9 @@ function updateTiles(){
   var uniDeadlines = storeGet('uni:deadlines'); if (!Array.isArray(uniDeadlines)) uniDeadlines = [];
   var dueCount = uniDeadlines.filter(function(d){ return d.status !== 'done'; }).length;
   document.getElementById('tileUniStat').textContent = dueCount + ' due';
+  var gamesLog = storeGet('games:log'); if (!Array.isArray(gamesLog)) gamesLog = [];
+  var playingCount = gamesLog.filter(function(g){ return g.status === 'playing'; }).length;
+  document.getElementById('tileGamesStat').textContent = playingCount + ' playing';
 }
 updateTiles();
 Mind.tiles = { refresh: updateTiles };

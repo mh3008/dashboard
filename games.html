@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Games · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  /* ============================================================
+     GLASS MODULE CARDS — same visual language as mind.html/
+     uni.html: frosted glass, animated iridescent gradient rim.
+     ============================================================ */
+  .mod-card {
+    position: relative; border-radius: 20px; padding:20px;
+    background: var(--m-bg, rgba(248,113,113,0.05));
+    border: 1px solid var(--m-bd, rgba(248,113,113,0.16));
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+    opacity: 0; transform: translateY(14px);
+    transition: opacity .5s ease-out, transform .5s ease-out;
+  }
+  .mod-card.lo-visible { opacity: 1; transform: translateY(0); }
+  .mod-card::after {
+    content:''; position:absolute; inset:0; border-radius:20px; padding:1.5px;
+    background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3), var(--g2), var(--g1));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: bodyBorderShift 8s ease infinite;
+    opacity: 0.65; pointer-events: none; z-index: 2;
+  }
+  @keyframes bodyBorderShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mod-card::after { animation: none; }
+    .mod-card { transition: none; opacity: 1; transform: none; }
+  }
+  .mod-mind { --g1:#f87171; --g2:#fb923c; --g3:#ec4899; --m-bg:rgba(248,113,113,0.045); --m-bd:rgba(248,113,113,0.18); --m-accent:#f87171; }
+
+  /* ---- HERO ---- */
+  .body-hero { padding: 22px; margin-bottom: 12px; }
+  .hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; position:relative; z-index:1; }
+  .body-title-wrap { display:flex; align-items:center; gap:12px; }
+  .body-hero-icon { font-size:28px; color:#f87171; }
+  .body-title {
+    font-size:32px; font-weight:800; letter-spacing:-0.03em; line-height:1;
+    background: linear-gradient(120deg, #f87171, #fb923c, #ec4899, #f87171);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    animation: gamesTitleShift 10s ease infinite;
+  }
+  @keyframes gamesTitleShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
+  .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
+
+  .stat-cells { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; position:relative; z-index:1; margin-bottom:14px; }
+  .scell { background:rgba(255,255,255,0.03); border:1px solid var(--hair); border-radius:12px; padding:12px 10px; text-align:center; }
+  .scell .sc-val { font-size:20px; font-weight:800; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .scell .sc-lbl { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-top:4px; }
+  .pos { color:var(--success); } .neg { color:var(--danger); } .flat { color:var(--text-3); }
+
+  .pillar-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; position:relative; z-index:1; }
+  .pillar-chip {
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--hair);
+    transition:background .2s, border-color .2s, box-shadow .2s;
+  }
+  .pillar-chip i { font-size:18px; color:var(--text-3); transition:color .2s; }
+  .pillar-chip span { font-size:9.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); transition:color .2s; }
+  .pillar-chip.hit { background:rgba(248,113,113,0.12); border-color:rgba(248,113,113,0.45); box-shadow:0 0 16px rgba(248,113,113,0.25); }
+  .pillar-chip.hit i, .pillar-chip.hit span { color:#ffd9d9; }
+
+  /* ---- shared module head ---- */
+  .mod-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; position:relative; z-index:1; }
+  .mod-title { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+  .mod-title i { color:var(--m-accent); font-size:20px; }
+  .mod-count { font-family:var(--mono); font-size:13px; color:var(--text-2); }
+  .mod-count b { color:var(--text-1); font-weight:800; }
+  .mod-body { position:relative; z-index:1; }
+  .td-empty { text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px; padding:20px 0 6px; position:relative; z-index:1; }
+
+  /* ---- shared row + action buttons (Now Playing / Backlog) ---- */
+  .gm-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); margin-bottom:8px; }
+  .gm-main { flex:1; min-width:0; }
+  .gm-title { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .gm-sub { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
+  .gm-actions { display:flex; gap:8px; flex-shrink:0; align-items:center; }
+  .gm-btn { font-family:var(--mono); font-size:11px; font-weight:700; padding:8px 12px; border-radius:10px; cursor:pointer;
+    border:1px solid var(--hair); background:rgba(255,255,255,0.04); color:var(--text-2); transition:background .16s, border-color .16s, color .16s; }
+  .gm-btn:hover { background:var(--card-2); }
+  .gm-btn-primary { border-color:rgba(248,113,113,0.45); background:rgba(248,113,113,0.12); color:#f87171; }
+  .gm-btn-primary:hover { background:rgba(248,113,113,0.2); }
+  .gm-btn-danger { border-color:rgba(255,107,107,0.35); color:var(--danger); }
+  .gm-btn-danger:hover { background:rgba(255,107,107,0.12); border-color:rgba(255,107,107,0.55); }
+
+  /* ---- RATED ---- */
+  .rt-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); margin-bottom:8px; }
+  .rt-main { flex:1; min-width:0; }
+  .rt-title { font-size:13px; font-weight:700; }
+  .rt-sub { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
+  .rt-val { font-family:var(--mono); font-size:16px; font-weight:800; text-align:right; flex-shrink:0; }
+
+  /* ---- ADD FORM — reused verbatim from uni.html's mind-add language ---- */
+  .mind-add { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; position:relative; z-index:1; }
+  .mind-in, .mind-sel { flex:1; padding:12px 14px; border-radius:12px; border:1px solid var(--hair);
+    background:rgba(0,0,0,0.22); color:var(--text-1); font-size:14px; font-family:var(--font); outline:none;
+    transition:border-color .16s; min-width:120px; }
+  .mind-in::placeholder { color:var(--text-3); }
+  .mind-in:focus, .mind-sel:focus { border-color:rgba(248,113,113,0.5); }
+  .mind-in[type="date"]::-webkit-calendar-picker-indicator { filter:invert(0.7) sepia(1) saturate(4) hue-rotate(-30deg); cursor:pointer; }
+  .mind-num { flex:none; width:88px; min-width:0; }
+  .mind-btn { padding:12px 18px; border-radius:12px; border:none; background:#f87171;
+    color:#1a0a0a; font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0; transition:transform .1s; }
+  .mind-btn:active { transform:scale(0.96); }
+
+  /* ---- TILE GRID (nav) ---- */
+  .tile-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:12px; }
+  .tile {
+    aspect-ratio:1/1; padding:16px; display:flex; flex-direction:column;
+    text-decoration:none; color:inherit; cursor:pointer;
+    transition: opacity .5s ease-out, transform .5s ease-out, border-color .2s;
+  }
+  .tile-top { display:flex; align-items:center; gap:8px; position:relative; z-index:1; }
+  .tile-top i { font-size:18px; color:var(--m-accent); }
+  .tile-top span { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .tile-stat {
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--mono); font-size:15px; font-weight:800; color:var(--text-2);
+    position:relative; z-index:1;
+  }
+  .tile-wide { grid-column:1/-1; aspect-ratio:auto; flex-direction:row; align-items:center; justify-content:space-between; padding:18px 20px; }
+  .tile-wide .tile-stat { flex:none; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="card mod-card mod-mind body-hero" id="heroCard">
+    <div class="hero-top">
+      <div class="body-title-wrap">
+        <i class="ti ti-device-gamepad-2 body-hero-icon"></i>
+        <div class="body-title">Games</div>
+      </div>
+      <div class="body-date" id="heroDate">—</div>
+    </div>
+    <div class="stat-cells" id="statCells"></div>
+    <div class="pillar-row" id="pillarRow"></div>
+  </div>
+
+  <!-- NOW PLAYING -->
+  <div class="section-title">Now Playing</div>
+  <div class="card mod-card mod-mind" id="playingCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-player-play"></i> Now Playing</div>
+      <div class="mod-count" id="playingCount">0</div>
+    </div>
+    <div class="mod-body">
+      <div id="playingList"></div>
+    </div>
+  </div>
+
+  <!-- RATED -->
+  <div class="section-title">Rated</div>
+  <div class="card mod-card mod-mind" id="ratedCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-star"></i> Rated</div>
+      <div class="mod-count" id="ratedCount">0</div>
+    </div>
+    <div class="mod-body">
+      <div id="ratedList"></div>
+    </div>
+  </div>
+
+  <!-- BACKLOG -->
+  <div class="section-title">Backlog</div>
+  <div class="card mod-card mod-mind" id="backlogCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-list"></i> Backlog</div>
+      <div class="mod-count" id="backlogCount">0</div>
+    </div>
+    <div class="mod-body">
+      <div id="backlogList"></div>
+      <div class="mind-add">
+        <input class="mind-in" id="gmTitleIn" type="text" placeholder="Game title…" maxlength="120">
+        <input class="mind-in" id="gmPlatformIn" type="text" placeholder="Platform…" maxlength="40">
+        <select class="mind-sel" id="gmStatusSel">
+          <option value="backlog">Backlog</option>
+          <option value="playing">Playing</option>
+          <option value="done">Done</option>
+          <option value="dropped">Dropped</option>
+        </select>
+        <button class="mind-btn" id="gmBtn">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV TILES -->
+  <div class="section-title">More</div>
+  <div class="tile-grid">
+    <a class="mod-card mod-mind tile tile-wide" href="mind.html" id="tileMind">
+      <div class="tile-top"><i class="ti ti-brain"></i><span>Mind</span></div>
+      <div class="tile-stat">Back to Mind →</div>
+    </a>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+/* ============================================================
+   SHARED HELPERS — identical conventions to every other page.
+   ============================================================ */
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function fmtFull(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}); }
+function daysBetween(a,b){
+  var pa=a.split('-'),pb=b.split('-');
+  var da=new Date(+pa[0],+pa[1]-1,+pa[2]), db=new Date(+pb[0],+pb[1]-1,+pb[2]);
+  return Math.round((db-da)/86400000);
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function loadGames(){ var v = storeGet('games:log'); return Array.isArray(v) ? v : []; }
+function saveGames(v){ storeSet('games:log', v); }
+function findIndexById(list, id){
+  for (var i=0;i<list.length;i++){ if (list[i].id === id) return i; }
+  return -1;
+}
+
+var Games = {}; /* module registry — each section publishes { refresh: fn } here */
+
+/* ============================================================
+   HERO — Now playing / Average rating stat cells, Playing /
+   Rated / Backlog chips.
+   ============================================================ */
+var CHIP_DEFS = [
+  { key:'playing', label:'Playing', icon:'ti-player-play' },
+  { key:'rated',   label:'Rated',   icon:'ti-star' },
+  { key:'backlog', label:'Backlog', icon:'ti-list' }
+];
+var chipEls = {};
+(function buildHero(){
+  var row = document.getElementById('pillarRow');
+  CHIP_DEFS.forEach(function(cd){
+    var chip = document.createElement('div'); chip.className = 'pillar-chip';
+    chip.innerHTML = '<i class="ti '+cd.icon+'"></i><span>'+cd.label+'</span>';
+    row.appendChild(chip);
+    chipEls[cd.key] = chip;
+  });
+  document.getElementById('heroDate').textContent = fmtFull(todayStr());
+})();
+
+function updateHero(){
+  var today = todayStr();
+  document.getElementById('heroDate').textContent = fmtFull(today);
+  var all = loadGames();
+
+  var playing = all.filter(function(g){ return g.status === 'playing'; });
+  playing.sort(function(a,b){ return (b.started||'') < (a.started||'') ? -1 : ((b.started||'') > (a.started||'') ? 1 : 0); });
+  var nowPlaying = playing.length ? playing[0].title : 'Nothing';
+
+  var rated = all.filter(function(g){ return g.rating !== null && g.rating !== undefined; });
+  var avg = null;
+  if (rated.length){
+    var sum = 0;
+    rated.forEach(function(g){ sum += g.rating; });
+    avg = sum / rated.length;
+  }
+
+  var cells = [
+    ['Now playing', nowPlaying, playing.length ? 'pos' : 'flat'],
+    ['Average rating', avg === null ? '—' : avg.toFixed(1), avg === null ? 'flat' : (avg >= 8 ? 'pos' : (avg >= 5 ? 'flat' : 'neg'))]
+  ];
+  document.getElementById('statCells').innerHTML = cells.map(function(c){
+    return '<div class="scell"><div class="sc-val '+c[2]+'">'+c[1]+'</div><div class="sc-lbl">'+c[0]+'</div></div>';
+  }).join('');
+
+  var playingHit = playing.length > 0;
+  var thisMonth = today.slice(0,7);
+  var ratedHit = all.some(function(g){ return g.rating !== null && g.rating !== undefined && g.finished && g.finished.slice(0,7) === thisMonth; });
+  var backlogHit = all.filter(function(g){ return g.status === 'backlog'; }).length <= 5;
+
+  chipEls.playing.classList.toggle('hit', playingHit);
+  chipEls.rated.classList.toggle('hit', ratedHit);
+  chipEls.backlog.classList.toggle('hit', backlogHit);
+}
+
+/* ============================================================
+   NOW PLAYING — Finish (inline rating entry, commits status
+   done + finished today + rating together) / Drop actions.
+   ============================================================ */
+(function(){
+  function build(){
+    var playing = loadGames().filter(function(g){ return g.status === 'playing'; });
+    playing.sort(function(a,b){ return (b.started||'') < (a.started||'') ? -1 : ((b.started||'') > (a.started||'') ? 1 : 0); });
+
+    var list = document.getElementById('playingList'); list.innerHTML = '';
+    document.getElementById('playingCount').textContent = playing.length;
+
+    if (!playing.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'Nothing in progress.';
+      list.appendChild(e);
+      return;
+    }
+
+    playing.forEach(function(g){
+      var days = g.started ? daysBetween(g.started, todayStr()) : 0;
+      var row = document.createElement('div'); row.className = 'gm-row';
+
+      var main = document.createElement('div'); main.className = 'gm-main';
+      main.innerHTML = '<div class="gm-title">'+g.title+'</div><div class="gm-sub">'+(g.platform || '')+' · '+days+'d</div>';
+      row.appendChild(main);
+
+      var actions = document.createElement('div'); actions.className = 'gm-actions';
+      var finishBtn = document.createElement('button'); finishBtn.className = 'gm-btn gm-btn-primary'; finishBtn.textContent = 'Finish';
+      var dropBtn = document.createElement('button'); dropBtn.className = 'gm-btn gm-btn-danger'; dropBtn.textContent = 'Drop';
+      actions.appendChild(finishBtn); actions.appendChild(dropBtn);
+      row.appendChild(actions);
+
+      dropBtn.addEventListener('click', function(){
+        var all = loadGames();
+        var idx = findIndexById(all, g.id);
+        if (idx < 0) return;
+        all[idx].status = 'dropped';
+        saveGames(all);
+        build();
+        updateHero();
+      });
+
+      finishBtn.addEventListener('click', function(){
+        actions.innerHTML = '';
+        var rateIn = document.createElement('input');
+        rateIn.className = 'mind-in mind-num'; rateIn.type = 'number'; rateIn.min = 0; rateIn.max = 10; rateIn.placeholder = 'Rate /10';
+        var saveBtn = document.createElement('button'); saveBtn.className = 'gm-btn gm-btn-primary'; saveBtn.textContent = 'Save';
+        actions.appendChild(rateIn); actions.appendChild(saveBtn);
+        rateIn.focus();
+
+        function commit(){
+          var all = loadGames();
+          var idx = findIndexById(all, g.id);
+          if (idx < 0) return;
+          all[idx].status = 'done';
+          all[idx].finished = todayStr();
+          all[idx].rating = rateIn.value === '' ? null : +rateIn.value;
+          saveGames(all);
+          build();
+          updateHero();
+          if (Games.rated) Games.rated.refresh();
+        }
+        saveBtn.addEventListener('click', commit);
+        rateIn.addEventListener('keydown', function(e){ if (e.key === 'Enter') commit(); });
+      });
+
+      list.appendChild(row);
+    });
+  }
+  build();
+  Games.playing = { refresh: build };
+})();
+
+/* ============================================================
+   RATED — done games with a rating, sorted rating descending,
+   capped at 10 rows.
+   ============================================================ */
+(function(){
+  function build(){
+    var all = loadGames().filter(function(g){ return g.status === 'done' && g.rating !== null && g.rating !== undefined; });
+    all.sort(function(a,b){ return b.rating - a.rating; });
+    var shown = all.slice(0,10);
+
+    var list = document.getElementById('ratedList'); list.innerHTML = '';
+    document.getElementById('ratedCount').textContent = all.length;
+
+    if (!shown.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'No rated games yet.';
+      list.appendChild(e);
+      return;
+    }
+    shown.forEach(function(g){
+      var row = document.createElement('div'); row.className = 'rt-row';
+      row.innerHTML = '<div class="rt-main"><div class="rt-title">'+g.title+'</div>'+
+        '<div class="rt-sub">'+(g.platform || '')+(g.finished ? ' · '+g.finished : '')+'</div></div>'+
+        '<div class="rt-val" style="color:'+(g.rating >= 8 ? 'var(--success)' : (g.rating >= 5 ? 'var(--text-2)' : 'var(--danger)'))+'">'+g.rating+'/10</div>';
+      list.appendChild(row);
+    });
+  }
+  build();
+  Games.rated = { refresh: build };
+})();
+
+/* ============================================================
+   BACKLOG — Start action, plus inline add form.
+   ============================================================ */
+(function(){
+  function build(){
+    var backlog = loadGames().filter(function(g){ return g.status === 'backlog'; });
+
+    var list = document.getElementById('backlogList'); list.innerHTML = '';
+    document.getElementById('backlogCount').textContent = backlog.length;
+
+    if (!backlog.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'Backlog is clear.';
+      list.appendChild(e);
+    } else {
+      backlog.forEach(function(g){
+        var row = document.createElement('div'); row.className = 'gm-row';
+
+        var main = document.createElement('div'); main.className = 'gm-main';
+        main.innerHTML = '<div class="gm-title">'+g.title+'</div><div class="gm-sub">'+(g.platform || '')+'</div>';
+        row.appendChild(main);
+
+        var actions = document.createElement('div'); actions.className = 'gm-actions';
+        var startBtn = document.createElement('button'); startBtn.className = 'gm-btn gm-btn-primary'; startBtn.textContent = 'Start';
+        actions.appendChild(startBtn);
+        row.appendChild(actions);
+
+        startBtn.addEventListener('click', function(){
+          var all = loadGames();
+          var idx = findIndexById(all, g.id);
+          if (idx < 0) return;
+          all[idx].status = 'playing';
+          all[idx].started = todayStr();
+          saveGames(all);
+          build();
+          updateHero();
+          if (Games.playing) Games.playing.refresh();
+        });
+
+        list.appendChild(row);
+      });
+    }
+  }
+
+  document.getElementById('gmBtn').addEventListener('click', function(){
+    var titleIn = document.getElementById('gmTitleIn');
+    var platformIn = document.getElementById('gmPlatformIn');
+    var statusSel = document.getElementById('gmStatusSel');
+    var title = (titleIn.value||'').trim();
+    if (!title) return;
+    var status = statusSel.value || 'backlog';
+    var all = loadGames();
+    all.push({
+      id: uid(), title: title, platform: (platformIn.value||'').trim(), status: status,
+      rating: null,
+      started: status === 'playing' ? todayStr() : null,
+      finished: null,
+      notes: ''
+    });
+    saveGames(all);
+    titleIn.value = ''; platformIn.value = ''; statusSel.value = 'backlog';
+    build();
+    updateHero();
+    if (Games.playing) Games.playing.refresh();
+  });
+  document.getElementById('gmTitleIn').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') document.getElementById('gmBtn').click();
+  });
+
+  build();
+  Games.backlog = { refresh: build };
+})();
+
+/* ============================================================
+   BOOT — hero, sync/focus refresh, staggered entry animation.
+   ============================================================ */
+updateHero();
+
+function refreshAllModules(){
+  updateHero();
+  if (Games.playing) Games.playing.refresh();
+  if (Games.rated) Games.rated.refresh();
+  if (Games.backlog) Games.backlog.refresh();
+}
+window.addEventListener('lo-sync-applied', refreshAllModules);
+window.addEventListener('focus', refreshAllModules);
+
+(function(){
+  var cards = document.querySelectorAll('.mod-card');
+  Array.prototype.forEach.call(cards, function(c, idx){ c.style.transitionDelay = (idx*50)+'ms'; });
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      Array.prototype.forEach.call(cards, function(c){ c.classList.add('lo-visible'); });
+    });
+  });
+})();
+</script>
+</body>
+</html>
