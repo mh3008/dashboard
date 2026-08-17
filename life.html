@@ -192,7 +192,7 @@
     </div>
     <div class="pillar-row" id="pillarRow"></div>
     <div class="pillar-bar"><div class="pillar-fill" id="pillarFill"></div></div>
-    <div class="pillar-summary" id="pillarSummary">0 / 3 clear</div>
+    <div class="pillar-summary" id="pillarSummary">0 / 2 clear</div>
   </div>
 
   <!-- TODAY'S TASKS -->
@@ -225,10 +225,6 @@
   <!-- NAV TILES -->
   <div class="section-title">More</div>
   <div class="tile-grid">
-    <a class="mod-card mod-life tile soon" href="uni.html" id="tileUni">
-      <div class="tile-top"><i class="ti ti-school"></i><span>Uni</span></div>
-      <div class="tile-stat">Coming soon</div>
-    </a>
     <a class="mod-card mod-life tile" href="car.html" id="tileCar">
       <div class="tile-top"><i class="ti ti-car"></i><span>Car</span></div>
       <div class="tile-stat">Maintenance &amp; mods</div>
@@ -299,8 +295,7 @@ var Life = {}; /* module registry — each section publishes { refresh: fn } her
    ============================================================ */
 var CHIP_DEFS = [
   { key:'tasks',  label:'Tasks',  icon:'ti-checkbox' },
-  { key:'plants', label:'Plants', icon:'ti-plant-2' },
-  { key:'uni',    label:'Uni',    icon:'ti-school' }
+  { key:'plants', label:'Plants', icon:'ti-plant-2' }
 ];
 var chipEls = {};
 (function buildHero(){
@@ -321,9 +316,8 @@ function updateHero(){
   var pHit = window.LO_PLANT_COUNTS().overdue === 0; if (pHit) hits++;
   chipEls.tasks.classList.toggle('hit', tHit);
   chipEls.plants.classList.toggle('hit', pHit);
-  chipEls.uni.classList.toggle('hit', false);
-  document.getElementById('pillarFill').style.width = (hits/3*100)+'%';
-  document.getElementById('pillarSummary').textContent = hits+' / 3 clear';
+  document.getElementById('pillarFill').style.width = (hits/2*100)+'%';
+  document.getElementById('pillarSummary').textContent = hits+' / 2 clear';
 }
 
 /* ============================================================

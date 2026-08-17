@@ -211,12 +211,12 @@
       <div class="tile-top"><i class="ti ti-books"></i><span>Learn</span></div>
       <div class="tile-stat" id="tileLearnStat">0 in queue</div>
     </a>
-    <a class="mod-card mod-mind tile soon" href="uni.html" id="tileUni">
+    <a class="mod-card mod-mind tile" href="uni.html" id="tileUni">
       <div class="tile-top"><i class="ti ti-school"></i><span>Uni</span></div>
-      <div class="tile-stat">Coming soon</div>
+      <div class="tile-stat" id="tileUniStat">0 due</div>
     </a>
-    <a class="mod-card mod-mind tile soon tile-wide" href="#" id="tileReading">
-      <div class="tile-top"><i class="ti ti-book"></i><span>Reading</span></div>
+    <a class="mod-card mod-mind tile soon tile-wide" href="games.html" id="tileGames">
+      <div class="tile-top"><i class="ti ti-device-gamepad-2"></i><span>Games</span></div>
       <div class="tile-stat">Coming soon</div>
     </a>
   </div>
@@ -272,12 +272,12 @@ function learnHitForDate(date){
 var Mind = {}; /* module registry — each section publishes { refresh: fn } here */
 
 /* ============================================================
-   HERO — Learn / Uni / Reading chips.
+   HERO — Learn / Uni / Games chips.
    ============================================================ */
 var CHIP_DEFS = [
-  { key:'learn',   label:'Learn',   icon:'ti-books' },
-  { key:'uni',     label:'Uni',     icon:'ti-school' },
-  { key:'reading', label:'Reading', icon:'ti-book' }
+  { key:'learn', label:'Learn', icon:'ti-books' },
+  { key:'uni',   label:'Uni',   icon:'ti-school' },
+  { key:'games', label:'Games', icon:'ti-device-gamepad-2' }
 ];
 var chipEls = {};
 (function buildHero(){
@@ -296,8 +296,11 @@ function updateHero(){
   var hits = 0;
   var lHit = learnHitForDate(date); if (lHit) hits++;
   chipEls.learn.classList.toggle('hit', lHit);
-  chipEls.uni.classList.toggle('hit', false);
-  chipEls.reading.classList.toggle('hit', false);
+  var uniDeadlines = storeGet('uni:deadlines'); if (!Array.isArray(uniDeadlines)) uniDeadlines = [];
+  var uHit = !uniDeadlines.some(function(d){ return d.status !== 'done' && d.dueDate <= date; });
+  if (uHit) hits++;
+  chipEls.uni.classList.toggle('hit', uHit);
+  chipEls.games.classList.toggle('hit', false);
   document.getElementById('pillarFill').style.width = (hits/3*100)+'%';
   document.getElementById('pillarSummary').textContent = hits+' / 3 clear';
 }
@@ -386,6 +389,9 @@ function updateHero(){
 function updateTiles(){
   var undoneCount = loadQueue().filter(function(q){ return !q.done; }).length;
   document.getElementById('tileLearnStat').textContent = undoneCount + ' in queue';
+  var uniDeadlines = storeGet('uni:deadlines'); if (!Array.isArray(uniDeadlines)) uniDeadlines = [];
+  var dueCount = uniDeadlines.filter(function(d){ return d.status !== 'done'; }).length;
+  document.getElementById('tileUniStat').textContent = dueCount + ' due';
 }
 updateTiles();
 Mind.tiles = { refresh: updateTiles };
