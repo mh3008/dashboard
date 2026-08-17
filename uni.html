@@ -62,22 +62,11 @@
   @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
   .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
 
-  .stat-cells { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; position:relative; z-index:1; margin-bottom:14px; }
+  .stat-cells { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; position:relative; z-index:1; }
   .scell { background:rgba(255,255,255,0.03); border:1px solid var(--hair); border-radius:12px; padding:12px 10px; text-align:center; }
   .scell .sc-val { font-size:20px; font-weight:800; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
   .scell .sc-lbl { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-top:4px; }
   .pos { color:var(--success); } .neg { color:var(--danger); } .flat { color:var(--text-3); }
-
-  .pillar-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; position:relative; z-index:1; }
-  .pillar-chip {
-    display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
-    background:rgba(255,255,255,0.03); border:1px solid var(--hair);
-    transition:background .2s, border-color .2s, box-shadow .2s;
-  }
-  .pillar-chip i { font-size:18px; color:var(--text-3); transition:color .2s; }
-  .pillar-chip span { font-size:9.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); transition:color .2s; }
-  .pillar-chip.hit { background:rgba(248,113,113,0.12); border-color:rgba(248,113,113,0.45); box-shadow:0 0 16px rgba(248,113,113,0.25); }
-  .pillar-chip.hit i, .pillar-chip.hit span { color:#ffd9d9; }
 
   /* ---- shared module head ---- */
   .mod-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; position:relative; z-index:1; }
@@ -190,7 +179,6 @@
       <div class="body-date" id="heroDate">—</div>
     </div>
     <div class="stat-cells" id="statCells"></div>
-    <div class="pillar-row" id="pillarRow"></div>
   </div>
 
   <!-- TODAY'S TIMETABLE -->
@@ -331,26 +319,8 @@ function weightedAvg(list){
 var Uni = {}; /* module registry — each section publishes { refresh: fn } here */
 
 /* ============================================================
-   HERO — next deadline countdown, overall grade average,
-   Classes / Deadlines / Grades chips.
+   HERO — next deadline countdown, overall grade average.
    ============================================================ */
-var CHIP_DEFS = [
-  { key:'classes',   label:'Classes',   icon:'ti-calendar-time' },
-  { key:'deadlines', label:'Deadlines', icon:'ti-clipboard-list' },
-  { key:'grades',    label:'Grades',    icon:'ti-chart-bar' }
-];
-var chipEls = {};
-(function buildHero(){
-  var row = document.getElementById('pillarRow');
-  CHIP_DEFS.forEach(function(cd){
-    var chip = document.createElement('div'); chip.className = 'pillar-chip';
-    chip.innerHTML = '<i class="ti '+cd.icon+'"></i><span>'+cd.label+'</span>';
-    row.appendChild(chip);
-    chipEls[cd.key] = chip;
-  });
-  document.getElementById('heroDate').textContent = fmtFull(todayStr());
-})();
-
 function updateHero(){
   var today = todayStr();
   document.getElementById('heroDate').textContent = fmtFull(today);
@@ -374,16 +344,6 @@ function updateHero(){
   document.getElementById('statCells').innerHTML = cells.map(function(c){
     return '<div class="scell"><div class="sc-val '+c[2]+'">'+c[1]+'</div><div class="sc-lbl">'+c[0]+'</div></div>';
   }).join('');
-
-  var wd = new Date().getDay();
-  var classesHit = loadTimetable().some(function(t){ return t.day === wd; });
-  var deadlinesHit = !loadDeadlines().some(function(d){ return d.status !== 'done' && daysBetween(d.dueDate, today) >= 0; });
-  var thisMonth = today.slice(0,7);
-  var gradesHit = grades.some(function(g){ return (g.date||'').slice(0,7) === thisMonth; });
-
-  chipEls.classes.classList.toggle('hit', classesHit);
-  chipEls.deadlines.classList.toggle('hit', deadlinesHit);
-  chipEls.grades.classList.toggle('hit', gradesHit);
 }
 
 /* ============================================================
