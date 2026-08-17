@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Uni · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  /* ============================================================
+     GLASS MODULE CARDS — same visual language as life.html/
+     money.html: frosted glass, animated iridescent gradient rim.
+     ============================================================ */
+  .mod-card {
+    position: relative; border-radius: 20px; padding:20px;
+    background: var(--m-bg, rgba(107,227,164,0.05));
+    border: 1px solid var(--m-bd, rgba(107,227,164,0.16));
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+    opacity: 0; transform: translateY(14px);
+    transition: opacity .5s ease-out, transform .5s ease-out;
+  }
+  .mod-card.lo-visible { opacity: 1; transform: translateY(0); }
+  .mod-card::after {
+    content:''; position:absolute; inset:0; border-radius:20px; padding:1.5px;
+    background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3), var(--g2), var(--g1));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: bodyBorderShift 8s ease infinite;
+    opacity: 0.65; pointer-events: none; z-index: 2;
+  }
+  @keyframes bodyBorderShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mod-card::after { animation: none; }
+    .mod-card { transition: none; opacity: 1; transform: none; }
+  }
+  .mod-uni { --g1:#6be3a4; --g2:#38bdf8; --g3:#a3e635; --m-bg:rgba(107,227,164,0.045); --m-bd:rgba(107,227,164,0.18); --m-accent:#6be3a4; }
+
+  /* ---- HERO ---- */
+  .body-hero { padding: 22px; margin-bottom: 12px; }
+  .hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; position:relative; z-index:1; }
+  .body-title-wrap { display:flex; align-items:center; gap:12px; }
+  .body-hero-icon { font-size:28px; color:#6be3a4; }
+  .body-title {
+    font-size:32px; font-weight:800; letter-spacing:-0.03em; line-height:1;
+    background: linear-gradient(120deg, #6be3a4, #38bdf8, #a3e635, #6be3a4);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    animation: uniTitleShift 10s ease infinite;
+  }
+  @keyframes uniTitleShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
+  .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
+
+  .stat-cells { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; position:relative; z-index:1; }
+  .scell { background:rgba(255,255,255,0.03); border:1px solid var(--hair); border-radius:12px; padding:12px 10px; text-align:center; }
+  .scell .sc-val { font-size:20px; font-weight:800; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .scell .sc-lbl { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-top:4px; }
+  .pos { color:var(--success); } .neg { color:var(--danger); } .flat { color:var(--text-3); }
+
+  .pillar-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px; position:relative; z-index:1; }
+  .pillar-chip {
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--hair);
+    transition:background .2s, border-color .2s, box-shadow .2s;
+  }
+  .pillar-chip i { font-size:18px; color:var(--text-3); transition:color .2s; }
+  .pillar-chip span { font-size:9.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); transition:color .2s; }
+  .pillar-chip.hit { background:rgba(107,227,164,0.12); border-color:rgba(107,227,164,0.45); box-shadow:0 0 16px rgba(107,227,164,0.25); }
+  .pillar-chip.hit i, .pillar-chip.hit span { color:#d8f5e4; }
+
+  /* ---- shared module head ---- */
+  .mod-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; position:relative; z-index:1; }
+  .mod-title { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+  .mod-title i { color:var(--m-accent); font-size:20px; }
+  .mod-count { font-family:var(--mono); font-size:13px; color:var(--text-2); }
+  .mod-count b { color:var(--text-1); font-weight:800; }
+  .mod-body { position:relative; z-index:1; }
+  .td-empty { text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px; padding:20px 0 6px; position:relative; z-index:1; }
+
+  .mod-footer-link {
+    display:block; text-align:center; margin-top:14px; padding-top:12px; border-top:1px solid var(--hair);
+    font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text-2); text-decoration:none;
+    position:relative; z-index:1; transition:color .16s;
+  }
+  .mod-footer-link:hover { color:var(--text-1); }
+
+  /* ---- TIMETABLE ---- */
+  .tt-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); margin-bottom:8px; }
+  .tt-time { font-family:var(--mono); font-size:11px; font-weight:800; color:var(--m-accent); width:82px; flex-shrink:0; line-height:1.35; }
+  .tt-main { flex:1; min-width:0; }
+  .tt-code { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .tt-name { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
+  .tt-loc { font-family:var(--mono); font-size:10px; color:var(--text-2); text-align:right; flex-shrink:0; }
+
+  /* ---- DEADLINES ---- */
+  .item-list { display:flex; flex-direction:column; gap:8px; position:relative; z-index:1; }
+  .item {
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); transition:background .18s, opacity .18s; cursor:pointer;
+    touch-action: manipulation; -webkit-user-select:none; user-select:none;
+  }
+  .item:hover { background:var(--card-2); }
+  .item.done { opacity:0.5; background:rgba(107,227,164,0.06); }
+  .item.done .item-txt { text-decoration:line-through; text-decoration-color:rgba(255,255,255,0.4); }
+  .item.soon { background:rgba(242,192,99,0.08); border-color:rgba(242,192,99,0.35); }
+  .item.overdue { background:rgba(255,107,107,0.08); border-color:rgba(255,107,107,0.4); }
+  .cb { width:22px; height:22px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.18);
+    background:rgba(0,0,0,0.2); flex-shrink:0; position:relative; transition:background .18s, box-shadow .18s, border-color .18s; }
+  .item.done .cb { background:#6be3a4; border-color:#6be3a4; box-shadow:0 0 12px rgba(107,227,164,0.4); }
+  .item.done .cb::after { content:''; position:absolute; left:7px; top:3px; width:5px; height:10px;
+    border:solid #0a0a0b; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  .item-main { flex:1; min-width:0; }
+  .item-txt { font-size:14px; }
+  .item-sub { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
+  .item.soon .item-sub { color:var(--warning); }
+  .item.overdue .item-sub { color:var(--danger); }
+
+  /* ---- MODULES ---- */
+  .mrow { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); margin-bottom:8px; }
+  .mrow-main { flex:1; min-width:0; }
+  .mrow-code { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .mrow-name { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
+  .mrow-avg { font-family:var(--mono); font-size:16px; font-weight:800; text-align:right; flex-shrink:0; }
+
+  /* ---- GRADES ---- */
+  .grow { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); margin-bottom:8px; }
+  .grow-main { flex:1; min-width:0; }
+  .grow-name { font-size:13px; font-weight:700; }
+  .grow-sub { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
+  .grow-val { font-family:var(--mono); font-size:16px; font-weight:800; text-align:right; flex-shrink:0; }
+
+  /* ---- ADD FORM (matches countdowns.html add-form pattern) ---- */
+  .add-zone { margin-top:12px; position:relative; z-index:1; }
+  .add-btn { display:flex; align-items:center; justify-content:center; gap:9px; width:100%;
+    cursor:pointer; padding:12px; border-radius:12px; border:1px dashed rgba(107,227,164,0.35);
+    color:var(--m-accent); font-size:12.5px; font-weight:800; letter-spacing:0.02em;
+    background:rgba(107,227,164,0.04); transition:background .16s, border-color .16s; }
+  .add-btn:hover { background:rgba(107,227,164,0.09); border-color:rgba(107,227,164,0.55); }
+  .add-btn i { font-size:16px; }
+  .add-form { margin-top:10px; padding:14px; border-radius:12px; background:rgba(255,255,255,0.03); border:1px solid var(--hair); }
+  .add-row { display:flex; gap:8px; margin-bottom:8px; }
+  .add-row:last-child { margin-bottom:0; }
+  .add-in, .add-sel { flex:1; background:rgba(0,0,0,0.22); border:1px solid var(--hair); border-radius:10px;
+    color:var(--text-1); font-size:13px; padding:10px 11px; transition:border-color .16s; min-width:0; }
+  .add-in:focus, .add-sel:focus { outline:none; border-color:rgba(107,227,164,0.5); }
+  .add-in::placeholder { color:var(--text-3); }
+  .add-in[type="date"]::-webkit-calendar-picker-indicator { filter:invert(0.7) sepia(1) saturate(3) hue-rotate(60deg); cursor:pointer; }
+  .add-num { flex:none; width:74px; }
+  .add-go { background:var(--m-accent); color:#052013; border:none; border-radius:10px; font-weight:800;
+    font-size:13px; padding:10px 16px; cursor:pointer; white-space:nowrap; }
+  .add-go:active { transform:scale(0.96); }
+  .add-cancel { background:transparent; border:1px solid var(--hair); border-radius:10px; color:var(--text-2);
+    font-size:13px; font-weight:700; padding:10px 13px; cursor:pointer; }
+
+  /* ---- TILE GRID (nav) ---- */
+  .tile-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:12px; }
+  .tile {
+    aspect-ratio:1/1; padding:16px; display:flex; flex-direction:column;
+    text-decoration:none; color:inherit; cursor:pointer;
+    transition: opacity .5s ease-out, transform .5s ease-out, border-color .2s;
+  }
+  .tile-top { display:flex; align-items:center; gap:8px; position:relative; z-index:1; }
+  .tile-top i { font-size:18px; color:var(--m-accent); }
+  .tile-top span { font-size:13px; font-weight:800; letter-spacing:-0.01em; }
+  .tile-stat {
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--mono); font-size:15px; font-weight:800; color:var(--text-2);
+    position:relative; z-index:1;
+  }
+  .tile-wide { grid-column:1/-1; aspect-ratio:auto; flex-direction:row; align-items:center; justify-content:space-between; padding:18px 20px; }
+  .tile-wide .tile-stat { flex:none; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="card mod-card mod-uni body-hero" id="heroCard">
+    <div class="hero-top">
+      <div class="body-title-wrap">
+        <i class="ti ti-school body-hero-icon"></i>
+        <div class="body-title">Uni</div>
+      </div>
+      <div class="body-date" id="heroDate">—</div>
+    </div>
+    <div class="stat-cells" id="statCells"></div>
+    <div class="pillar-row" id="pillarRow"></div>
+  </div>
+
+  <!-- TODAY'S TIMETABLE -->
+  <div class="section-title">Today's Timetable</div>
+  <div class="card mod-card mod-uni" id="ttCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-calendar-time"></i> Timetable</div>
+      <div class="mod-count" id="ttCount">0</div>
+    </div>
+    <div class="mod-body">
+      <div id="ttList"></div>
+    </div>
+  </div>
+
+  <!-- UPCOMING DEADLINES -->
+  <div class="section-title">Upcoming Deadlines</div>
+  <div class="card mod-card mod-uni" id="deadlinesCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-clipboard-list"></i> Deadlines</div>
+      <div class="mod-count" id="deadlineCount">0</div>
+    </div>
+    <div class="mod-body">
+      <div class="item-list" id="deadlineList"></div>
+      <div class="add-zone" id="deadlineAddZone"></div>
+    </div>
+  </div>
+
+  <!-- MODULES -->
+  <div class="section-title">Modules</div>
+  <div class="card mod-card mod-uni" id="modulesCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-book-2"></i> Modules</div>
+      <div class="mod-count" id="moduleCount">0</div>
+    </div>
+    <div class="mod-body">
+      <div id="moduleList"></div>
+      <div class="add-zone" id="moduleAddZone"></div>
+    </div>
+  </div>
+
+  <!-- RECENT GRADES -->
+  <div class="section-title">Recent Grades</div>
+  <div class="card mod-card mod-uni" id="gradesCard">
+    <div class="mod-head">
+      <div class="mod-title"><i class="ti ti-chart-bar"></i> Grades</div>
+      <div class="mod-count" id="gradeCount">0</div>
+    </div>
+    <div class="mod-body">
+      <div id="gradeList"></div>
+      <div class="add-zone" id="gradeAddZone"></div>
+    </div>
+  </div>
+
+  <!-- NAV TILES -->
+  <div class="section-title">More</div>
+  <div class="tile-grid">
+    <a class="mod-card mod-uni tile tile-wide" href="life.html" id="tileLife">
+      <div class="tile-top"><i class="ti ti-home"></i><span>Life</span></div>
+      <div class="tile-stat">Back to Life →</div>
+    </a>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+/* ============================================================
+   SHARED HELPERS — identical conventions to every other page.
+   ============================================================ */
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function fmtFull(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}); }
+function daysBetween(a,b){
+  var pa=a.split('-'),pb=b.split('-');
+  var da=new Date(+pa[0],+pa[1]-1,+pa[2]), db=new Date(+pb[0],+pb[1]-1,+pb[2]);
+  return Math.round((db-da)/86400000);
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+var MODULES_KEY = 'uni:modules';
+var TIMETABLE_KEY = 'uni:timetable';
+var DEADLINES_KEY = 'uni:deadlines';
+var GRADES_KEY = 'uni:grades';
+
+function loadModules(){ var v = storeGet(MODULES_KEY); return Array.isArray(v) ? v : []; }
+function saveModules(v){ storeSet(MODULES_KEY, v); }
+function loadTimetable(){ var v = storeGet(TIMETABLE_KEY); return Array.isArray(v) ? v : []; }
+function loadDeadlines(){ var v = storeGet(DEADLINES_KEY); return Array.isArray(v) ? v : []; }
+function saveDeadlines(v){ storeSet(DEADLINES_KEY, v); }
+function loadGrades(){ var v = storeGet(GRADES_KEY); return Array.isArray(v) ? v : []; }
+function saveGrades(v){ storeSet(GRADES_KEY, v); }
+
+function moduleById(id){
+  var mods = loadModules();
+  for (var i=0;i<mods.length;i++){ if (mods[i].id === id) return mods[i]; }
+  return null;
+}
+function moduleLabel(id){
+  var m = moduleById(id);
+  return m ? m.code : '—';
+}
+
+function fmtTime(t){ return t; }
+
+function weightedAvg(list){
+  if (!list.length) return null;
+  var wSum = 0, wTotal = 0, simple = 0;
+  var hasWeight = list.some(function(g){ return g.weight; });
+  if (hasWeight){
+    list.forEach(function(g){ var w = g.weight || 0; wSum += g.grade * w; wTotal += w; });
+    if (wTotal > 0) return wSum / wTotal;
+  }
+  list.forEach(function(g){ simple += g.grade; });
+  return simple / list.length;
+}
+
+var Uni = {}; /* module registry — each section publishes { refresh: fn } here */
+
+/* ============================================================
+   HERO — next deadline countdown, overall grade average,
+   Today's classes / Deadlines / Grades chips.
+   ============================================================ */
+var CHIP_DEFS = [
+  { key:'classes',   label:"Today's classes", icon:'ti-calendar-time' },
+  { key:'deadlines', label:'Deadlines',        icon:'ti-clipboard-list' },
+  { key:'grades',    label:'Grades',           icon:'ti-chart-bar' }
+];
+var chipEls = {};
+(function buildHero(){
+  var row = document.getElementById('pillarRow');
+  CHIP_DEFS.forEach(function(cd){
+    var chip = document.createElement('div'); chip.className = 'pillar-chip';
+    chip.innerHTML = '<i class="ti '+cd.icon+'"></i><span>'+cd.label+'</span>';
+    row.appendChild(chip);
+    chipEls[cd.key] = chip;
+  });
+  document.getElementById('heroDate').textContent = fmtFull(todayStr());
+})();
+
+function updateHero(){
+  var today = todayStr();
+  document.getElementById('heroDate').textContent = fmtFull(today);
+
+  var todo = loadDeadlines().filter(function(d){ return d.status !== 'done'; });
+  todo.sort(function(a,b){ return a.dueDate < b.dueDate ? -1 : (a.dueDate > b.dueDate ? 1 : 0); });
+  var next = todo.length ? todo[0] : null;
+
+  var grades = loadGrades();
+  var avg = weightedAvg(grades);
+
+  var cellsHost = document.getElementById('statCells');
+  var cells = [];
+  if (next){
+    var d = daysBetween(today, next.dueDate);
+    var dLbl = d < 0 ? Math.abs(d)+'d overdue' : (d === 0 ? 'today' : d+'d left');
+    cells.push(['Next deadline', dLbl + ' · ' + next.title, d < 0 ? 'neg' : (d <= 3 ? 'flat' : 'pos')]);
+  } else {
+    cells.push(['Next deadline', 'None', 'flat']);
+  }
+  cells.push(['Grade average', avg === null ? '—' : avg.toFixed(1)+'%', avg === null ? 'flat' : (avg >= 60 ? 'pos' : (avg >= 40 ? 'flat' : 'neg'))]);
+  cellsHost.innerHTML = cells.map(function(c){
+    return '<div class="scell"><div class="sc-val '+c[2]+'">'+c[1]+'</div><div class="sc-lbl">'+c[0]+'</div></div>';
+  }).join('');
+
+  var wd = new Date().getDay();
+  var classesHit = loadTimetable().some(function(t){ return t.day === wd; });
+  var deadlinesHit = !loadDeadlines().some(function(d){ return d.status !== 'done' && daysBetween(d.dueDate, today) >= 0; });
+  var thisMonth = today.slice(0,7);
+  var gradesHit = grades.some(function(g){ return (g.date||'').slice(0,7) === thisMonth; });
+
+  chipEls.classes.classList.toggle('hit', classesHit);
+  chipEls.deadlines.classList.toggle('hit', deadlinesHit);
+  chipEls.grades.classList.toggle('hit', gradesHit);
+}
+
+/* ============================================================
+   TODAY'S TIMETABLE — read-only, sorted by start time.
+   ============================================================ */
+(function(){
+  function render(){
+    var wd = new Date().getDay();
+    var todays = loadTimetable().filter(function(t){ return t.day === wd; });
+    todays.sort(function(a,b){ return a.start < b.start ? -1 : (a.start > b.start ? 1 : 0); });
+
+    var list = document.getElementById('ttList'); list.innerHTML = '';
+    document.getElementById('ttCount').textContent = todays.length;
+
+    if (!todays.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'No classes today.';
+      list.appendChild(e);
+      return;
+    }
+    todays.forEach(function(t){
+      var mod = moduleById(t.moduleId);
+      var row = document.createElement('div'); row.className = 'tt-row';
+      row.innerHTML =
+        '<div class="tt-time">'+fmtTime(t.start)+'<br>'+fmtTime(t.end)+'</div>'+
+        '<div class="tt-main"><div class="tt-code">'+(mod ? mod.code : '—')+(t.type ? ' · '+t.type : '')+'</div>'+
+        '<div class="tt-name">'+(mod ? mod.name : '')+'</div></div>'+
+        '<div class="tt-loc">'+(t.location || '')+'</div>';
+      list.appendChild(row);
+    });
+  }
+  render();
+  Uni.timetable = { refresh: render };
+})();
+
+/* ============================================================
+   UPCOMING DEADLINES — tickable in place (tap toggles status,
+   no full rebuild), plus inline add form.
+   ============================================================ */
+(function(){
+  var todo = [];
+  var formOpen = false;
+
+  function moduleOptionsHtml(){
+    return loadModules().map(function(m){ return '<option value="'+m.id+'">'+m.code+'</option>'; }).join('');
+  }
+
+  function build(){
+    var today = todayStr();
+    todo = loadDeadlines().filter(function(d){ return d.status !== 'done'; });
+    todo.sort(function(a,b){ return a.dueDate < b.dueDate ? -1 : (a.dueDate > b.dueDate ? 1 : 0); });
+
+    var list = document.getElementById('deadlineList'); list.innerHTML = '';
+    document.getElementById('deadlineCount').textContent = todo.length;
+
+    if (!todo.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'Nothing due.';
+      list.appendChild(e);
+    } else {
+      todo.forEach(function(d){
+        var days = daysBetween(today, d.dueDate);
+        var flag = days < 0 ? 'overdue' : (days <= 3 ? 'soon' : '');
+        var row = document.createElement('div'); row.className = 'item' + (flag ? ' '+flag : '');
+        var sub = days < 0 ? Math.abs(days)+'d overdue' : (days === 0 ? 'due today' : days+'d left');
+        row.innerHTML = '<span class="cb"></span><div class="item-main"><div class="item-txt">'+d.title+' <span style="color:var(--text-3);font-family:var(--mono);font-size:10px;">'+moduleLabel(d.moduleId)+'</span></div>'+
+          '<div class="item-sub">'+sub+' · '+d.dueDate+(d.weight ? ' · '+d.weight+'%' : '')+'</div></div>';
+        row.addEventListener('click', function(){ toggleDeadline(d.id, row); });
+        list.appendChild(row);
+      });
+    }
+    renderAdd();
+  }
+
+  function toggleDeadline(id, row){
+    var all = loadDeadlines();
+    var d = null;
+    for (var i=0;i<all.length;i++){ if (all[i].id === id){ d = all[i]; break; } }
+    if (!d) return;
+    d.status = 'done';
+    saveDeadlines(all);
+    row.classList.add('done');
+    setTimeout(build, 250);
+    updateHero();
+  }
+
+  function renderAdd(){
+    var zone = document.getElementById('deadlineAddZone'); zone.innerHTML = '';
+    if (!formOpen){
+      var btn = document.createElement('div'); btn.className = 'add-btn';
+      btn.innerHTML = '<i class="ti ti-plus"></i> Add deadline';
+      btn.addEventListener('click', function(){ formOpen = true; renderAdd(); });
+      zone.appendChild(btn);
+      return;
+    }
+    var form = document.createElement('div'); form.className = 'add-form';
+
+    var row1 = document.createElement('div'); row1.className = 'add-row';
+    var titleIn = document.createElement('input'); titleIn.className = 'add-in'; titleIn.placeholder = 'Deadline title…';
+    row1.appendChild(titleIn); form.appendChild(row1);
+
+    var row2 = document.createElement('div'); row2.className = 'add-row';
+    var modSel = document.createElement('select'); modSel.className = 'add-sel';
+    modSel.innerHTML = moduleOptionsHtml() || '<option value="">No modules yet</option>';
+    var dateIn = document.createElement('input'); dateIn.className = 'add-in'; dateIn.type = 'date';
+    row2.appendChild(modSel); row2.appendChild(dateIn); form.appendChild(row2);
+
+    var row3 = document.createElement('div'); row3.className = 'add-row';
+    var weightIn = document.createElement('input'); weightIn.className = 'add-in add-num'; weightIn.type = 'number'; weightIn.placeholder = 'Weight %';
+    var goBtn = document.createElement('button'); goBtn.className = 'add-go'; goBtn.textContent = 'Add';
+    var cancelBtn = document.createElement('button'); cancelBtn.className = 'add-cancel'; cancelBtn.textContent = 'Cancel';
+    row3.appendChild(weightIn); row3.appendChild(goBtn); row3.appendChild(cancelBtn); form.appendChild(row3);
+
+    function commit(){
+      var title = (titleIn.value||'').trim();
+      var dueDate = dateIn.value;
+      if (!title || !dueDate) return;
+      var all = loadDeadlines();
+      all.push({ id:uid(), moduleId:modSel.value||'', title:title, dueDate:dueDate, status:'todo', weight: weightIn.value ? +weightIn.value : null });
+      saveDeadlines(all);
+      formOpen = false;
+      build();
+      updateHero();
+    }
+    goBtn.addEventListener('click', commit);
+    titleIn.addEventListener('keydown', function(e){ if(e.key==='Enter') commit(); });
+    cancelBtn.addEventListener('click', function(){ formOpen = false; renderAdd(); });
+
+    zone.appendChild(form);
+    titleIn.focus();
+  }
+
+  build();
+  Uni.deadlines = { refresh: build };
+})();
+
+/* ============================================================
+   MODULES — running average per module, plus inline add form.
+   ============================================================ */
+(function(){
+  var formOpen = false;
+
+  function build(){
+    var mods = loadModules();
+    var grades = loadGrades();
+    var list = document.getElementById('moduleList'); list.innerHTML = '';
+    document.getElementById('moduleCount').textContent = mods.length;
+
+    if (!mods.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'No modules yet.';
+      list.appendChild(e);
+    } else {
+      mods.forEach(function(m){
+        var mg = grades.filter(function(g){ return g.moduleId === m.id; });
+        var avg = weightedAvg(mg);
+        var row = document.createElement('div'); row.className = 'mrow';
+        row.innerHTML = '<div class="mrow-main"><div class="mrow-code">'+m.code+'</div>'+
+          '<div class="mrow-name">'+m.name+(m.credits ? ' · '+m.credits+' cr' : '')+'</div></div>'+
+          '<div class="mrow-avg" style="color:'+(avg === null ? 'var(--text-3)' : (avg >= 60 ? 'var(--success)' : (avg >= 40 ? 'var(--text-2)' : 'var(--danger)')))+'">'+(avg === null ? '—' : avg.toFixed(1)+'%')+'</div>';
+        list.appendChild(row);
+      });
+    }
+    renderAdd();
+  }
+
+  function renderAdd(){
+    var zone = document.getElementById('moduleAddZone'); zone.innerHTML = '';
+    if (!formOpen){
+      var btn = document.createElement('div'); btn.className = 'add-btn';
+      btn.innerHTML = '<i class="ti ti-plus"></i> Add module';
+      btn.addEventListener('click', function(){ formOpen = true; renderAdd(); });
+      zone.appendChild(btn);
+      return;
+    }
+    var form = document.createElement('div'); form.className = 'add-form';
+
+    var row1 = document.createElement('div'); row1.className = 'add-row';
+    var codeIn = document.createElement('input'); codeIn.className = 'add-in'; codeIn.placeholder = 'Code (e.g. CS101)';
+    var nameIn = document.createElement('input'); nameIn.className = 'add-in'; nameIn.placeholder = 'Module name…';
+    row1.appendChild(codeIn); row1.appendChild(nameIn); form.appendChild(row1);
+
+    var row2 = document.createElement('div'); row2.className = 'add-row';
+    var creditsIn = document.createElement('input'); creditsIn.className = 'add-in add-num'; creditsIn.type = 'number'; creditsIn.placeholder = 'Credits';
+    var goBtn = document.createElement('button'); goBtn.className = 'add-go'; goBtn.textContent = 'Add';
+    var cancelBtn = document.createElement('button'); cancelBtn.className = 'add-cancel'; cancelBtn.textContent = 'Cancel';
+    row2.appendChild(creditsIn); row2.appendChild(goBtn); row2.appendChild(cancelBtn); form.appendChild(row2);
+
+    function commit(){
+      var code = (codeIn.value||'').trim();
+      var name = (nameIn.value||'').trim();
+      if (!code || !name) return;
+      var mods = loadModules();
+      mods.push({ id:uid(), code:code, name:name, credits: creditsIn.value ? +creditsIn.value : null });
+      saveModules(mods);
+      formOpen = false;
+      build();
+      if (Uni.deadlines) Uni.deadlines.refresh();
+    }
+    goBtn.addEventListener('click', commit);
+    nameIn.addEventListener('keydown', function(e){ if(e.key==='Enter') commit(); });
+    cancelBtn.addEventListener('click', function(){ formOpen = false; renderAdd(); });
+
+    zone.appendChild(form);
+    codeIn.focus();
+  }
+
+  build();
+  Uni.modules = { refresh: build };
+})();
+
+/* ============================================================
+   RECENT GRADES — last 5, newest first, plus inline add form.
+   ============================================================ */
+(function(){
+  var formOpen = false;
+
+  function moduleOptionsHtml(){
+    return loadModules().map(function(m){ return '<option value="'+m.id+'">'+m.code+'</option>'; }).join('');
+  }
+
+  function build(){
+    var all = loadGrades();
+    var recent = all.slice().sort(function(a,b){ return (a.date+a.id) < (b.date+b.id) ? 1 : -1; }).slice(0,5);
+    var list = document.getElementById('gradeList'); list.innerHTML = '';
+    document.getElementById('gradeCount').textContent = all.length;
+
+    if (!recent.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'No grades logged yet.';
+      list.appendChild(e);
+    } else {
+      recent.forEach(function(g){
+        var row = document.createElement('div'); row.className = 'grow';
+        row.innerHTML = '<div class="grow-main"><div class="grow-name">'+moduleLabel(g.moduleId)+' · '+g.name+'</div>'+
+          '<div class="grow-sub">'+g.date+(g.weight ? ' · '+g.weight+'%' : '')+'</div></div>'+
+          '<div class="grow-val" style="color:'+(g.grade >= 60 ? 'var(--success)' : (g.grade >= 40 ? 'var(--text-2)' : 'var(--danger)'))+'">'+g.grade+'%</div>';
+        list.appendChild(row);
+      });
+    }
+    renderAdd();
+  }
+
+  function renderAdd(){
+    var zone = document.getElementById('gradeAddZone'); zone.innerHTML = '';
+    if (!formOpen){
+      var btn = document.createElement('div'); btn.className = 'add-btn';
+      btn.innerHTML = '<i class="ti ti-plus"></i> Add grade';
+      btn.addEventListener('click', function(){ formOpen = true; renderAdd(); });
+      zone.appendChild(btn);
+      return;
+    }
+    var form = document.createElement('div'); form.className = 'add-form';
+
+    var row1 = document.createElement('div'); row1.className = 'add-row';
+    var modSel = document.createElement('select'); modSel.className = 'add-sel';
+    modSel.innerHTML = moduleOptionsHtml() || '<option value="">No modules yet</option>';
+    var nameIn = document.createElement('input'); nameIn.className = 'add-in'; nameIn.placeholder = 'Assessment name…';
+    row1.appendChild(modSel); row1.appendChild(nameIn); form.appendChild(row1);
+
+    var row2 = document.createElement('div'); row2.className = 'add-row';
+    var gradeIn = document.createElement('input'); gradeIn.className = 'add-in add-num'; gradeIn.type = 'number'; gradeIn.placeholder = 'Grade %';
+    var weightIn = document.createElement('input'); weightIn.className = 'add-in add-num'; weightIn.type = 'number'; weightIn.placeholder = 'Weight %';
+    var goBtn = document.createElement('button'); goBtn.className = 'add-go'; goBtn.textContent = 'Add';
+    var cancelBtn = document.createElement('button'); cancelBtn.className = 'add-cancel'; cancelBtn.textContent = 'Cancel';
+    row2.appendChild(gradeIn); row2.appendChild(weightIn); row2.appendChild(goBtn); row2.appendChild(cancelBtn); form.appendChild(row2);
+
+    function commit(){
+      var name = (nameIn.value||'').trim();
+      var grade = gradeIn.value;
+      if (!name || grade === '') return;
+      var all = loadGrades();
+      all.push({ id:uid(), moduleId:modSel.value||'', name:name, grade:+grade, weight: weightIn.value ? +weightIn.value : null, date: todayStr() });
+      saveGrades(all);
+      formOpen = false;
+      build();
+      if (Uni.modules) Uni.modules.refresh();
+      updateHero();
+    }
+    goBtn.addEventListener('click', commit);
+    gradeIn.addEventListener('keydown', function(e){ if(e.key==='Enter') commit(); });
+    cancelBtn.addEventListener('click', function(){ formOpen = false; renderAdd(); });
+
+    zone.appendChild(form);
+    nameIn.focus();
+  }
+
+  build();
+  Uni.grades = { refresh: build };
+})();
+
+/* ============================================================
+   BOOT — hero, sync/focus refresh, staggered entry animation.
+   ============================================================ */
+updateHero();
+
+function refreshAllModules(){
+  updateHero();
+  if (Uni.timetable) Uni.timetable.refresh();
+  if (Uni.deadlines) Uni.deadlines.refresh();
+  if (Uni.modules) Uni.modules.refresh();
+  if (Uni.grades) Uni.grades.refresh();
+}
+window.addEventListener('lo-sync-applied', refreshAllModules);
+window.addEventListener('focus', refreshAllModules);
+
+(function(){
+  var cards = document.querySelectorAll('.mod-card');
+  Array.prototype.forEach.call(cards, function(c, idx){ c.style.transitionDelay = (idx*50)+'ms'; });
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      Array.prototype.forEach.call(cards, function(c){ c.classList.add('lo-visible'); });
+    });
+  });
+})();
+</script>
+</body>
+</html>
