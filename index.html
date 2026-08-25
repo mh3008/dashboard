@@ -192,6 +192,7 @@ function dayDiff(a,b){
   var da=new Date(+pa[0],+pa[1]-1,+pa[2]), db=new Date(+pb[0],+pb[1]-1,+pb[2]);
   return Math.round((db-da)/86400000);
 }
+function loadVinted(){ var v = storeGet('vinted:items'); return Array.isArray(v) ? v : []; }
 function toMin(t){ if(!t||t.indexOf(':')<0) return null; var p=t.split(':'); return (+p[0])*60+(+p[1]); }
 function durMins(bed,wake){ var b=toMin(bed),w=toMin(wake); if(b==null||w==null) return null; if(w<=b) w+=1440; return w-b; }
 function nowMs(){ return (window.performance && performance.now) ? performance.now() : Date.now(); }
@@ -289,7 +290,7 @@ var HYG_GROUPS = [
    Each returns { pct, life, line, extra }
    ============================================================ */
 
-/* ---------- BODY (purple) — 4 strict all-or-nothing pillars ---------- */
+/* ---------- BODY (purple) — 5 strict all-or-nothing pillars ---------- */
 function buildBody(date){
   var s=storeGet('supps:'+date)||{}, taken=0, k;
   for(k in s){ if(s.hasOwnProperty(k) && s[k]) taken++; }
@@ -298,7 +299,8 @@ function buildBody(date){
   var gymDone = !!(storeGet('gym:'+date)||{}).done;
 
   var sl=storeGet('sleep:'+date)||{};
-  var sleepDone = !!(sl.bed || sl.wake);
+  var sleepMins = durMins(sl.bed, sl.wake);
+  var sleepDone = sleepMins != null && sleepMins >= 420;
 
   var stp=storeGet('steps:'+date)||{};
   var stepsCount = stp.count||0, goal = stepsGoal();
@@ -340,16 +342,28 @@ function buildLife(date){
   return { pct:pct, life:pct/100, line:line, extra:{ tasksDone:hdone, tasksTotal:due.length } };
 }
 
-/* ---------- MONEY (red) — trade logged today ---------- */
+/* ---------- MONEY (red) — trade logged + vinted activity today; Vinted alone fills 100% until trading is active ---------- */
 function buildMoney(date){
   var trades = storeGet('trades:log'); if(!Array.isArray(trades)) trades=[];
+  var tradingActive = trades.length > 0;
   var tradeToday = trades.some(function(t){ return t.date === date; });
 
-  var hit = tradeToday;
-  var pct = hit ? 100 : 0;
-  var line = tradeToday ? 'Trade logged ✓' : 'Nothing yet';
+  var vinted = loadVinted();
+  var vintedToday = vinted.some(function(it){ return it.listedDate === date || (it.status==='sold' && it.soldDate === date); });
 
-  return { pct:pct, life:pct/100, line:line, extra:{ tradeToday:tradeToday } };
+  var pct, line;
+  if (tradingActive){
+    pct = (tradeToday?50:0) + (vintedToday?50:0);
+    if (tradeToday && vintedToday) line = 'Trade + listed ✓';
+    else if (tradeToday) line = 'Trade logged ✓';
+    else if (vintedToday) line = 'Listed today ✓';
+    else line = 'Nothing yet';
+  } else {
+    pct = vintedToday ? 100 : 0;
+    line = vintedToday ? 'Listed today ✓' : 'Nothing yet';
+  }
+
+  return { pct:pct, life:pct/100, line:line, extra:{ tradeToday:tradeToday, listedToday:vintedToday } };
 }
 
 /* ============================================================
@@ -1056,7 +1070,7 @@ function buildTiles(){
   requestAnimationFrame(function(){
     requestAnimationFrame(function(){
       var tiles = grid.querySelectorAll('.sec-tile');
-      tiles.forEach(function(t){ t.classList.add('lo-visible'); });
+      Array.prototype.forEach.call(tiles, function(t){ t.classList.add('lo-visible'); });
     });
   });
 }
