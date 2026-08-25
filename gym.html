@@ -34,7 +34,7 @@
   .sess-meta .m-done { margin-left:auto; }
   .ex { margin-top:12px; }
   .ex-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-  .ex-name { font-size:15px; font-weight:800; letter-spacing:-0.01em; }
+  .ex-name { font-size:15px; font-weight:800; letter-spacing:-0.01em; cursor:pointer; }
   .ex-last { font-family:var(--mono); font-size:10.5px; color:var(--text-3);
     background:rgba(255,255,255,0.04); padding:3px 8px; border-radius:999px; white-space:nowrap; }
   .ex-pr { font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:0.04em;
@@ -43,6 +43,13 @@
   .ex-del { margin-left:auto; color:var(--text-3); cursor:pointer; font-size:18px; line-height:1;
     padding:2px 4px; transition:color .16s; }
   .ex-del:hover { color:var(--danger); }
+  .ex-prog { margin:0 0 10px; padding:10px 10px 8px; border:1px solid var(--hair); border-radius:10px; background:rgba(255,255,255,0.02); }
+  .ex-prog-head { font-family:var(--mono); font-size:10.5px; color:var(--text-3); margin-bottom:8px; }
+  .ex-prog-bars { display:flex; align-items:flex-end; gap:6px; height:56px; }
+  .ex-prog-col { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; flex:1; height:100%; }
+  .ex-prog-bar { width:100%; max-width:22px; background:var(--accent-lt); border-radius:4px 4px 0 0; }
+  .ex-prog-n { font-family:var(--mono); font-size:9px; color:var(--text-3); margin-top:4px; }
+  .ex-prog-verdict { font-family:var(--mono); font-size:11px; color:var(--text-2); margin-top:10px; }
   .set-row { display:flex; align-items:center; gap:8px; padding:7px 0; }
   .set-n { font-family:var(--mono); font-size:11px; color:var(--text-3); width:20px; flex-shrink:0; text-align:center; }
   .set-in { width:100%; background:rgba(0,0,0,0.22); border:1px solid var(--hair); border-radius:9px;
@@ -230,6 +237,33 @@ function currentTop(ex){
   });
   return top ? { weight:top.weight, reps:top.reps, e1rm:e1rm(top.weight,top.reps) } : null;
 }
+function currentBlockFor(name){
+  var rows=[];
+  for (var i=0;i<localStorage.length;i++){
+    var k = localStorage.key(i);
+    if (!k || k.indexOf('gym:')!==0) continue;
+    var date = k.slice(4);
+    var sess = storeGet(k); if (!sess) continue;
+    var ex = sessAllEx(sess).filter(function(e){ return (e.name||'').toLowerCase()===name.toLowerCase(); })[0];
+    if (!ex || !Array.isArray(ex.sets)) continue;
+    var top=null;
+    ex.sets.forEach(function(st){
+      var w=num(st.weight), r=num(st.reps); if(!w||!r) return;
+      if (!top || e1rm(w,r) > e1rm(top.weight,top.reps)) top={weight:w,reps:r};
+    });
+    if (!top) continue;
+    rows.push({date:date, weight:top.weight, reps:top.reps});
+  }
+  if (!rows.length) return null;
+  rows.sort(function(a,b){ return a.date<b.date?-1:(a.date>b.date?1:0); });
+  var wt = rows[rows.length-1].weight;
+  var block=[];
+  for (var j=rows.length-1;j>=0;j--){
+    if (rows[j].weight !== wt) break;
+    block.unshift({date:rows[j].date, reps:rows[j].reps});
+  }
+  return { weight:wt, entries:block };
+}
 function historyNames(){
   var seen={}, ordered=[], keys=[];
   for (var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k&&k.indexOf('gym:')===0) keys.push(k); }
@@ -240,6 +274,39 @@ function historyNames(){
   });
   SEED_EX.forEach(function(n){ if(!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; ordered.push(n); } });
   return ordered;
+}
+var openPanelKey=null;
+function buildProgressionPanel(name){
+  var panel=document.createElement('div'); panel.className='ex-prog';
+  var block=currentBlockFor(name);
+  if (!block || block.entries.length<2){
+    var em=document.createElement('div'); em.className='empty'; em.textContent='Not enough history at this weight yet.';
+    panel.appendChild(em);
+    return panel;
+  }
+  var head=document.createElement('div'); head.className='ex-prog-head';
+  head.textContent=(+block.weight.toFixed(1))+'kg · '+block.entries.length+' sessions';
+  panel.appendChild(head);
+  var bars=document.createElement('div'); bars.className='ex-prog-bars';
+  var maxReps=0;
+  block.entries.forEach(function(en){ if(en.reps>maxReps) maxReps=en.reps; });
+  block.entries.forEach(function(en){
+    var col=document.createElement('div'); col.className='ex-prog-col';
+    var bar=document.createElement('div'); bar.className='ex-prog-bar';
+    var h= maxReps>0 ? Math.max(6, Math.round(en.reps/maxReps*48)) : 6;
+    bar.style.height=h+'px';
+    var lbl=document.createElement('div'); lbl.className='ex-prog-n'; lbl.textContent=en.reps;
+    col.appendChild(bar); col.appendChild(lbl);
+    bars.appendChild(col);
+  });
+  panel.appendChild(bars);
+  var first=block.entries[0].reps, lastR=block.entries[block.entries.length-1].reps, verdict;
+  if (lastR>first) verdict='Gaining — '+first+' to '+lastR+' reps at '+(+block.weight.toFixed(1))+'kg.';
+  else if (lastR<first) verdict='Dropping — '+first+' to '+lastR+' reps at '+(+block.weight.toFixed(1))+'kg.';
+  else verdict='Holding — steady at '+lastR+' reps at '+(+block.weight.toFixed(1))+'kg.';
+  var v=document.createElement('div'); v.className='ex-prog-verdict'; v.textContent=verdict;
+  panel.appendChild(v);
+  return panel;
 }
 function render(){
   var s = load();
@@ -279,6 +346,11 @@ function render(){
     var card=document.createElement('div'); card.className='card ex';
     var head=document.createElement('div'); head.className='ex-head';
     var nm=document.createElement('div'); nm.className='ex-name'; nm.textContent=ex.name;
+    nm.addEventListener('click', function(){
+      var key=ex.name.toLowerCase();
+      openPanelKey = (openPanelKey===key) ? null : key;
+      render();
+    });
     head.appendChild(nm);
     var last=lastTimeFor(ex.name);
     if (last){
@@ -298,6 +370,9 @@ function render(){
     del.addEventListener('click', function(){ var st=load(); activeEx(st).splice(ei,1); save(st); render(); });
     head.appendChild(del);
     card.appendChild(head);
+    if (openPanelKey===ex.name.toLowerCase()){
+      card.appendChild(buildProgressionPanel(ex.name));
+    }
     (ex.sets||[]).forEach(function(set, si){
       var row=document.createElement('div'); row.className='set-row'+(set.done?' done':'');
       var n=document.createElement('span'); n.className='set-n'; n.textContent=(si+1); row.appendChild(n);
