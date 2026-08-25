@@ -415,6 +415,7 @@ function updateHero(){
     for (i=0;i<all.length;i++){ if (all[i].id === id){ d = all[i]; break; } }
     if (!d) return;
     d.status = 'done';
+    d.doneDate = todayStr();
     saveDeadlines(all);
     row.classList.add('done');
     updateHero();

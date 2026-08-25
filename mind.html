@@ -62,7 +62,7 @@
   @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
   .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
 
-  .pillar-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; position:relative; z-index:1; }
+  .pillar-row { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; position:relative; z-index:1; }
   .pillar-chip {
     display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
     background:rgba(255,255,255,0.03); border:1px solid var(--hair);
@@ -276,8 +276,7 @@ var Mind = {}; /* module registry — each section publishes { refresh: fn } her
    ============================================================ */
 var CHIP_DEFS = [
   { key:'learn', label:'Learn', icon:'ti-books' },
-  { key:'uni',   label:'Uni',   icon:'ti-school' },
-  { key:'games', label:'Games', icon:'ti-device-gamepad-2' }
+  { key:'uni',   label:'Uni',   icon:'ti-school' }
 ];
 var chipEls = {};
 (function buildHero(){
@@ -297,15 +296,14 @@ function updateHero(){
   var lHit = learnHitForDate(date); if (lHit) hits++;
   chipEls.learn.classList.toggle('hit', lHit);
   var uniDeadlines = storeGet('uni:deadlines'); if (!Array.isArray(uniDeadlines)) uniDeadlines = [];
-  var uHit = !uniDeadlines.some(function(d){ return d.status !== 'done' && d.dueDate <= date; });
+  var uniGrades = storeGet('uni:grades'); if (!Array.isArray(uniGrades)) uniGrades = [];
+  var uHit = uniDeadlines.some(function(d){ return d.status === 'done' && d.doneDate === date; })
+    || uniGrades.some(function(g){ return g.date === date; });
   if (uHit) hits++;
   chipEls.uni.classList.toggle('hit', uHit);
-  var gamesLog = storeGet('games:log'); if (!Array.isArray(gamesLog)) gamesLog = [];
-  var gHit = gamesLog.some(function(g){ return g.status === 'playing'; });
-  if (gHit) hits++;
-  chipEls.games.classList.toggle('hit', gHit);
-  document.getElementById('pillarFill').style.width = (hits/3*100)+'%';
-  document.getElementById('pillarSummary').textContent = hits+' / 3 clear';
+  var denom = CHIP_DEFS.length;
+  document.getElementById('pillarFill').style.width = (hits/denom*100)+'%';
+  document.getElementById('pillarSummary').textContent = hits+' / '+denom+' clear';
 }
 
 /* ============================================================
