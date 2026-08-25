@@ -26,7 +26,7 @@
     'supps:', 'gym:', 'sleep:', 'hygiene:', 'steps:', 'fuel:', 'body:',
     'goals:', 'todos:', 'streaks:', 'log:',
     'money:', 'trades:', 'buy:', 'subs:',
-    'learn:', 'reading:',
+    'learn:', 'reading:', 'uni:',
     'social:', 'timers:', 'posture:', 'football:',
     'countdowns:', 'weekly:', 'goal_streak_v1',
     'plants:', 'car:'
