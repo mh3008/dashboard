@@ -172,7 +172,8 @@ function setsForName(nm){
   return SETS_PER_OVERRIDE.hasOwnProperty(key) ? SETS_PER_OVERRIDE[key] : SETS_PER;
 }
 var SEED_EX = ['Chest Fly','Incline Chest Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor','Seated Row','Lat Pulldown','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise'];
-function KEY(){ return 'gym:'+getActiveDateString(); }
+var viewedDate = getActiveDateString();
+function KEY(){ return 'gym:'+viewedDate; }
 function load(){
   var s = storeGet(KEY()) || {};
   if (s.bySplit == null || typeof s.bySplit !== 'object'){
@@ -210,12 +211,12 @@ function computeDone(s){
 }
 function save(s){ s.done = computeDone(s); storeSet(KEY(), s); }
 function lastTimeFor(name){
-  var today = getActiveDateString(), best=null, bestDate=null;
+  var cutoff = viewedDate, best=null, bestDate=null;
   for (var i=0;i<localStorage.length;i++){
     var k = localStorage.key(i);
     if (!k || k.indexOf('gym:')!==0) continue;
     var date = k.slice(4);
-    if (date >= today) continue;
+    if (date >= cutoff) continue;
     var sess = storeGet(k); if (!sess) continue;
     var ex = sessAllEx(sess).filter(function(e){ return (e.name||'').toLowerCase()===name.toLowerCase(); })[0];
     if (!ex || !Array.isArray(ex.sets)) continue;
@@ -310,7 +311,18 @@ function buildProgressionPanel(name){
 }
 function render(){
   var s = load();
-  document.getElementById('dateLbl').textContent = getActiveDateString();
+  var isToday = viewedDate === getActiveDateString();
+  var lbl = document.getElementById('dateLbl'); lbl.innerHTML='';
+  lbl.appendChild(document.createTextNode(viewedDate));
+  if (isToday){
+    var tag=document.createElement('span'); tag.className='today-tag'; tag.textContent='TODAY';
+    lbl.appendChild(tag);
+  } else {
+    var jump=document.createElement('span'); jump.className='jump'; jump.textContent='back to today';
+    jump.addEventListener('click', function(){ viewedDate=getActiveDateString(); render(); });
+    lbl.appendChild(jump);
+  }
+  document.getElementById('dateNext').classList.toggle('disabled', isToday);
   var sr = document.getElementById('splitRow'); sr.innerHTML='';
   SPLITS.forEach(function(sp){
     var c=document.createElement('span');
@@ -495,6 +507,16 @@ Array.prototype.forEach.call(document.querySelectorAll('.rest-preset'), function
 document.getElementById('restStop').addEventListener('click', function(){
   clearInterval(restT); restT=null; var d=document.getElementById('restDisp'); d.classList.remove('run'); d.textContent='0:00';
 });
+function stepDate(deltaDays){
+  var d=new Date(viewedDate+'T00:00:00');
+  d.setDate(d.getDate()+deltaDays);
+  var next = d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  if (next > getActiveDateString()) return;
+  viewedDate = next;
+  render();
+}
+document.getElementById('datePrev').addEventListener('click', function(){ stepDate(-1); });
+document.getElementById('dateNext').addEventListener('click', function(){ stepDate(1); });
 render();
 window.addEventListener('lo-sync-applied', render);
 window.addEventListener('focus', render);
