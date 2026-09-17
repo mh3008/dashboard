@@ -229,6 +229,10 @@
       <div class="tile-top"><i class="ti ti-car"></i><span>Car</span></div>
       <div class="tile-stat">Maintenance &amp; mods</div>
     </a>
+    <a class="mod-card mod-life tile" href="shopping.html" id="tileShopping">
+      <div class="tile-top"><i class="ti ti-shopping-cart"></i><span>Shopping</span></div>
+      <div class="tile-stat" id="tileShoppingStat">Nothing to buy</div>
+    </a>
     <a class="mod-card mod-life tile tile-wide" href="house.html" id="tileHouse">
       <div class="tile-top"><i class="ti ti-building"></i><span>House</span></div>
       <div class="tile-stat">Bills &amp; admin</div>
@@ -437,6 +441,17 @@ function miniRingSvg(pct, col){
 })();
 
 /* ============================================================
+   TILES — small nav-tile stats.
+   ============================================================ */
+function updateTiles(){
+  var list = storeGet('shopping:list');
+  if (!Array.isArray(list)) list = [];
+  var toBuy = list.filter(function(it){ return !it.done; }).length;
+  document.getElementById('tileShoppingStat').textContent = toBuy ? (toBuy + ' to buy') : 'Nothing to buy';
+}
+Life.tiles = { refresh: updateTiles };
+
+/* ============================================================
    CONSISTENCY — 30-day heatmap of task completion. A day with
    no due tasks counts as a hit.
    ============================================================ */
@@ -497,11 +512,13 @@ function miniRingSvg(pct, col){
    BOOT — hero, sync/focus refresh, staggered entry animation.
    ============================================================ */
 updateHero();
+updateTiles();
 
 function refreshAllModules(){
   updateHero();
   if (Life.tasks) Life.tasks.refresh();
   if (Life.plants) Life.plants.refresh();
+  if (Life.tiles) Life.tiles.refresh();
   if (Life.consistency) Life.consistency.refresh();
 }
 window.addEventListener('lo-sync-applied', refreshAllModules);

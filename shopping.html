@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Shopping · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  /* ============================================================
+     GLASS MODULE CARDS — same visual language as life.html.
+     ============================================================ */
+  .mod-card {
+    position: relative; border-radius: 20px; padding:20px;
+    background: var(--m-bg, rgba(107,227,164,0.05));
+    border: 1px solid var(--m-bd, rgba(107,227,164,0.16));
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+    opacity: 0; transform: translateY(14px);
+    transition: opacity .5s ease-out, transform .5s ease-out;
+  }
+  .mod-card.lo-visible { opacity: 1; transform: translateY(0); }
+  .mod-card::after {
+    content:''; position:absolute; inset:0; border-radius:20px; padding:1.5px;
+    background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3), var(--g2), var(--g1));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: bodyBorderShift 8s ease infinite;
+    opacity: 0.65; pointer-events: none; z-index: 2;
+  }
+  @keyframes bodyBorderShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mod-card::after { animation: none; }
+    .mod-card { transition: none; opacity: 1; transform: none; }
+  }
+  .mod-life { --g1:#6be3a4; --g2:#38bdf8; --g3:#a3e635; --m-bg:rgba(107,227,164,0.045); --m-bd:rgba(107,227,164,0.18); --m-accent:#6be3a4; }
+
+  /* ---- HERO ---- */
+  .body-hero { padding: 22px; margin-bottom: 12px; }
+  .hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; position:relative; z-index:1; }
+  .body-title-wrap { display:flex; align-items:center; gap:12px; }
+  .body-hero-icon { font-size:28px; color:#6be3a4; }
+  .body-title {
+    font-size:32px; font-weight:800; letter-spacing:-0.03em; line-height:1;
+    background: linear-gradient(120deg, #6be3a4, #38bdf8, #a3e635, #6be3a4);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    animation: lifeTitleShift 10s ease infinite;
+  }
+  @keyframes lifeTitleShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
+  .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
+  .pillar-summary { font-family:var(--mono); font-size:12px; color:var(--text-2); font-weight:700; position:relative; z-index:1; }
+
+  /* ---- shared module head ---- */
+  .mod-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; position:relative; z-index:1; }
+  .mod-title { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+  .mod-title i { color:var(--m-accent); font-size:20px; }
+  .mod-body { position:relative; z-index:1; }
+  .td-empty { text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px; padding:20px 0 6px; position:relative; z-index:1; }
+
+  /* ---- ADD ITEM FORM — patterned on vinted.html ---- */
+  .form-lbl { font-family:var(--mono); font-size:9.5px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); margin-bottom:10px; position:relative; z-index:1; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; position:relative; z-index:1; }
+  .fld { display:flex; flex-direction:column; gap:4px; }
+  .fld.full { grid-column:1 / -1; }
+  .fld label { font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-3); }
+  .fin { background:rgba(0,0,0,0.22); border:1px solid var(--hair); border-radius:9px; color:var(--text-1);
+    font-size:14px; padding:10px; font-family:var(--mono); width:100%; transition:border-color .16s; }
+  .fin:focus { outline:none; border-color:rgba(107,227,164,0.5); }
+  select.fin { font-family:inherit; }
+  .add-btn { grid-column:1 / -1; background:#6be3a4; color:#052617; border:none; border-radius:10px;
+    font-weight:800; font-size:14px; padding:13px; cursor:pointer; margin-top:2px; }
+  .add-btn:active { transform:scale(0.98); }
+  .shake { animation: shShake .3s; }
+  @keyframes shShake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
+
+  /* ---- FILTER PILLS ---- */
+  .filter-pills { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; position:relative; z-index:1; }
+  .fpill { font-family:var(--mono); font-size:10.5px; font-weight:700; padding:6px 12px; border-radius:999px; cursor:pointer;
+    background:rgba(255,255,255,0.04); border:1px solid var(--hair); color:var(--text-2); }
+  .fpill.on { background:rgba(107,227,164,0.14); border-color:rgba(107,227,164,0.45); color:#6be3a4; }
+
+  /* ---- ITEM ROWS — life.html's .item / .cb pattern ---- */
+  .item-list { display:flex; flex-direction:column; gap:8px; position:relative; z-index:1; }
+  .item {
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.035); border:1px solid var(--hair); transition:background .18s, opacity .18s; cursor:pointer;
+    touch-action: manipulation; -webkit-user-select:none; user-select:none;
+  }
+  .item:hover { background:var(--card-2); }
+  .item.done { opacity:0.5; background:rgba(107,227,164,0.06); }
+  .item.done .item-txt { text-decoration:line-through; text-decoration-color:rgba(255,255,255,0.4); }
+  .cb { width:22px; height:22px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.18);
+    background:rgba(0,0,0,0.2); flex-shrink:0; position:relative; transition:background .18s, box-shadow .18s, border-color .18s; }
+  .item.done .cb { background:#6be3a4; border-color:#6be3a4; box-shadow:0 0 12px rgba(107,227,164,0.4); }
+  .item.done .cb::after { content:''; position:absolute; left:7px; top:3px; width:5px; height:10px;
+    border:solid #0a0a0b; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  .item-txt { font-size:14px; flex:1; min-width:0; }
+  .item-cat { font-family:var(--mono); font-size:10px; color:var(--text-3); flex-shrink:0; }
+  .item-del { font-family:var(--mono); font-size:16px; line-height:1; color:var(--text-3); padding:4px 6px; flex-shrink:0; }
+  .item-del:hover { color:var(--danger); }
+
+  /* ---- ACTIONS ---- */
+  .actions-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px solid var(--hair); position:relative; z-index:1; }
+  .act-btn { font-family:var(--mono); font-size:11px; font-weight:800; padding:9px 14px; border-radius:9px; cursor:pointer;
+    background:rgba(255,255,255,0.06); color:var(--text-2); border:1px solid var(--hair); }
+  .act-btn.danger { background:rgba(255,107,107,0.14); color:var(--danger); border:1px solid rgba(255,107,107,0.3); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="card mod-card mod-life body-hero" id="heroCard">
+    <div class="hero-top">
+      <div class="body-title-wrap">
+        <i class="ti ti-shopping-cart body-hero-icon"></i>
+        <div class="body-title">Shopping</div>
+      </div>
+      <div class="body-date" id="heroDate">—</div>
+    </div>
+    <div class="pillar-summary" id="pillarSummary">0 to buy · 0 in basket</div>
+  </div>
+
+  <!-- ADD ITEM -->
+  <div class="section-title">Add Item</div>
+  <div class="card mod-card mod-life" id="addCard">
+    <div class="form-lbl">Add to the list</div>
+    <div class="form-grid">
+      <div class="fld full"><label>Item</label><input class="fin" id="iText" placeholder="Oat milk"></div>
+      <div class="fld"><label>Category</label>
+        <select class="fin" id="iCat">
+          <option>Food</option>
+          <option>Household</option>
+          <option>Toiletries</option>
+          <option>Supps</option>
+          <option>Vinted</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <button class="add-btn" id="addBtn">Add</button>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="section-title">List</div>
+  <div class="card mod-card mod-life" id="listCard">
+    <div class="filter-pills" id="filterPills"></div>
+    <div class="mod-body">
+      <div class="item-list" id="shopList"></div>
+      <div class="actions-row" id="actionsRow">
+        <div class="act-btn" id="clearDoneBtn">Clear done</div>
+        <div class="act-btn danger" id="clearAllBtn">Clear all</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+/* ============================================================
+   SHARED HELPERS — identical conventions to life.html.
+   ============================================================ */
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function getActiveDateString(){ var d=new Date(); if(d.getHours()<6) d.setDate(d.getDate()-1); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function fmtFull(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}); }
+
+var LIST_KEY = 'shopping:list';
+function loadList(){ var v=storeGet(LIST_KEY); return Array.isArray(v)?v:[]; }
+function saveList(v){ storeSet(LIST_KEY, v); }
+
+var CAT_ORDER = ['Food','Household','Toiletries','Supps','Vinted','Other'];
+
+var Shopping = {}; /* module registry — each section publishes { refresh: fn } here */
+
+/* ============================================================
+   HERO
+   ============================================================ */
+function updateHero(){
+  var date = getActiveDateString();
+  document.getElementById('heroDate').textContent = fmtFull(date);
+  var list = loadList();
+  var toBuy = list.filter(function(it){ return !it.done; }).length;
+  var inBasket = list.filter(function(it){ return it.done; }).length;
+  document.getElementById('pillarSummary').textContent = toBuy + ' to buy · ' + inBasket + ' in basket';
+}
+
+/* ============================================================
+   ADD ITEM
+   ============================================================ */
+(function(){
+  var textEl = document.getElementById('iText');
+  var catEl = document.getElementById('iCat');
+
+  function shake(el){ el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+
+  function addItem(){
+    var text = textEl.value.trim();
+    if (!text){
+      shake(document.getElementById('addCard'));
+      if (window.loToast) loToast('Enter an item');
+      return;
+    }
+    var it = {
+      id: String(Date.now()) + Math.random().toString(36).slice(2,8),
+      text: text,
+      cat: catEl.value,
+      done: false,
+      added: getActiveDateString()
+    };
+    var list = loadList();
+    list.push(it);
+    saveList(list);
+    textEl.value = '';
+    if (window.loToast) loToast('Item added');
+    refreshAllModules();
+  }
+
+  document.getElementById('addBtn').addEventListener('click', addItem);
+  textEl.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') addItem();
+  });
+})();
+
+/* ============================================================
+   LIST — filter pills + rows. Rows built once; a tap toggles a
+   class in place (no rebuild) so ticking stays instant; re-sort
+   is debounced 400ms after a tap.
+   ============================================================ */
+(function(){
+  var curFilter = 'All';
+  var sortDebounce = null;
+  var rowEls = {};
+
+  function catsPresent(){
+    var list = loadList();
+    var present = [];
+    CAT_ORDER.forEach(function(c){
+      if (list.some(function(it){ return it.cat === c; })) present.push(c);
+    });
+    return present;
+  }
+
+  function buildPills(){
+    var host = document.getElementById('filterPills'); host.innerHTML = '';
+    var cats = ['All'].concat(catsPresent());
+    cats.forEach(function(f){
+      var p = document.createElement('div'); p.className = 'fpill'+(f===curFilter?' on':'');
+      p.textContent = f;
+      p.addEventListener('click', function(){ curFilter = f; render(); });
+      host.appendChild(p);
+    });
+  }
+
+  function sortList(list){
+    var notDone = list.filter(function(it){ return !it.done; });
+    var done = list.filter(function(it){ return it.done; });
+    notDone.sort(function(a,b){
+      var ai = CAT_ORDER.indexOf(a.cat), bi = CAT_ORDER.indexOf(b.cat);
+      if (ai !== bi) return ai - bi;
+      return 0;
+    });
+    return notDone.concat(done);
+  }
+
+  function toggleItem(id, row){
+    var list = loadList();
+    var it = list.filter(function(x){ return x.id === id; })[0];
+    if (!it) return;
+    it.done = !it.done;
+    saveList(list);
+    row.classList.toggle('done', !!it.done);
+    updateHero();
+    if (sortDebounce) clearTimeout(sortDebounce);
+    sortDebounce = setTimeout(function(){ render(); }, 400);
+  }
+
+  function deleteItem(id){
+    var list = loadList().filter(function(x){ return x.id !== id; });
+    saveList(list);
+    refreshAllModules();
+  }
+
+  function render(){
+    if (curFilter !== 'All' && catsPresent().indexOf(curFilter) === -1) curFilter = 'All';
+    buildPills();
+    var all = loadList();
+    var filtered = curFilter === 'All' ? all : all.filter(function(it){ return it.cat === curFilter; });
+    var sorted = sortList(filtered);
+    var host = document.getElementById('shopList'); host.innerHTML = '';
+    rowEls = {};
+    if (!sorted.length){
+      var e = document.createElement('div'); e.className = 'td-empty'; e.textContent = 'Nothing on the list.';
+      host.appendChild(e);
+    } else {
+      sorted.forEach(function(it){
+        var row = document.createElement('div'); row.className = 'item' + (it.done ? ' done' : '');
+        row.innerHTML = '<span class="cb"></span>'+
+          '<span class="item-txt">'+it.text+'</span>'+
+          '<span class="item-cat">'+it.cat+'</span>'+
+          '<span class="item-del" data-act="del">×</span>';
+        row.addEventListener('click', function(e){
+          if (e.target.getAttribute('data-act') === 'del') return;
+          toggleItem(it.id, row);
+        });
+        row.querySelector('[data-act="del"]').addEventListener('click', function(e){
+          e.stopPropagation();
+          deleteItem(it.id);
+        });
+        host.appendChild(row);
+        rowEls[it.id] = row;
+      });
+    }
+    updateActions();
+  }
+
+  function updateActions(){
+    var all = loadList();
+    var doneCount = all.filter(function(it){ return it.done; }).length;
+    document.getElementById('clearDoneBtn').style.display = doneCount ? '' : 'none';
+  }
+
+  document.getElementById('clearDoneBtn').addEventListener('click', function(){
+    var all = loadList();
+    var doneCount = all.filter(function(it){ return it.done; }).length;
+    if (!doneCount) return;
+    if (!window.confirm('Remove ' + doneCount + ' done item' + (doneCount===1?'':'s') + '?')) return;
+    saveList(all.filter(function(it){ return !it.done; }));
+    refreshAllModules();
+  });
+
+  document.getElementById('clearAllBtn').addEventListener('click', function(){
+    var all = loadList();
+    if (!all.length) return;
+    if (!window.confirm('Remove all ' + all.length + ' item' + (all.length===1?'':'s') + '?')) return;
+    saveList([]);
+    refreshAllModules();
+  });
+
+  render();
+  Shopping.list = { refresh: render };
+})();
+
+/* ============================================================
+   BOOT — hero, sync/focus refresh, staggered entry animation.
+   ============================================================ */
+updateHero();
+
+function refreshAllModules(){
+  updateHero();
+  if (Shopping.list) Shopping.list.refresh();
+}
+window.addEventListener('lo-sync-applied', refreshAllModules);
+window.addEventListener('focus', refreshAllModules);
+
+(function(){
+  var cards = document.querySelectorAll('.mod-card');
+  Array.prototype.forEach.call(cards, function(c, idx){ c.style.transitionDelay = (idx*50)+'ms'; });
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      Array.prototype.forEach.call(cards, function(c){ c.classList.add('lo-visible'); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

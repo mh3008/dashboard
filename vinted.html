@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Vinted · Life OS</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link href="theme.css" rel="stylesheet">
+<style>
+  /* ============================================================
+     GLASS MODULE CARDS — same visual language as money.html.
+     ============================================================ */
+  .mod-card {
+    position: relative; border-radius: 20px; padding:20px;
+    background: var(--m-bg, rgba(251,191,36,0.05));
+    border: 1px solid var(--m-bd, rgba(251,191,36,0.16));
+    backdrop-filter: blur(26px) saturate(1.4);
+    -webkit-backdrop-filter: blur(26px) saturate(1.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+    opacity: 0; transform: translateY(14px);
+    transition: opacity .5s ease-out, transform .5s ease-out;
+  }
+  .mod-card.lo-visible { opacity: 1; transform: translateY(0); }
+  .mod-card::after {
+    content:''; position:absolute; inset:0; border-radius:20px; padding:1.5px;
+    background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3), var(--g2), var(--g1));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: bodyBorderShift 8s ease infinite;
+    opacity: 0.65; pointer-events: none; z-index: 2;
+  }
+  @keyframes bodyBorderShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mod-card::after { animation: none; }
+    .mod-card { transition: none; opacity: 1; transform: none; }
+  }
+  .mod-money { --g1:#fbbf24; --g2:#f59e0b; --g3:#fb923c; --m-bg:rgba(251,191,36,0.045); --m-bd:rgba(251,191,36,0.18); --m-accent:#fbbf24; }
+
+  /* ---- TO SHIP BANNER — amber alert variant, red "urgent" swap ---- */
+  .mod-alert { --g1:#fbbf24; --g2:#f59e0b; --g3:#fb923c; --m-bg:rgba(251,191,36,0.10); --m-bd:rgba(251,191,36,0.40); }
+  .mod-alert.urgent { --g1:#f87171; --g2:#ef4444; --g3:#f87171; --m-bg:rgba(248,113,113,0.10); --m-bd:rgba(248,113,113,0.40);
+    animation: shipPulse 2s ease-in-out infinite; }
+  @keyframes shipPulse {
+    0%, 100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 rgba(248,113,113,0); }
+    50% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.10), 0 0 22px rgba(248,113,113,0.55); }
+  }
+  @media (prefers-reduced-motion: reduce) { .mod-alert.urgent { animation:none; } }
+  .ship-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--hair); position:relative; z-index:1; }
+  .ship-row:last-child { border-bottom:none; }
+  .ship-main { flex:1; min-width:0; }
+  .ship-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .ship-title { font-weight:800; font-size:14px; }
+  .ship-badge { font-family:var(--mono); font-size:9px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; padding:2px 6px; border-radius:5px; background:rgba(255,255,255,0.08); color:var(--text-2); }
+  .ship-drop { font-family:var(--mono); font-size:10.5px; color:var(--text-3); margin-top:4px; }
+  .ship-count { font-family:var(--mono); font-size:11px; font-weight:800; margin-top:4px; color:#fbbf24; }
+  .mod-alert.urgent .ship-count { color:#f87171; }
+
+  /* ---- HERO ---- */
+  .body-hero { padding: 22px; margin-bottom: 12px; }
+  .hero-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; position:relative; z-index:1; }
+  .body-title-wrap { display:flex; align-items:center; gap:12px; }
+  .body-hero-icon { font-size:28px; color:#fbbf24; }
+  .body-title {
+    font-size:32px; font-weight:800; letter-spacing:-0.03em; line-height:1;
+    background: linear-gradient(120deg, #fbbf24, #f59e0b, #fb923c, #fbbf24);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    animation: moneyTitleShift 10s ease infinite;
+  }
+  @keyframes moneyTitleShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .body-title { animation: none; } }
+  .body-date { font-family:var(--mono); font-size:11px; color:var(--text-3); padding-top:7px; white-space:nowrap; }
+
+  .stat-cells { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; position:relative; z-index:1; }
+  @media (max-width:420px){ .stat-cells { grid-template-columns:repeat(2,1fr); } }
+  .scell { background:rgba(255,255,255,0.03); border:1px solid var(--hair); border-radius:12px; padding:12px 10px; text-align:center; }
+  .scell .sc-val { font-size:20px; font-weight:800; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .scell .sc-lbl { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-top:4px; }
+  .pos { color:var(--success); } .neg { color:var(--danger); } .flat { color:var(--text-3); }
+
+  .hero-empty { font-family:var(--mono); font-size:11px; color:var(--text-3); text-align:center; margin-top:12px; position:relative; z-index:1; }
+
+  .pillar-row { display:grid; grid-template-columns:repeat(1,1fr); gap:8px; margin-top:14px; position:relative; z-index:1; }
+  .pillar-chip {
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--hair);
+    transition:background .2s, border-color .2s, box-shadow .2s;
+  }
+  .pillar-chip i { font-size:18px; color:var(--text-3); transition:color .2s; }
+  .pillar-chip span { font-size:9.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); transition:color .2s; }
+  .pillar-chip.hit { background:rgba(251,191,36,0.12); border-color:rgba(251,191,36,0.45); box-shadow:0 0 16px rgba(251,191,36,0.25); }
+  .pillar-chip.hit i, .pillar-chip.hit span { color:#fff2cc; }
+
+  /* ---- shared module head ---- */
+  .mod-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px; position:relative; z-index:1; }
+  .mod-title { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+  .mod-title i { color:var(--m-accent); font-size:20px; }
+  .mod-count { font-family:var(--mono); font-size:13px; color:var(--text-2); }
+  .mod-body { position:relative; z-index:1; }
+  .td-empty { text-align:center; color:var(--text-3); font-family:var(--mono); font-size:12px; padding:20px 0 6px; position:relative; z-index:1; }
+
+  /* ---- ADD ITEM FORM — compact inline, patterned on trades.html form ---- */
+  .form-lbl { font-family:var(--mono); font-size:9.5px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); margin-bottom:10px; position:relative; z-index:1; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; position:relative; z-index:1; }
+  .fld { display:flex; flex-direction:column; gap:4px; }
+  .fld.full { grid-column:1 / -1; }
+  .fld label { font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-3); }
+  .fin { background:rgba(0,0,0,0.22); border:1px solid var(--hair); border-radius:9px; color:var(--text-1);
+    font-size:14px; padding:10px; font-family:var(--mono); width:100%; transition:border-color .16s; }
+  .fin:focus { outline:none; border-color:rgba(251,191,36,0.5); }
+  select.fin { font-family:inherit; }
+  .add-btn { grid-column:1 / -1; background:#fbbf24; color:#160a04; border:none; border-radius:10px;
+    font-weight:800; font-size:14px; padding:13px; cursor:pointer; margin-top:2px; }
+  .add-btn:active { transform:scale(0.98); }
+  .shake { animation: vShake .3s; }
+  @keyframes vShake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
+
+  /* ---- FILTER PILLS ---- */
+  .filter-pills { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; position:relative; z-index:1; }
+  .fpill { font-family:var(--mono); font-size:10.5px; font-weight:700; padding:6px 12px; border-radius:999px; cursor:pointer;
+    background:rgba(255,255,255,0.04); border:1px solid var(--hair); color:var(--text-2); }
+  .fpill.on { background:rgba(251,191,36,0.14); border-color:rgba(251,191,36,0.45); color:#fbbf24; }
+
+  /* ---- INVENTORY ROWS — patterned on trades.html .trow ---- */
+  .trow { padding:11px 12px; border-radius:11px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--hair); margin-bottom:8px; cursor:pointer; transition:background .15s;
+    position:relative; z-index:1; }
+  .trow:hover { background:var(--card-2); }
+  .trow-top { display:flex; align-items:center; gap:10px; }
+  .t-main { flex:1; min-width:0; }
+  .t-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .t-title { font-weight:800; font-size:14px; }
+  .t-badge { font-family:var(--mono); font-size:9px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; padding:2px 6px; border-radius:5px; }
+  .t-badge.sourced { background:rgba(255,255,255,0.08); color:var(--text-2); }
+  .t-badge.listed { background:rgba(96,165,250,0.14); color:#60a5fa; }
+  .t-badge.sold { background:rgba(107,227,164,0.14); color:var(--success); }
+  .t-cat { font-family:var(--mono); font-size:10px; color:var(--text-3); }
+  .t-sub { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:3px; }
+  .t-right { text-align:right; }
+  .t-r { font-family:var(--mono); font-weight:800; font-size:15px; text-align:right; min-width:56px; font-variant-numeric:tabular-nums; }
+  .t-r2 { font-family:var(--mono); font-size:10px; text-align:right; color:var(--text-3); }
+
+  /* ---- INLINE EXPANDED EDITOR ---- */
+  .trow-detail { margin-top:12px; padding-top:12px; border-top:1px solid var(--hair); display:flex; flex-direction:column; gap:10px; }
+  .td-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .td-btn { font-family:var(--mono); font-size:11px; font-weight:800; padding:9px 14px; border-radius:9px; cursor:pointer;
+    background:#fbbf24; color:#160a04; border:none; }
+  .td-btn.secondary { background:rgba(255,255,255,0.06); color:var(--text-2); border:1px solid var(--hair); }
+  .td-btn.danger { background:rgba(255,107,107,0.14); color:var(--danger); border:1px solid rgba(255,107,107,0.3); }
+  .td-section-lbl { font-family:var(--mono); font-size:8.5px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-bottom:6px; }
+  .bd-row { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; padding:6px 0; font-size:12px; }
+  .bd-name { color:var(--text-3); font-family:var(--mono); font-size:11px; }
+  .bd-num { font-family:var(--mono); font-variant-numeric:tabular-nums; text-align:right; font-weight:700; }
+
+  /* ---- STATS grid ---- */
+  .vstat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; position:relative; z-index:1; }
+  .vstat-grid .scell { padding:14px 10px; }
+  .tax-line { margin-top:14px; font-family:var(--mono); font-size:11px; color:var(--text-2); position:relative; z-index:1; }
+  .tax-bar { margin-top:8px; height:8px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  .tax-bar-fill { height:100%; background:#fbbf24; border-radius:999px; transition:width .3s; }
+  .tax-bar-fill.over { background:#f87171; }
+
+  /* ---- CONSISTENCY ---- */
+  .cons-overall { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; position:relative; z-index:1; }
+  .cons-overall-num {
+    font-size:38px; font-weight:800; letter-spacing:-0.03em;
+    background:linear-gradient(120deg,#fbbf24,#f59e0b,#fb923c); background-size:200% 200%;
+    -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+  }
+  .cons-overall-lbl { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .heat-row { display:flex; align-items:center; gap:10px; position:relative; z-index:1; }
+  .heat-label { width:52px; flex-shrink:0; font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-2); }
+  .heat-grid { display:grid; grid-template-columns:repeat(30, 1fr); gap:3px; flex:1; }
+  .heat-cell {
+    aspect-ratio:1/1; border-radius:3px; background:rgba(255,255,255,0.05); cursor:pointer;
+    transition:transform .1s, outline-color .15s;
+    outline:1.5px solid transparent; outline-offset:1px;
+  }
+  .heat-cell:hover { transform:scale(1.3); }
+  .heat-cell.sel { outline-color:var(--text-1); }
+  .heat-streak { font-family:var(--mono); font-size:9px; color:var(--text-3); flex-shrink:0; width:64px; text-align:right; line-height:1.5; }
+  .heat-streak b { color:var(--text-1); }
+  .cons-detail { font-family:var(--mono); font-size:11px; color:var(--text-2); margin-top:16px; min-height:14px; position:relative; z-index:1; }
+  .cons-detail b { color:var(--text-1); font-weight:800; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="card mod-card mod-money body-hero" id="heroCard">
+    <div class="hero-top">
+      <div class="body-title-wrap">
+        <i class="ti ti-shopping-bag body-hero-icon"></i>
+        <div class="body-title">Vinted</div>
+      </div>
+      <div class="body-date" id="heroDate">—</div>
+    </div>
+    <div class="stat-cells" id="statCells"></div>
+    <div class="hero-empty" id="heroEmpty" style="display:none;">No items sourced yet.</div>
+    <div class="pillar-row" id="pillarRow"></div>
+  </div>
+
+  <!-- TO SHIP -->
+  <div id="shipBannerWrap"></div>
+
+  <!-- ADD ITEM -->
+  <div class="section-title">Add Item</div>
+  <div class="card mod-card mod-money" id="addCard">
+    <div class="form-lbl">Source a new item</div>
+    <div class="form-grid">
+      <div class="fld"><label>Title</label><input class="fin" id="iTitle" placeholder="Levi's denim jacket"></div>
+      <div class="fld"><label>Cost (£)</label><input class="fin" type="number" inputmode="decimal" step="0.01" id="iCost" placeholder="4"></div>
+      <div class="fld"><label>Source</label><input class="fin" id="iSource" placeholder="charity shop"></div>
+      <div class="fld"><label>Category</label>
+        <select class="fin" id="iCat">
+          <option>Tops</option>
+          <option>Bottoms</option>
+          <option>Outerwear</option>
+          <option>Shoes</option>
+          <option>Accessories</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <button class="add-btn" id="addBtn">Add</button>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="section-title">Inventory</div>
+  <div class="card mod-card mod-money" id="invCard">
+    <div class="filter-pills" id="filterPills"></div>
+    <div class="mod-body">
+      <div id="invList"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="section-title">Stats</div>
+  <div class="card mod-card mod-money" id="statsCard">
+    <div class="vstat-grid" id="vStatGrid"></div>
+    <div class="tax-line" id="taxLine"></div>
+    <div class="tax-bar"><div class="tax-bar-fill" id="taxBarFill" style="width:0%;"></div></div>
+  </div>
+
+  <!-- CONSISTENCY -->
+  <div class="section-title">Consistency</div>
+  <div class="card mod-card mod-money" id="vintedConsCard">
+    <div class="cons-overall">
+      <div class="cons-overall-num" id="vintedConsOverallNum">0%</div>
+      <div class="cons-overall-lbl">listing activity — last 30 days</div>
+    </div>
+    <div class="mod-body">
+      <div class="heat-row">
+        <div class="heat-label">Listed</div>
+        <div class="heat-grid" id="vintedHeatGrid"></div>
+        <div class="heat-streak" id="vintedHeatStreak"></div>
+      </div>
+    </div>
+    <div class="cons-detail" id="vintedConsDetail">Tap a day to see the breakdown.</div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+<script>
+/* ============================================================
+   SHARED HELPERS — same conventions as money.html/trades.html.
+   Plain calendar date, no pre-6am shift.
+   ============================================================ */
+function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function num(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
+function lastNDates(n){
+  var base = new Date();
+  var out = [];
+  for (var i=n-1;i>=0;i--){ var d=new Date(base.getFullYear(),base.getMonth(),base.getDate()-i); out.push(d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())); }
+  return out;
+}
+function fmtFull(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}); }
+function rClass(n){ return n>0?'pos':(n<0?'neg':'flat'); }
+
+var ITEMS_KEY = 'vinted:items';
+function loadItems(){ var v=storeGet(ITEMS_KEY); return Array.isArray(v)?v:[]; }
+function saveItems(v){ storeSet(ITEMS_KEY, v); }
+
+function profitOf(it){ return it.soldPrice - it.cost; }
+function marginOf(it){ return it.soldPrice>0 ? profitOf(it)/it.soldPrice : 0; }
+function daysBetween(a, b){
+  var da = new Date(a+'T00:00'), db = new Date(b+'T00:00');
+  return Math.round((db-da)/86400000);
+}
+function daysSince(dateStr){ return daysBetween(dateStr, todayStr()); }
+function addWorkingDays(dateStr, n){
+  var d = new Date(dateStr+'T00:00');
+  var added = 0;
+  while (added < n){
+    d.setDate(d.getDate()+1);
+    var day = d.getDay();
+    if (day !== 0 && day !== 6) added++;
+  }
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+}
+function fmtShort(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}); }
+var CARRIER_DROPOFF = {
+  'Evri': 'Albany Rd ParcelShop — closes 5:30pm, shut Sun',
+  'InPost': 'Lidl Maindy Rd locker — 24/7',
+  'Royal Mail': 'Albany Rd Post Office — closes 5:30pm, shut Sun',
+  'Yodel': 'check the Vinted app for your drop point'
+};
+
+/* current tax year: 6 Apr N to 5 Apr N+1 */
+function currentTaxYear(){
+  var d = new Date();
+  var y = d.getFullYear();
+  var aprSixThisYear = new Date(y,3,6);
+  var startY = (d >= aprSixThisYear) ? y : y-1;
+  var endY = startY+1;
+  return { start: startY+'-04-06', end: endY+'-04-05', label: String(startY).slice(2)+'/'+String(endY).slice(2) };
+}
+function inTaxYear(dateStr, ty){ return dateStr >= ty.start && dateStr <= ty.end; }
+
+var Vinted = {}; /* module registry — each section publishes { refresh: fn } here */
+
+/* ============================================================
+   HERO
+   ============================================================ */
+var CHIP_DEFS = [
+  { key:'listedToday', label:'Listed today', icon:'ti-tag' }
+];
+var chipEls = {};
+(function buildHero(){
+  var row = document.getElementById('pillarRow');
+  CHIP_DEFS.forEach(function(cd){
+    var chip = document.createElement('div'); chip.className = 'pillar-chip';
+    chip.innerHTML = '<i class="ti '+cd.icon+'"></i><span>'+cd.label+'</span>';
+    row.appendChild(chip);
+    chipEls[cd.key] = chip;
+  });
+  document.getElementById('heroDate').textContent = fmtFull(todayStr());
+})();
+function updateHero(){
+  var all = loadItems();
+  var date = todayStr();
+  document.getElementById('heroDate').textContent = fmtFull(date);
+
+  var cellsHost = document.getElementById('statCells');
+  var heroEmpty = document.getElementById('heroEmpty');
+  var sold = all.filter(function(it){ return it.status==='sold'; });
+  var tradingFund = 0;
+  sold.forEach(function(it){ tradingFund += profitOf(it); });
+  var cashInStock = 0;
+  all.forEach(function(it){ if (it.status!=='sold') cashInStock += it.cost; });
+  var active = all.filter(function(it){ return it.status==='listed'; }).length;
+  var toShip = all.filter(function(it){ return it.status==='sold' && !it.shipped; }).length;
+
+  if (!all.length){
+    cellsHost.innerHTML = ['Trading fund','Cash in stock','Active','To ship'].map(function(lbl){
+      return '<div class="scell"><div class="sc-val flat">—</div><div class="sc-lbl">'+lbl+'</div></div>';
+    }).join('');
+    heroEmpty.style.display = 'block';
+  } else {
+    var cells = [
+      ['Trading fund', (tradingFund>=0?'+£':'-£')+Math.abs(tradingFund).toFixed(2), rClass(tradingFund)],
+      ['Cash in stock', '£'+cashInStock.toFixed(2), 'flat'],
+      ['Active', String(active), 'flat'],
+      ['To ship', String(toShip), toShip>0?'neg':'flat']
+    ];
+    cellsHost.innerHTML = cells.map(function(c){
+      return '<div class="scell"><div class="sc-val '+c[2]+'">'+c[1]+'</div><div class="sc-lbl">'+c[0]+'</div></div>';
+    }).join('');
+    heroEmpty.style.display = 'none';
+  }
+
+  var listedToday = all.some(function(it){ return it.listedDate === date; });
+  chipEls.listedToday.classList.toggle('hit', listedToday);
+}
+
+/* ============================================================
+   ADD ITEM
+   ============================================================ */
+(function(){
+  var titleEl = document.getElementById('iTitle');
+  var costEl = document.getElementById('iCost');
+  var sourceEl = document.getElementById('iSource');
+  var catEl = document.getElementById('iCat');
+
+  function shake(el){ el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+
+  document.getElementById('addBtn').addEventListener('click', function(){
+    var title = titleEl.value.trim();
+    var cost = num(costEl.value);
+    if (!title || cost < 0){
+      shake(document.getElementById('addCard'));
+      if (window.loToast) loToast('Add a title and valid cost');
+      return;
+    }
+    var it = {
+      id: String(Date.now()) + Math.random().toString(36).slice(2,8),
+      title: title,
+      cat: catEl.value,
+      cost: cost,
+      source: sourceEl.value.trim(),
+      listPrice: 0,
+      soldPrice: 0,
+      postage: 0,
+      fees: 0,
+      status: 'sourced',
+      sourcedDate: todayStr(),
+      listedDate: '',
+      soldDate: '',
+      carrier: '',
+      shipped: false,
+      shippedDate: '',
+      shipBy: ''
+    };
+    var list = loadItems();
+    list.push(it);
+    saveItems(list);
+    titleEl.value=''; costEl.value=''; sourceEl.value=''; catEl.selectedIndex=0;
+    if (window.loToast) loToast('Item added');
+    refreshAllModules();
+  });
+})();
+
+/* ============================================================
+   TO SHIP BANNER — sold, unshipped items, soonest shipBy first.
+   ============================================================ */
+(function(){
+  function render(){
+    var all = loadItems();
+    var toShip = all.filter(function(it){ return it.status==='sold' && !it.shipped; });
+    var host = document.getElementById('shipBannerWrap');
+    if (!toShip.length){ host.innerHTML = ''; return; }
+    toShip = toShip.slice().sort(function(a,b){ return a.shipBy < b.shipBy ? -1 : 1; });
+    var anyUrgent = toShip.some(function(it){ return daysBetween(todayStr(), it.shipBy) <= 2; });
+    var rows = toShip.map(function(it){
+      var d = daysBetween(todayStr(), it.shipBy);
+      var countdown = d===0 ? 'SHIP TODAY' : (d<0 ? 'OVERDUE' : ('Ship by '+fmtShort(it.shipBy)+' — '+d+' day'+(d===1?'':'s')+' left'));
+      var dropoff = CARRIER_DROPOFF[it.carrier] || 'carrier not set';
+      return '<div class="ship-row" data-id="'+it.id+'">'+
+        '<div class="ship-main"><div class="ship-top">'+
+          '<span class="ship-title">'+it.title+'</span>'+
+          '<span class="ship-badge">'+it.carrier+'</span>'+
+        '</div>'+
+        '<div class="ship-drop">'+dropoff+'</div>'+
+        '<div class="ship-count">'+countdown+'</div></div>'+
+        '<div class="td-btn" data-act="markShipped">Mark shipped</div>'+
+      '</div>';
+    }).join('');
+    host.innerHTML = '<div class="section-title">To Ship</div>'+
+      '<div class="card mod-card mod-alert'+(anyUrgent?' urgent':'')+'" id="toShipCard">'+rows+'</div>';
+    var card = document.getElementById('toShipCard');
+    if (card) card.classList.add('lo-visible');
+    Array.prototype.forEach.call(host.querySelectorAll('[data-act="markShipped"]'), function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.closest('.ship-row').getAttribute('data-id');
+        var list = loadItems();
+        list = list.map(function(x){ if (x.id===id){ x.shipped=true; x.shippedDate=todayStr(); } return x; });
+        saveItems(list);
+        refreshAllModules();
+      });
+    });
+  }
+  render();
+  Vinted.toShip = { refresh: render };
+})();
+
+/* ============================================================
+   INVENTORY — filter pills + rows + inline expanded editor.
+   ============================================================ */
+(function(){
+  var FILTERS = ['All','Sourced','Listed','Sold'];
+  var curFilter = 'All';
+  var expandedId = null;
+
+  function buildPills(){
+    var host = document.getElementById('filterPills'); host.innerHTML = '';
+    FILTERS.forEach(function(f){
+      var p = document.createElement('div'); p.className = 'fpill'+(f===curFilter?' on':'');
+      p.textContent = f;
+      p.addEventListener('click', function(){ curFilter = f; render(); });
+      host.appendChild(p);
+    });
+  }
+
+  function statusMatches(it, f){
+    if (f==='All') return true;
+    if (f==='Sourced') return it.status==='sourced';
+    if (f==='Listed') return it.status==='listed';
+    if (f==='Sold') return it.status==='sold';
+    return true;
+  }
+
+  function sortItems(list){
+    var open = list.filter(function(it){ return it.status!=='sold'; })
+      .sort(function(a,b){ return a.sourcedDate < b.sourcedDate ? -1 : 1; });
+    var sold = list.filter(function(it){ return it.status==='sold'; })
+      .sort(function(a,b){ return a.soldDate < b.soldDate ? 1 : -1; });
+    return open.concat(sold);
+  }
+
+  function subLine(it){
+    if (it.status==='sold'){
+      var p = profitOf(it);
+      return '£'+it.cost.toFixed(2)+' → £'+it.soldPrice.toFixed(2)+' · '+(p>=0?'+£':'-£')+Math.abs(p).toFixed(2);
+    }
+    if (it.status==='listed'){
+      return '£'+it.cost.toFixed(2)+' · asking £'+it.listPrice.toFixed(2);
+    }
+    return '£'+it.cost.toFixed(2)+' · not listed';
+  }
+
+  function rightBlock(it){
+    if (it.status==='sold'){
+      var p = profitOf(it), m = marginOf(it);
+      return '<div class="t-right"><div class="t-r '+rClass(p)+'">'+(p>=0?'+£':'-£')+Math.abs(p).toFixed(2)+'</div>'+
+        '<div class="t-r2">'+Math.round(m*100)+'% margin</div></div>';
+    }
+    if (it.status==='listed'){
+      var d = daysSince(it.listedDate);
+      return '<div class="t-right"><div class="t-r flat">'+d+'d</div><div class="t-r2">since listed</div></div>';
+    }
+    var ds = daysSince(it.sourcedDate);
+    return '<div class="t-right"><div class="t-r flat">'+ds+'d</div><div class="t-r2">held</div></div>';
+  }
+
+  function editorHtml(it){
+    var h = '<div class="trow-detail">';
+    if (it.status==='sourced'){
+      h += '<div><div class="td-section-lbl">List it</div><div class="form-grid">'+
+        '<div class="fld full"><label>List price (£)</label><input class="fin" type="number" step="0.01" data-f="listPrice" value="'+it.listPrice+'"></div>'+
+        '</div><div class="td-actions" style="margin-top:8px;"><div class="td-btn" data-act="markListed">Mark listed</div></div></div>';
+    } else if (it.status==='listed'){
+      h += '<div><div class="td-section-lbl">Mark as sold</div><div class="form-grid">'+
+        '<div class="fld"><label>Sold price (£)</label><input class="fin" type="number" step="0.01" data-f="soldPrice" value="'+it.soldPrice+'"></div>'+
+        '<div class="fld"><label>Carrier</label><select class="fin" data-f="carrier">'+
+          ['','Evri','InPost','Royal Mail','Yodel'].map(function(c){
+            return '<option'+(c===it.carrier?' selected':'')+'>'+c+'</option>';
+          }).join('')+
+        '</select></div>'+
+        '</div><div class="td-actions" style="margin-top:8px;"><div class="td-btn" data-act="markSold">Mark sold</div></div></div>';
+    } else {
+      h += '<div><div class="td-section-lbl">Breakdown</div>'+
+        '<div class="bd-row"><span class="bd-name">Sold price</span><span class="bd-num">£'+it.soldPrice.toFixed(2)+'</span></div>'+
+        '<div class="bd-row"><span class="bd-name">Cost</span><span class="bd-num">-£'+it.cost.toFixed(2)+'</span></div>'+
+        (it.postage ? '<div class="bd-row"><span class="bd-name">Postage</span><span class="bd-num">-£'+it.postage.toFixed(2)+'</span></div>' : '')+
+        (it.fees ? '<div class="bd-row"><span class="bd-name">Fees</span><span class="bd-num">-£'+it.fees.toFixed(2)+'</span></div>' : '')+
+        '<div class="bd-row"><span class="bd-name">Profit</span><span class="bd-num '+rClass(profitOf(it))+'">'+(profitOf(it)>=0?'+£':'-£')+Math.abs(profitOf(it)).toFixed(2)+'</span></div>'+
+        '<div class="td-actions" style="margin-top:8px;"><div class="td-btn secondary" data-act="reopen">Reopen</div></div></div>';
+    }
+    h += '<div><div class="td-section-lbl">Edit</div><div class="form-grid">'+
+      '<div class="fld"><label>Title</label><input class="fin" data-f="title" value="'+it.title.replace(/"/g,'&quot;')+'"></div>'+
+      '<div class="fld"><label>Cost (£)</label><input class="fin" type="number" step="0.01" data-f="cost" value="'+it.cost+'"></div>'+
+      '<div class="fld"><label>Source</label><input class="fin" data-f="source" value="'+(it.source||'').replace(/"/g,'&quot;')+'"></div>'+
+      '<div class="fld"><label>Category</label><select class="fin" data-f="cat">'+
+        ['Tops','Bottoms','Outerwear','Shoes','Accessories','Other'].map(function(c){
+          return '<option'+(c===it.cat?' selected':'')+'>'+c+'</option>';
+        }).join('')+
+      '</select></div>'+
+      '</div><div class="td-actions" style="margin-top:8px;">'+
+      '<div class="td-btn secondary" data-act="saveEdit">Save changes</div>'+
+      '<div class="td-btn danger" data-act="delete">Delete</div>'+
+      '</div></div>';
+    h += '</div>';
+    return h;
+  }
+
+  function render(){
+    buildPills();
+    var all = loadItems();
+    var filtered = all.filter(function(it){ return statusMatches(it, curFilter); });
+    var sorted = sortItems(filtered);
+    var host = document.getElementById('invList'); host.innerHTML = '';
+    if (!sorted.length){
+      var e = document.createElement('div'); e.className='td-empty'; e.textContent='No items here.';
+      host.appendChild(e);
+      return;
+    }
+    sorted.forEach(function(it){
+      var row = document.createElement('div'); row.className='trow';
+      var top = document.createElement('div'); top.className='trow-top';
+      top.innerHTML =
+        '<div class="t-main"><div class="t-top">'+
+          '<span class="t-title">'+it.title+'</span>'+
+          '<span class="t-badge '+it.status+'">'+it.status+'</span>'+
+          '<span class="t-cat">'+it.cat+'</span>'+
+        '</div><div class="t-sub">'+subLine(it)+'</div></div>'+
+        rightBlock(it);
+      row.appendChild(top);
+
+      if (expandedId === it.id){
+        var det = document.createElement('div');
+        det.innerHTML = editorHtml(it);
+        row.appendChild(det.firstChild);
+        wireEditor(row, it);
+      }
+
+      top.addEventListener('click', function(){
+        expandedId = (expandedId === it.id) ? null : it.id;
+        render();
+      });
+      host.appendChild(row);
+    });
+  }
+
+  function wireEditor(row, it){
+    var det = row.querySelector('.trow-detail');
+    det.addEventListener('click', function(e){ e.stopPropagation(); });
+
+    var markListedBtn = det.querySelector('[data-act="markListed"]');
+    if (markListedBtn) markListedBtn.addEventListener('click', function(){
+      var lp = num(det.querySelector('[data-f="listPrice"]').value);
+      updateItem(it.id, function(x){ x.listPrice=lp; x.status='listed'; x.listedDate=todayStr(); });
+    });
+
+    var markSoldBtn = det.querySelector('[data-act="markSold"]');
+    if (markSoldBtn) markSoldBtn.addEventListener('click', function(){
+      var sp = num(det.querySelector('[data-f="soldPrice"]').value);
+      var carrier = det.querySelector('[data-f="carrier"]').value;
+      if (!carrier){ if (window.loToast) loToast('Select a carrier'); return; }
+      var soldDate = todayStr();
+      var shipBy = addWorkingDays(soldDate, 5);
+      updateItem(it.id, function(x){
+        x.soldPrice=sp; x.carrier=carrier;
+        x.status='sold'; x.soldDate=soldDate; x.shipBy=shipBy; x.shipped=false; x.shippedDate='';
+      });
+    });
+
+    var reopenBtn = det.querySelector('[data-act="reopen"]');
+    if (reopenBtn) reopenBtn.addEventListener('click', function(){
+      updateItem(it.id, function(x){
+        x.status='listed'; x.soldDate=''; x.soldPrice=0; x.carrier=''; x.shipBy=''; x.shipped=false; x.shippedDate='';
+      });
+    });
+
+    var saveEditBtn = det.querySelector('[data-act="saveEdit"]');
+    if (saveEditBtn) saveEditBtn.addEventListener('click', function(){
+      var title = det.querySelector('[data-f="title"]').value.trim();
+      var cost = num(det.querySelector('[data-f="cost"]').value);
+      var source = det.querySelector('[data-f="source"]').value.trim();
+      var cat = det.querySelector('[data-f="cat"]').value;
+      if (!title || cost < 0){ if (window.loToast) loToast('Title and valid cost required'); return; }
+      updateItem(it.id, function(x){ x.title=title; x.cost=cost; x.source=source; x.cat=cat; });
+      if (window.loToast) loToast('Item updated');
+    });
+
+    var deleteBtn = det.querySelector('[data-act="delete"]');
+    if (deleteBtn) deleteBtn.addEventListener('click', function(){
+      if (!window.confirm('Delete "'+it.title+'"?')) return;
+      var list = loadItems().filter(function(x){ return x.id !== it.id; });
+      saveItems(list);
+      expandedId = null;
+      refreshAllModules();
+    });
+  }
+
+  function updateItem(id, mutate){
+    var list = loadItems();
+    list = list.map(function(x){ if (x.id===id) mutate(x); return x; });
+    saveItems(list);
+    refreshAllModules();
+  }
+
+  render();
+  Vinted.inventory = { refresh: render };
+})();
+
+/* ============================================================
+   STATS — computed from sold items only, plus tax-year progress.
+   ============================================================ */
+(function(){
+  function render(){
+    var all = loadItems();
+    var sold = all.filter(function(it){ return it.status==='sold'; });
+
+    var avgMargin = 0;
+    if (sold.length){
+      var sumM = 0, cnt = 0;
+      sold.forEach(function(it){ if (it.soldPrice>0){ sumM += marginOf(it); cnt++; } });
+      avgMargin = cnt ? sumM/cnt : 0;
+    }
+    var sellThrough = all.length ? sold.length/all.length : 0;
+
+    var daysList = [];
+    sold.forEach(function(it){ if (it.listedDate) daysList.push(daysBetween(it.listedDate, it.soldDate)); });
+    var avgDays = daysList.length ? (daysList.reduce(function(a,b){return a+b;},0)/daysList.length) : 0;
+
+    var catProfit = {};
+    sold.forEach(function(it){ catProfit[it.cat] = (catProfit[it.cat]||0) + profitOf(it); });
+    var bestCat = '—', bestVal = -Infinity;
+    Object.keys(catProfit).forEach(function(c){ if (catProfit[c] > bestVal){ bestVal = catProfit[c]; bestCat = c; } });
+    if (!sold.length) bestCat = '—';
+
+    var totalRevenue = 0;
+    sold.forEach(function(it){ totalRevenue += it.soldPrice; });
+
+    var shipDaysList = [];
+    all.forEach(function(it){ if (it.shipped && it.soldDate && it.shippedDate) shipDaysList.push(daysBetween(it.soldDate, it.shippedDate)); });
+    var avgShipTime = shipDaysList.length ? (shipDaysList.reduce(function(a,b){ return a+b; },0)/shipDaysList.length) : 0;
+
+    var cells = [
+      ['Avg margin %', Math.round(avgMargin*100)+'%'],
+      ['Sell-through %', Math.round(sellThrough*100)+'%'],
+      ['Avg days to sell', daysList.length ? avgDays.toFixed(1) : '—'],
+      ['Best category', bestCat],
+      ['Total revenue', '£'+totalRevenue.toFixed(2)],
+      ['Items sold', String(sold.length)],
+      ['Avg ship time', shipDaysList.length ? avgShipTime.toFixed(1) : '—']
+    ];
+    document.getElementById('vStatGrid').innerHTML = cells.map(function(c){
+      return '<div class="scell"><div class="sc-val flat">'+c[1]+'</div><div class="sc-lbl">'+c[0]+'</div></div>';
+    }).join('');
+
+    var ty = currentTaxYear();
+    var tyProfit = 0;
+    sold.forEach(function(it){ if (inTaxYear(it.soldDate, ty)) tyProfit += profitOf(it); });
+    var allowance = 1000;
+    var pct = Math.max(0, Math.min(100, (tyProfit/allowance)*100));
+    var over = tyProfit > allowance;
+    document.getElementById('taxLine').textContent = 'Tax year '+ty.label+': £'+tyProfit.toFixed(2)+' of £'+allowance+' allowance';
+    var fill = document.getElementById('taxBarFill');
+    fill.style.width = pct+'%';
+    fill.classList.toggle('over', over);
+  }
+  render();
+  Vinted.stats = { refresh: render };
+})();
+
+/* ============================================================
+   CONSISTENCY — 30-day heatmap of listing days.
+   ============================================================ */
+(function(){
+  var HEAT_N = 30;
+  var cells = [], dates = [];
+  var selIdx = -1;
+
+  function itemsListedOn(date){
+    return loadItems().filter(function(it){ return it.listedDate === date; });
+  }
+  function itemsSoldOn(date){
+    return loadItems().filter(function(it){ return it.soldDate === date; });
+  }
+
+  function build(){
+    dates = lastNDates(HEAT_N);
+    var host = document.getElementById('vintedHeatGrid'); host.innerHTML = '';
+    cells = [];
+    dates.forEach(function(date, idx){
+      var cell = document.createElement('div'); cell.className = 'heat-cell';
+      cell.setAttribute('data-idx', idx);
+      cell.addEventListener('click', function(){
+        selIdx = (selIdx === idx) ? -1 : idx;
+        updateSelection();
+      });
+      host.appendChild(cell);
+      cells.push(cell);
+    });
+  }
+
+  function updateSelection(){
+    cells.forEach(function(c, idx){ c.classList.toggle('sel', idx === selIdx); });
+    var detail = document.getElementById('vintedConsDetail');
+    if (selIdx < 0){ detail.textContent = 'Tap a day to see the breakdown.'; return; }
+    var date = dates[selIdx];
+    var listed = itemsListedOn(date);
+    var sold = itemsSoldOn(date);
+    var profit = 0;
+    sold.forEach(function(it){ profit += profitOf(it); });
+    detail.innerHTML = '<b>' + fmtFull(date) + '</b> · ' + listed.length + ' listed · ' + sold.length + ' sold · ' + (profit>=0?'+£':'-£') + Math.abs(profit).toFixed(2);
+  }
+
+  function refresh(){
+    dates = lastNDates(HEAT_N);
+    var hits = 0, curStreak = 0, bestStreak = 0, run = 0, i;
+    for (i=0;i<dates.length;i++){
+      var n = itemsListedOn(dates[i]).length;
+      var hit = n >= 1;
+      if (hit){ hits++; run++; if (run > bestStreak) bestStreak = run; } else { run = 0; }
+      if (n >= 2){ cells[i].style.background = '#fbbf24'; cells[i].style.boxShadow = '0 0 5px rgba(251,191,36,0.6)'; }
+      else if (n >= 1){ cells[i].style.background = 'rgba(251,191,36,0.45)'; cells[i].style.boxShadow = 'none'; }
+      else { cells[i].style.background = 'rgba(255,255,255,0.05)'; cells[i].style.boxShadow = 'none'; }
+    }
+    for (i=dates.length-1;i>=0;i--){ if (itemsListedOn(dates[i]).length >= 1) curStreak++; else break; }
+    document.getElementById('vintedHeatStreak').innerHTML = '<b>' + curStreak + '</b> now<br>' + bestStreak + ' best';
+    var overallPct = Math.round(hits / dates.length * 100);
+    document.getElementById('vintedConsOverallNum').textContent = overallPct + '%';
+    updateSelection();
+  }
+
+  build();
+  refresh();
+  Vinted.consistency = { refresh: refresh };
+})();
+
+/* ============================================================
+   BOOT — hero, sync/focus refresh, staggered entry animation.
+   ============================================================ */
+updateHero();
+
+function refreshAllModules(){
+  updateHero();
+  if (Vinted.toShip) Vinted.toShip.refresh();
+  if (Vinted.inventory) Vinted.inventory.refresh();
+  if (Vinted.stats) Vinted.stats.refresh();
+  if (Vinted.consistency) Vinted.consistency.refresh();
+}
+window.addEventListener('lo-sync-applied', refreshAllModules);
+window.addEventListener('focus', refreshAllModules);
+
+(function(){
+  var cards = document.querySelectorAll('.mod-card');
+  Array.prototype.forEach.call(cards, function(c, idx){ c.style.transitionDelay = (idx*50)+'ms'; });
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      Array.prototype.forEach.call(cards, function(c){ c.classList.add('lo-visible'); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -215,6 +215,10 @@
       <div class="tile-top"><i class="ti ti-chart-candle"></i><span>Trades</span></div>
       <div class="tile-stat" id="tileTradesStat">0 logged</div>
     </a>
+    <a class="mod-card mod-money tile" href="vinted.html" id="tileVinted">
+      <div class="tile-top"><i class="ti ti-shopping-bag"></i><span>Vinted</span></div>
+      <div class="tile-stat" id="tileVintedStat">0 items</div>
+    </a>
     <a class="mod-card mod-money tile soon" href="#" id="tileNetWorth">
       <div class="tile-top"><i class="ti ti-wallet"></i><span>Net Worth</span></div>
       <div class="tile-stat">Coming soon</div>
@@ -433,9 +437,21 @@ function updateHero(){
 /* ============================================================
    TILES — nav grid; Trades' stat mirrors the live log.
    ============================================================ */
+function loadVintedItems(){ var v=storeGet('vinted:items'); return Array.isArray(v)?v:[]; }
 function updateTiles(){
   var all = loadTrades();
   document.getElementById('tileTradesStat').textContent = all.length + ' logged';
+  var vinted = loadVintedItems();
+  var toShip = vinted.filter(function(v){ return v.status === 'sold' && !v.shipped; }).length;
+  var vintedStat = document.getElementById('tileVintedStat');
+  if (toShip > 0){
+    vintedStat.textContent = toShip + ' to ship';
+    vintedStat.style.color = '#f87171';
+  } else {
+    var inStock = vinted.filter(function(v){ return v.status !== 'sold'; }).length;
+    vintedStat.textContent = vinted.length ? (inStock + ' in stock') : '0 items';
+    vintedStat.style.color = '';
+  }
 }
 updateTiles();
 Money.tiles = { refresh: updateTiles };
