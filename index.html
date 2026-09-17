@@ -116,6 +116,30 @@
   .sec-tile[data-sec="life"]  { --g1:#6be3a4; --g2:#38bdf8; --g3:#a3e635; }
   .sec-tile[data-sec="money"] { --g1:#fbbf24; --g2:#f59e0b; --g3:#fb923c; }
   .sec-tile[data-sec="system"] { --g1:#60a5fa; --g2:#22d3ee; --g3:#6366f1; }
+
+  /* --- hero day-ring %: full-spectrum animated gradient text --- */
+  .ring-pct.ring-pct-glow {
+    background: linear-gradient(120deg, #ec4899, #60a5fa, #ff6b6b, #fb923c, #a78bfa, #ec4899);
+    background-size: 400% 400%;
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent; -webkit-text-fill-color: transparent;
+    animation: dayPctShift 12s ease infinite;
+  }
+  @keyframes dayPctShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ring-pct.ring-pct-glow { animation: none; background-position: 30% 50%; }
+  }
+
+  .hero-breakdown { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+
+  #shipTicker .ticker-dot { background:#fbbf24; }
+  #shipTicker.urgent .ticker-dot, #shipTicker.urgent .ticker-label,
+  #shipTicker.urgent .ticker-txt { color:#f87171; }
+  #shipTicker.urgent .ticker-dot { background:#f87171; }
 </style>
 </head>
 <body>
@@ -146,7 +170,8 @@
       <div class="hero-side">
         <div class="hero-status" id="dayStatus">Booting…</div>
         <div class="hero-remain" id="dayRemain">—</div>
-        <div class="hero-range">8:00 AM – 12:00 AM awake window</div>
+        <div class="hero-range" id="heroRange">8:00 AM – 12:00 AM awake window</div>
+        <div class="hero-breakdown" id="dayBreakdown"></div>
       </div>
     </div>
 
@@ -156,6 +181,14 @@
       <span class="ticker-label">GOALS</span>
       <div class="ticker-stage"><div class="ticker-txt" id="tickTxt">Loading…</div></div>
       <span class="ticker-meta" id="tickMeta">0/0</span>
+    </div>
+
+    <!-- ship ticker -->
+    <div class="ticker" id="shipTicker" style="display:none">
+      <span class="ticker-dot" id="shipDot"></span>
+      <span class="ticker-label">SHIP</span>
+      <div class="ticker-stage"><div class="ticker-txt" id="shipTxt"></div></div>
+      <span class="ticker-meta" id="shipMeta"></span>
     </div>
   </div>
 
@@ -193,6 +226,11 @@ function dayDiff(a,b){
   return Math.round((db-da)/86400000);
 }
 function loadVinted(){ var v = storeGet('vinted:items'); return Array.isArray(v) ? v : []; }
+function pendingShip(){
+  return loadVinted().filter(function(it){
+    return it.status === 'sold' && !it.shipped;
+  }).sort(function(a,b){ return (a.shipBy||'') < (b.shipBy||'') ? -1 : 1; });
+}
 function toMin(t){ if(!t||t.indexOf(':')<0) return null; var p=t.split(':'); return (+p[0])*60+(+p[1]); }
 function durMins(bed,wake){ var b=toMin(bed),w=toMin(wake); if(b==null||w==null) return null; if(w<=b) w+=1440; return w-b; }
 function nowMs(){ return (window.performance && performance.now) ? performance.now() : Date.now(); }
@@ -222,6 +260,69 @@ function sunColor(pct){
   var c = sunColorArr(pct);
   return 'rgb('+c[0]+','+c[1]+','+c[2]+')';
 }
+
+/* ---------- DAILY EXECUTION SCORE (ring) ---------- */
+// Swap point: replace this with a Whoop/wearable-sourced score without touching anything else.
+function sleepScoreFor(date){
+  var sl = storeGet('sleep:'+date) || {};
+  var mins = durMins(sl.bed, sl.wake);
+  if (mins == null) return { score:0, hit:false };
+  return { score: Math.min(1, mins/420), hit: mins>=420 };
+}
+function computeDayScore(date){
+  var parts = [], detail = {};
+
+  var goals = storeGet('goals:'+date)||[];
+  if (goals.length){
+    var gDone = goals.filter(function(g){return g.done;}).length;
+    parts.push(gDone/goals.length);
+    detail.goals = { included:true, done:gDone, total:goals.length };
+  } else {
+    detail.goals = { included:false, done:0, total:0 };
+  }
+
+  var s = storeGet('supps:'+date)||{}, taken=0, k;
+  for (k in s){ if (s.hasOwnProperty(k) && s[k]) taken++; }
+  parts.push(Math.min(1, taken/SUPPS_TOTAL));
+  detail.supps = { taken:taken, total:SUPPS_TOTAL };
+
+  var sleep = sleepScoreFor(date);
+  parts.push(sleep.score);
+  detail.sleep = { hit:sleep.hit };
+
+  var gym = storeGet('gym:'+date)||null;
+  var gymDone=0, gymTotal=0, gymFinished=false, gymScore=0;
+  if (gym){
+    gymFinished = !!gym.finished;
+    if (gym.split && gym.bySplit && Array.isArray(gym.bySplit[gym.split])){
+      gym.bySplit[gym.split].forEach(function(ex){
+        (ex.sets||[]).forEach(function(st){ gymTotal++; if (st.done) gymDone++; });
+      });
+    }
+    gymScore = gymFinished ? 1 : (gymTotal>0 ? gymDone/gymTotal : 0);
+  }
+  parts.push(gymScore);
+  detail.gym = { finished:gymFinished, done:gymDone, total:gymTotal };
+
+  var hyg = storeGet('hygiene:'+date)||{}, hygCount=0;
+  HYG_GROUPS.forEach(function(g){
+    g.items.forEach(function(name, idx){ if (hyg[g.id+':'+idx]) hygCount++; });
+  });
+  parts.push(Math.min(1, hygCount/HYG_TOTAL));
+  detail.hygiene = { done:hygCount, total:HYG_TOTAL };
+
+  var pct = parts.length ? Math.round(parts.reduce(function(a,b){return a+b;},0)/parts.length*100) : 0;
+  return { pct:pct, detail:detail };
+}
+function formatDayBreakdown(detail){
+  var segs = [];
+  if (detail.goals.included) segs.push('Goals '+detail.goals.done+'/'+detail.goals.total);
+  segs.push('Supps '+detail.supps.taken+'/'+detail.supps.total);
+  segs.push('Sleep '+(detail.sleep.hit ? '✓' : '✗'));
+  segs.push('Gym '+(detail.gym.finished ? '✓' : (detail.gym.done+'/'+detail.gym.total)));
+  segs.push('Hyg '+detail.hygiene.done+'/'+detail.hygiene.total);
+  return segs.join(' · ');
+}
 function updateDayRing(){
   var now=new Date();
   var hrs=now.getHours()+now.getMinutes()/60+now.getSeconds()/3600;
@@ -229,24 +330,26 @@ function updateDayRing(){
   var pctEl=document.getElementById('dayPct'), phaseEl=document.getElementById('dayPhase');
   var statusEl=document.getElementById('dayStatus'), remainEl=document.getElementById('dayRemain');
 
+  var breakdownEl=document.getElementById('dayBreakdown');
+  var scoreData=computeDayScore(getActiveDateString());
+  if (breakdownEl) breakdownEl.textContent=formatDayBreakdown(scoreData.detail);
+
   fill.setAttribute('stroke-dasharray', DAY_C);
 
   if (hrs < WAKE_HOUR){
-    fill.setAttribute('stroke-dashoffset', DAY_C);
+    fill.setAttribute('stroke-dashoffset', DAY_C*(1-scoreData.pct/100));
     fill.setAttribute('stroke', '#4d4b47');
-    pctEl.textContent='—'; phaseEl.textContent='SLEEPING';
-    pctEl.style.backgroundImage=''; pctEl.style.webkitBackgroundClip=''; pctEl.style.backgroundClip='';
-    pctEl.style.webkitTextFillColor=''; pctEl.style.color='';
+    pctEl.textContent=scoreData.pct+'%'; phaseEl.textContent='SLEEPING';
+    pctEl.classList.remove('ring-pct-glow');
     statusEl.textContent='😴 Still sleeping';
     var toWake=WAKE_HOUR-hrs;
     remainEl.textContent=Math.floor(toWake)+'h '+Math.round((toWake%1)*60)+'m until wake-up';
     return;
   }
-  var pct=Math.min(100,(hrs-WAKE_HOUR)/(SLEEP_HOUR-WAKE_HOUR)*100);
-  var col=sunColor(pct);
-  var pctA=sunColorArr(Math.max(0,pct-18));
-  var pctB=sunColorArr(pct);
-  var pctC=sunColorArr(Math.min(100,pct+18));
+  var timePct=Math.min(100,(hrs-WAKE_HOUR)/(SLEEP_HOUR-WAKE_HOUR)*100);
+  var pctA=sunColorArr(Math.max(0,timePct-18));
+  var pctB=sunColorArr(timePct);
+  var pctC=sunColorArr(Math.min(100,timePct+18));
   var colA='rgb('+pctA[0]+','+pctA[1]+','+pctA[2]+')';
   var colB='rgb('+pctB[0]+','+pctB[1]+','+pctB[2]+')';
   var colC='rgb('+pctC[0]+','+pctC[1]+','+pctC[2]+')';
@@ -254,18 +357,16 @@ function updateDayRing(){
   if (stop1) stop1.setAttribute('stop-color', colA);
   if (stop2) stop2.setAttribute('stop-color', colB);
   if (stop3) stop3.setAttribute('stop-color', colC);
-  fill.setAttribute('stroke-dashoffset', DAY_C*(1-pct/100));
+  fill.setAttribute('stroke-dashoffset', DAY_C*(1-scoreData.pct/100));
   fill.setAttribute('stroke', 'url(#dayGrad)');
-  pctEl.textContent=Math.round(pct)+'%';
-  pctEl.style.backgroundImage='linear-gradient(135deg,'+colA+','+colB+','+colC+')';
-  pctEl.style.webkitBackgroundClip='text'; pctEl.style.backgroundClip='text';
-  pctEl.style.webkitTextFillColor='transparent'; pctEl.style.color='transparent';
+  pctEl.textContent=scoreData.pct+'%';
+  pctEl.classList.add('ring-pct-glow');
 
   var phase,status;
-  if (pct<25){ phase='MORNING'; status='☀️ Morning — fresh start'; }
-  else if (pct<50){ phase='MIDDAY'; status='⚡ Midday — keep moving'; }
-  else if (pct<75){ phase='AFTERNOON'; status='🔥 Afternoon — push it'; }
-  else if (pct<90){ phase='EVENING'; status='⏳ Evening — wrap up'; }
+  if (timePct<25){ phase='MORNING'; status='☀️ Morning — fresh start'; }
+  else if (timePct<50){ phase='MIDDAY'; status='⚡ Midday — keep moving'; }
+  else if (timePct<75){ phase='AFTERNOON'; status='🔥 Afternoon — push it'; }
+  else if (timePct<90){ phase='EVENING'; status='⏳ Evening — wrap up'; }
   else { phase='BEDTIME'; status='🌙 Bedtime soon'; }
   phaseEl.textContent=phase; statusEl.textContent=status;
   var left=SLEEP_HOUR-hrs;
@@ -1178,6 +1279,47 @@ function tick(){
   tickIdx++;
 }
 
+/* ---------- SHIP TICKER ---------- */
+function dropLine(carrier){
+  if (carrier==='InPost') return 'Lidl Maindy Rd locker, 24/7';
+  if (carrier==='Evri') return 'Albany Rd ParcelShop, closes 5:30';
+  if (carrier==='Royal Mail') return 'Albany Rd Post Office, closes 5:30';
+  if (carrier==='Yodel') return 'check the app for your drop point';
+  return 'drop point not set';
+}
+function fmtShipDate(date){ return new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short'}); }
+function updateShip(){
+  var pending = pendingShip();
+  var el = document.getElementById('shipTicker');
+  var heroRange = document.getElementById('heroRange');
+  if (!pending.length){
+    el.style.display = 'none';
+    el.classList.remove('urgent');
+    if (heroRange){ heroRange.textContent = '8:00 AM – 12:00 AM awake window'; heroRange.style.color = ''; }
+    return;
+  }
+  el.style.display = '';
+  var item = pending[0];
+  var daysLeft = dayDiff(getActiveDateString(), item.shipBy);
+  var urgent = daysLeft <= 1;
+  el.classList.toggle('urgent', urgent);
+
+  document.getElementById('shipTxt').textContent = item.title+' — '+item.carrier+' · '+dropLine(item.carrier);
+
+  var metaTxt;
+  if (daysLeft > 1) metaTxt = daysLeft + 'd left';
+  else if (daysLeft === 1) metaTxt = 'TOMORROW';
+  else if (daysLeft === 0) metaTxt = 'TODAY';
+  else metaTxt = 'OVERDUE';
+  if (pending.length > 1) metaTxt += ' (+' + (pending.length-1) + ' more)';
+  document.getElementById('shipMeta').textContent = metaTxt;
+
+  if (heroRange){
+    heroRange.textContent = 'Ship by ' + fmtShipDate(item.shipBy);
+    heroRange.style.color = urgent ? '#f87171' : '#fbbf24';
+  }
+}
+
 /* ---------- boot ---------- */
 updateClock(); updateDayRing();
 buildTiles();
@@ -1190,11 +1332,14 @@ initSystemCanvas();
 })();
 updateStats(); startLoop();
 tick();
+updateShip();
 setInterval(updateClock, 1000);
 setInterval(updateDayRing, 60*1000);
 setInterval(tick, 5000);
-window.addEventListener('focus', function(){ updateStats(); updateDayRing(); });
-window.addEventListener('lo-sync-applied', function(){ updateStats(); tick(); });
+setInterval(updateShip, 60000);
+window.addEventListener('focus', function(){ updateStats(); updateDayRing(); updateShip(); });
+window.addEventListener('lo-sync-applied', function(){ updateStats(); tick(); updateDayRing(); updateShip(); });
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='visible') updateDayRing(); });
 </script>
 </body>
 </html>
