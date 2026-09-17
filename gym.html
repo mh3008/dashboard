@@ -166,10 +166,8 @@ var SPLIT_TEMPLATES = {
   'Posterior': ['Seated Row','Lat Pulldown','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise']
 };
 var SETS_PER = 2;
-var SETS_PER_OVERRIDE = { 'hip adductor':1, 'reverse curl':1, 'seated calf raise':1 };
 function setsForName(nm){
-  var key = (nm||'').toLowerCase();
-  return SETS_PER_OVERRIDE.hasOwnProperty(key) ? SETS_PER_OVERRIDE[key] : SETS_PER;
+  return SETS_PER;
 }
 var SEED_EX = ['Chest Fly','Incline Chest Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor','Seated Row','Lat Pulldown','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise'];
 var viewedDate = getActiveDateString();
@@ -210,6 +208,19 @@ function computeDone(s){
   return s.finished || anyComplete;
 }
 function save(s){ s.done = computeDone(s); storeSet(KEY(), s); }
+// A set counts if it has a weight. Top set is picked by e1rm among sets that
+// also have reps; if none of the exercise's sets have reps, fall back to the
+// heaviest weighted set with reps reported as 0.
+function pickTop(sets){
+  var top=null, heaviest=null;
+  (sets||[]).forEach(function(st){
+    var w=num(st.weight), r=num(st.reps); if(!w) return;
+    if (!heaviest || w>heaviest.weight) heaviest={weight:w, reps:r};
+    if (r>0 && (!top || e1rm(w,r) > e1rm(top.weight,top.reps))) top={weight:w,reps:r};
+  });
+  if (top) return top;
+  return heaviest ? {weight:heaviest.weight, reps:0} : null;
+}
 function lastTimeFor(name){
   var cutoff = viewedDate, best=null, bestDate=null;
   for (var i=0;i<localStorage.length;i++){
@@ -220,22 +231,14 @@ function lastTimeFor(name){
     var sess = storeGet(k); if (!sess) continue;
     var ex = sessAllEx(sess).filter(function(e){ return (e.name||'').toLowerCase()===name.toLowerCase(); })[0];
     if (!ex || !Array.isArray(ex.sets)) continue;
-    var top=null;
-    ex.sets.forEach(function(st){
-      var w=num(st.weight), r=num(st.reps); if(!w||!r) return;
-      if (!top || e1rm(w,r) > e1rm(top.weight,top.reps)) top={weight:w,reps:r};
-    });
+    var top = pickTop(ex.sets);
     if (!top) continue;
     if (!bestDate || date > bestDate){ bestDate=date; best=top; }
   }
   return best ? { weight:best.weight, reps:best.reps, e1rm:e1rm(best.weight,best.reps) } : null;
 }
 function currentTop(ex){
-  var top=null;
-  (ex.sets||[]).forEach(function(st){
-    var w=num(st.weight), r=num(st.reps); if(!w||!r) return;
-    if (!top || e1rm(w,r) > e1rm(top.weight,top.reps)) top={weight:w,reps:r};
-  });
+  var top = pickTop(ex.sets);
   return top ? { weight:top.weight, reps:top.reps, e1rm:e1rm(top.weight,top.reps) } : null;
 }
 function currentBlockFor(name){
@@ -247,11 +250,7 @@ function currentBlockFor(name){
     var sess = storeGet(k); if (!sess) continue;
     var ex = sessAllEx(sess).filter(function(e){ return (e.name||'').toLowerCase()===name.toLowerCase(); })[0];
     if (!ex || !Array.isArray(ex.sets)) continue;
-    var top=null;
-    ex.sets.forEach(function(st){
-      var w=num(st.weight), r=num(st.reps); if(!w||!r) return;
-      if (!top || e1rm(w,r) > e1rm(top.weight,top.reps)) top={weight:w,reps:r};
-    });
+    var top = pickTop(ex.sets);
     if (!top) continue;
     rows.push({date:date, weight:top.weight, reps:top.reps});
   }
@@ -312,6 +311,16 @@ function buildProgressionPanel(name){
 function render(){
   var s = load();
   var isToday = viewedDate === getActiveDateString();
+  if (isToday){
+    var padded = false;
+    SPLITS.forEach(function(sp){
+      (s.bySplit[sp]||[]).forEach(function(ex){
+        if (!Array.isArray(ex.sets)) ex.sets = [];
+        while (ex.sets.length < SETS_PER){ ex.sets.push({weight:'',reps:'',done:false}); padded = true; }
+      });
+    });
+    if (padded) save(s);
+  }
   var lbl = document.getElementById('dateLbl'); lbl.innerHTML='';
   lbl.appendChild(document.createTextNode(viewedDate));
   if (isToday){
@@ -367,10 +376,12 @@ function render(){
     var last=lastTimeFor(ex.name);
     if (last){
       var lb=document.createElement('span'); lb.className='ex-last';
-      lb.textContent='Last: '+ (+last.weight.toFixed(1)) +'kg × '+last.reps;
+      lb.textContent = last.reps>0
+        ? ('Last: '+ (+last.weight.toFixed(1)) +'kg × '+last.reps)
+        : ('Last: '+ (+last.weight.toFixed(1)) +'kg');
       head.appendChild(lb);
       var cur=currentTop(ex);
-      if (cur && cur.e1rm > last.e1rm){
+      if (cur && last.e1rm>0 && cur.e1rm>0 && cur.e1rm > last.e1rm){
         var pr=document.createElement('span'); pr.className='ex-pr'; pr.textContent='↑ BEATING';
         head.appendChild(pr);
       }
@@ -442,7 +453,7 @@ function refreshBadges(){
     var head=card.querySelector('.ex-head');
     var old=head.querySelector('.ex-pr'); if(old) old.remove();
     var last=lastTimeFor(ex.name), cur=currentTop(ex);
-    if (last && cur && cur.e1rm>last.e1rm){
+    if (last && cur && last.e1rm>0 && cur.e1rm>0 && cur.e1rm>last.e1rm){
       var pr=document.createElement('span'); pr.className='ex-pr'; pr.textContent='↑ BEATING';
       var del=head.querySelector('.ex-del'); head.insertBefore(pr, del);
     }
@@ -461,7 +472,8 @@ function togglePicker(){
   function commit(name){
     name=(name||'').trim(); if(!name) return;
     var st=load(); if(!st.split) return;
-    st.bySplit[st.split].push({ name:name, sets:[{weight:'',reps:'',done:false}] }); save(st);
+    var sets=[]; for(var i=0;i<SETS_PER;i++) sets.push({weight:'',reps:'',done:false});
+    st.bySplit[st.split].push({ name:name, sets:sets }); save(st);
     pickerOpen=false; document.getElementById('pickerHost').innerHTML=''; render();
   }
   go.addEventListener('click', function(){ commit(input.value); });
@@ -472,7 +484,7 @@ function togglePicker(){
   historyNames().slice(0,24).forEach(function(n){
     var chip=document.createElement('span'); chip.className='ex-chip'; chip.textContent=n;
     var last=lastTimeFor(n);
-    if(last){ var cl=document.createElement('span'); cl.className='c-last'; cl.textContent=(+last.weight.toFixed(1))+'×'+last.reps; chip.appendChild(cl); }
+    if(last){ var cl=document.createElement('span'); cl.className='c-last'; cl.textContent = last.reps>0 ? ((+last.weight.toFixed(1))+'×'+last.reps) : ((+last.weight.toFixed(1))+'kg'); chip.appendChild(cl); }
     chip.addEventListener('click', function(){ commit(n); });
     wrap.appendChild(chip);
   });
@@ -517,9 +529,24 @@ function stepDate(deltaDays){
 }
 document.getElementById('datePrev').addEventListener('click', function(){ stepDate(-1); });
 document.getElementById('dateNext').addEventListener('click', function(){ stepDate(1); });
+var renderPending = false;
+function isTypingInSetInput(){
+  var el = document.activeElement;
+  return !!(el && el.classList && el.classList.contains('set-in'));
+}
+document.addEventListener('focusout', function(e){
+  if (renderPending && e.target && e.target.classList && e.target.classList.contains('set-in')){
+    renderPending = false;
+    render();
+  }
+});
 render();
-window.addEventListener('lo-sync-applied', render);
+window.addEventListener('lo-sync-applied', function(){
+  if (isTypingInSetInput()){ renderPending = true; return; }
+  render();
+});
 window.addEventListener('focus', render);
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='visible') render(); });
 </script>
 </body>
 </html>

@@ -24,8 +24,8 @@
   // as we build pages (they'll then sync automatically).
   var SYNC_PREFIXES = [
     'supps:', 'gym:', 'sleep:', 'hygiene:', 'steps:', 'fuel:', 'body:',
-    'goals:', 'todos:', 'streaks:', 'log:',
-    'money:', 'trades:', 'buy:', 'subs:',
+    'goals:', 'todos:', 'streaks:', 'log:', 'shopping:',
+    'money:', 'trades:', 'vinted:', 'buy:', 'subs:',
     'learn:', 'reading:', 'uni:',
     'social:', 'timers:', 'posture:', 'football:',
     'countdowns:', 'weekly:', 'goal_streak_v1',
@@ -61,13 +61,25 @@
   var origSet = localStorage.setItem.bind(localStorage);
   var origRemove = localStorage.removeItem.bind(localStorage);
 
+  // keys changed locally since the last successful push: k -> { kind: 'set'|'remove', gen: N }
+  var dirty = {};
+  var dirtyGen = 0;
+  function markDirty(k, kind) {
+    dirtyGen++;
+    dirty[k] = { kind: kind, gen: dirtyGen };
+  }
+
+  // last known remote state (raw object, not JSON), kept fresh from fetches,
+  // realtime pushes, and successful pushes of our own.
+  var remoteSnapshot = {};
+
   localStorage.setItem = function (k, v) {
     origSet(k, v);
-    try { if (!suppress && matches(k)) schedulePush(); } catch (e) {}
+    try { if (!suppress && matches(k)) { markDirty(k, 'set'); schedulePush(); } } catch (e) {}
   };
   localStorage.removeItem = function (k) {
     origRemove(k);
-    try { if (!suppress && matches(k)) schedulePush(); } catch (e) {}
+    try { if (!suppress && matches(k)) { markDirty(k, 'remove'); schedulePush(); } } catch (e) {}
   };
 
   function applyRemote(remote) {
@@ -76,11 +88,9 @@
     try {
       Object.keys(remote).forEach(function (k) {
         if (!matches(k)) return;
+        if (dirty.hasOwnProperty(k)) return; // never overwrite a key that's currently dirty
         var incoming = JSON.stringify(remote[k]);
         if (localStorage.getItem(k) !== incoming) { origSet(k, incoming); changed = true; }
-      });
-      listKeys().forEach(function (k) {
-        if (!(k in remote)) { origRemove(k); changed = true; }
       });
     } finally { suppress = false; }
     if (changed) {
@@ -91,17 +101,56 @@
 
   function pushNow() {
     if (!supa) return;
-    var state = collect(), json = JSON.stringify(state);
-    if (json === lastJson) return;
-    supa.from('app_state')
-      .upsert({ key: APP_KEY, data: state, updated_at: new Date().toISOString() }, { onConflict: 'key' })
-      .then(function (r) { if (!r.error) lastJson = json; });
+    var dirtyKeys = Object.keys(dirty);
+    if (!dirtyKeys.length) return;
+    var snapshot = {};
+    dirtyKeys.forEach(function (k) { snapshot[k] = { kind: dirty[k].kind, gen: dirty[k].gen }; });
+
+    supa.from('app_state').select('data').eq('key', APP_KEY).maybeSingle()
+      .then(function (res) {
+        var current = (!res.error && res.data && res.data.data && typeof res.data.data === 'object') ? res.data.data : {};
+        var merged = {};
+        Object.keys(current).forEach(function (k) { merged[k] = current[k]; });
+        Object.keys(snapshot).forEach(function (k) {
+          if (snapshot[k].kind === 'remove') { delete merged[k]; }
+          else {
+            var v = localStorage.getItem(k);
+            if (v == null) { delete merged[k]; }
+            else { try { merged[k] = JSON.parse(v); } catch (e) { merged[k] = v; } }
+          }
+        });
+        var mergedJson = JSON.stringify(merged);
+        lastJson = mergedJson; // so the realtime echo of this write is ignored
+
+        return supa.from('app_state')
+          .upsert({ key: APP_KEY, data: merged, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+          .then(function (r) {
+            if (r.error) throw r.error;
+            // clear only the keys included in this push; ones re-dirtied mid-flight stay dirty
+            Object.keys(snapshot).forEach(function (k) {
+              if (dirty[k] && dirty[k].gen === snapshot[k].gen) delete dirty[k];
+            });
+            remoteSnapshot = merged;
+            applyRemote(merged);
+          });
+      })
+      .catch(function () { /* leave dirty keys dirty so the next push retries */ });
   }
   function schedulePush() { clearTimeout(pushTimer); pushTimer = setTimeout(pushNow, 250); }
 
   function flushOnUnload() {
-    var state = collect(), json = JSON.stringify(state);
-    if (json === lastJson) return;
+    var dirtyKeys = Object.keys(dirty);
+    if (!dirtyKeys.length) return;
+    var merged = {};
+    Object.keys(remoteSnapshot).forEach(function (k) { merged[k] = remoteSnapshot[k]; });
+    dirtyKeys.forEach(function (k) {
+      if (dirty[k].kind === 'remove') { delete merged[k]; }
+      else {
+        var v = localStorage.getItem(k);
+        if (v == null) { delete merged[k]; }
+        else { try { merged[k] = JSON.parse(v); } catch (e) { merged[k] = v; } }
+      }
+    });
     try {
       fetch(SUPABASE_URL + '/rest/v1/app_state?on_conflict=key', {
         method: 'POST',
@@ -111,11 +160,26 @@
           'Content-Type': 'application/json',
           'Prefer': 'resolution=merge-duplicates'
         },
-        body: JSON.stringify({ key: APP_KEY, data: state, updated_at: new Date().toISOString() }),
+        body: JSON.stringify({ key: APP_KEY, data: merged, updated_at: new Date().toISOString() }),
         keepalive: true
       }).catch(function () {});
-      lastJson = json;
+      lastJson = JSON.stringify(merged);
     } catch (e) {}
+  }
+
+  var lastResumePull = 0;
+  function resumePull() {
+    var now = Date.now();
+    if (now - lastResumePull < 2000) return;
+    lastResumePull = now;
+    if (!supa) return;
+    supa.from('app_state').select('data').eq('key', APP_KEY).maybeSingle()
+      .then(function (res) {
+        if (res.error || !res.data || !res.data.data || typeof res.data.data !== 'object') return;
+        remoteSnapshot = res.data.data;
+        applyRemote(res.data.data);
+        if (Object.keys(dirty).length) schedulePush();
+      });
   }
 
   function init() {
@@ -124,10 +188,14 @@
 
     supa.from('app_state').select('data').eq('key', APP_KEY).maybeSingle()
       .then(function (res) {
-        if (!res.error && res.data && res.data.data && Object.keys(res.data.data).length) {
-          lastJson = JSON.stringify(res.data.data);
-          applyRemote(res.data.data);
-        } else if (Object.keys(collect()).length) {
+        var remoteData = (!res.error && res.data && res.data.data && typeof res.data.data === 'object') ? res.data.data : {};
+        remoteSnapshot = remoteData;
+        lastJson = JSON.stringify(remoteData);
+        applyRemote(remoteData);
+        if (!Object.keys(remoteData).length) {
+          listKeys().forEach(function (k) { markDirty(k, 'set'); });
+          schedulePush();
+        } else if (Object.keys(dirty).length) {
           schedulePush();
         }
       });
@@ -140,17 +208,26 @@
           var incoming = JSON.stringify(payload.new.data);
           if (incoming === lastJson) return;
           lastJson = incoming;
+          remoteSnapshot = payload.new.data;
           applyRemote(payload.new.data);
         })
       .subscribe();
 
     window.addEventListener('beforeunload', flushOnUnload);
     window.addEventListener('pagehide', flushOnUnload);
-    window.addEventListener('storage', function (e) { if (e.key && matches(e.key)) schedulePush(); });
+    window.addEventListener('storage', function (e) {
+      if (e.key && matches(e.key)) { markDirty(e.key, e.newValue == null ? 'remove' : 'set'); schedulePush(); }
+    });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') resumePull(); });
+    window.addEventListener('focus', resumePull);
   }
 
   // expose for debugging / manual push
-  window.LO_SYNC = { push: function () { schedulePush(); }, state: collect };
+  window.LO_SYNC = {
+    push: function () { schedulePush(); },
+    state: collect,
+    get dirty() { return Object.keys(dirty); }
+  };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
