@@ -68,8 +68,9 @@ function shiftStr(dstr, delta){ var p=dstr.split('-'); var d=new Date(+p[0],+p[1
 function dayDiff(a,b){ var pa=a.split('-'),pb=b.split('-'); var da=new Date(+pa[0],+pa[1]-1,+pa[2]); var db=new Date(+pb[0],+pb[1]-1,+pb[2]); return Math.round((db-da)/86400000); }
 
 /* thresholds pulled from the same keys the other pages use */
-var SUPPS_TOTAL = 16;
-var SUPPS_DONE = 16;            /* supps counts only if all 16 logged */
+var SUPPS_TOTAL = 18;
+var SUPPS_DONE = 18;            /* supps counts only if all 18 logged */
+var SUPPS_DONE_BEFORE = { date:'2026-10-02', n:16 };   /* days before creatine + astaxanthin were added still need only 16 */
 function stepsGoal(){ var g=storeGet('steps:goal'); return (typeof g==='number' && g>0) ? g : 15000; }
 function sleepTarget(){ var t=storeGet('sleep:target'); return (typeof t==='number' && t>0) ? t : 8; }
 function toMin(t){ if(!t||t.indexOf(':')<0) return null; var p=t.split(':'); return (+p[0])*60+(+p[1]); }
@@ -83,7 +84,7 @@ var HABITS = [
   { id:'sleep', name:'Sleep', icon:'ti-moon',    bar:'target hit',
     done:function(dt){ var s=storeGet('sleep:'+dt)||{}; var m=durMins(s.bed,s.wake); return m!=null && (m/60)>=sleepTarget(); } },
   { id:'supps', name:'Supps', icon:'ti-pill',    bar:SUPPS_DONE+'/'+SUPPS_TOTAL+' taken',
-    done:function(dt){ var s=storeGet('supps:'+dt)||{}; var t=0,k; for(k in s){ if(s.hasOwnProperty(k)&&s[k]) t++; } return t>=SUPPS_DONE; } }
+    done:function(dt){ var s=storeGet('supps:'+dt)||{}; var t=0,k; for(k in s){ if(s.hasOwnProperty(k)&&s[k]) t++; } return t>=(dt<SUPPS_DONE_BEFORE.date ? SUPPS_DONE_BEFORE.n : SUPPS_DONE); } }
 ];
 
 function doneSetFor(hab){

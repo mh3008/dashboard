@@ -2005,7 +2005,7 @@ input[type="number"], input[type="text"], input[type="time"], textarea, select {
         <div class="gm-card-header-left">
           <div class="gm-eyebrow">SUPPS</div>
         </div>
-        <div class="tracker-counter" id="suppsCounter">0 / 16 taken</div>
+        <div class="tracker-counter" id="suppsCounter">0 / 18 taken</div>
       </div>
       <div class="tracker-progress-bar">
         <div class="tracker-progress-fill" id="suppsProgressFill"></div>
@@ -2862,12 +2862,12 @@ function lerpColor(t) {
 // -- Supplement Tracker --------------------------------------------------------
 const SUPPS_GROUPS = [
   { id: 'WakeUp',    label: 'Wake Up',                              items: ['L-Theanine + Caffeine'] },
-  { id: 'FatSupps',  label: 'Fat Supps — morning with milk',        items: ['D3 + K2', 'Boron', 'Beta Carotene', 'Fish Oil', 'Multivitamin'] },
+  { id: 'FatSupps',  label: 'Fat Supps — morning with milk',        items: ['D3 + K2', 'Boron', 'Beta Carotene', 'Fish Oil', 'Multivitamin', 'Creatine', 'Astaxanthin'] },
   { id: 'PreGym',    label: 'Pre-Gym',                              items: ['Taurine', 'Electrolyte Powder'] },
   { id: 'VitCSupps', label: 'Vit C Supps — dinner with OJ + meat',  items: ['NAC', 'Vitamin C', 'Zinc', 'Copper'] },
   { id: 'PreSleep',  label: 'Pre-Sleep',                            items: ['Taurine', 'Glycine', 'Mag Glycinate', 'L-Theanine'] },
 ];
-const SUPPS_TOTAL = 16;
+const SUPPS_TOTAL = 18;
 
 function buildSuppsGroups() {
   const container = document.getElementById('suppsGroups');
@@ -3247,7 +3247,7 @@ function isSuppsDone(date) {
   const d = storeGet('supps:' + date) || {};
   let n = 0;
   SUPPS_GROUPS.forEach(g => g.items.forEach((_, i) => { if (d[g.id + ':' + i]) n++; }));
-  return n === SUPPS_TOTAL;
+  return n >= (date < '2026-10-02' ? 16 : SUPPS_TOTAL);   // creatine + astaxanthin added 2026-10-01 — older days needed 16
 }
 function isSleepGood(date) { return getSleepHoursForDate(date) >= 7; }
 function hasLogContent(date) {
