@@ -112,6 +112,10 @@
   .rest-preset { font-family:var(--mono); font-size:11px; font-weight:700; padding:6px 10px; border-radius:999px; cursor:pointer;
     background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); color:var(--cool); transition:background .16s; }
   .rest-preset:hover { background:rgba(56,189,248,0.16); }
+  .ready-badge { display:inline-flex; align-items:center; gap:6px; margin-left:4px; padding:3px 9px; border-radius:999px;
+    font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.02em; color:var(--text-2);
+    background:rgba(255,255,255,0.04); border:1px solid var(--hair); white-space:nowrap; }
+  .ready-badge .rb-dot { width:7px; height:7px; border-radius:50%; background:var(--text-3); }
   .rest-stop { font-family:var(--mono); font-size:11px; font-weight:700; padding:6px 10px; border-radius:999px; cursor:pointer;
     background:rgba(255,255,255,0.04); border:1px solid var(--hair); color:var(--text-2); }
 </style>
@@ -120,7 +124,7 @@
 <div class="wrap">
   <div class="card" id="gymCard">
     <div class="gym-head">
-      <div class="gym-title"><i class="ti ti-barbell"></i> Gym</div>
+      <div class="gym-title"><i class="ti ti-barbell"></i> Gym <span class="ready-badge" id="readyBadge" style="display:none"><span class="rb-dot"></span><span class="rb-txt"></span></span></div>
       <div class="date-nav">
         <span class="date-arrow" id="datePrev"><i class="ti ti-chevron-left"></i></span>
         <span class="date-lbl" id="dateLbl">—</span>
@@ -153,6 +157,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="sync.js" defer></script>
 <script src="topbar.js" defer></script>
+<script src="health.js"></script>
 <script>
 function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
 function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -453,6 +458,7 @@ function render(){
     list.appendChild(card);
   });
   refreshMeta();
+  renderReady();
   var fb=document.getElementById('finishBtn');
   fb.classList.toggle('is-done', s.finished);
   fb.querySelector('span').textContent = s.finished ? 'Session finished ✓' : 'Finish session';
@@ -468,6 +474,13 @@ function refreshMeta(){
   var status = s.finished ? 'Finished ✓' : (completed>0 ? completed+' sets done' : (sets>0?'In progress':'Not started'));
   document.getElementById('mStatus').textContent=status;
   document.getElementById('gymCard').classList.toggle('is-done', s.finished);
+}
+var READY_COL = { green:'var(--success)', amber:'var(--warning)', red:'var(--danger)' };
+function renderReady(){
+  var r=LO_HEALTH.readiness(viewedDate), b=document.getElementById('readyBadge');
+  b.style.display = '';
+  b.querySelector('.rb-dot').style.background = READY_COL[r.state] || 'var(--text-3)';
+  b.querySelector('.rb-txt').textContent = r.verdict;
 }
 function refreshBadges(){
   var s=load(), exs=activeEx(s);
@@ -564,6 +577,7 @@ document.addEventListener('focusout', function(e){
   }
 });
 render();
+LO_HEALTH.load(function(){ renderReady(); });
 window.addEventListener('lo-sync-applied', function(){
   if (isTypingInSetInput()){ renderPending = true; return; }
   render();

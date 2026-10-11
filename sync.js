@@ -192,6 +192,8 @@
         remoteSnapshot = remoteData;
         lastJson = JSON.stringify(remoteData);
         applyRemote(remoteData);
+        window.LO_SYNC_READY = true;
+        try { window.dispatchEvent(new CustomEvent('lo-sync-ready')); } catch (e) {}
         if (!Object.keys(remoteData).length) {
           listKeys().forEach(function (k) { markDirty(k, 'set'); });
           schedulePush();

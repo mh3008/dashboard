@@ -53,13 +53,30 @@
   .trend-wrap svg { width:100%; height:auto; display:block; }
   .trend-read { font-family:var(--mono); font-size:11px; color:var(--text-2); text-align:center; margin-top:12px; min-height:14px; }
   .trend-read b { color:var(--text-1); font-weight:800; }
+  .helio-tag { display:inline-flex; align-items:center; gap:4px; margin-left:8px; padding:2px 7px; border-radius:999px;
+    font-family:var(--mono); font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--cool); background:var(--cool-dim); vertical-align:middle; }
+  .helio-tag i { font-size:11px; }
+  .helio-stages { font-family:var(--mono); font-size:10.5px; color:var(--text-3); margin-top:6px; min-height:13px; }
+  .ready-row { display:flex; align-items:center; gap:12px; }
+  .ready-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; background:var(--text-3); }
+  .ready-verdict { font-size:17px; font-weight:800; letter-spacing:-0.01em; }
+  .ready-nums { display:flex; gap:16px; margin-top:12px; font-family:var(--mono); font-size:11px; color:var(--text-2); }
+  .ready-nums b { color:var(--text-1); font-weight:800; }
+  .cons-row { display:flex; align-items:baseline; gap:10px; margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--hair); }
+  .cons-score { font-size:26px; font-weight:800; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .cons-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .hc-block + .hc-block { margin-top:16px; }
+  .hc-wrap svg { width:100%; height:auto; display:block; touch-action:pan-y; }
+  .hc-read { font-family:var(--mono); font-size:11px; color:var(--text-2); margin-top:4px; min-height:14px; }
+  .hc-read b { color:var(--text-1); font-weight:800; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card" id="sleepCard">
     <div class="slp-head">
-      <div class="slp-title"><i class="ti ti-moon"></i> Sleep</div>
+      <div class="slp-title"><i class="ti ti-moon"></i> Sleep<span class="helio-tag" id="helioTag" style="display:none"><i class="ti ti-device-watch"></i>synced from Helio</span></div>
       <div class="slp-date" id="slpDate">—</div>
     </div>
     <div class="time-grid">
@@ -78,6 +95,7 @@
       <div class="dur-sub">of <span id="tgtTxt">8h</span> target</div>
       <div class="dur-bar"><div class="dur-fill" id="durFill"></div></div>
       <div class="dur-status" id="durStatus"></div>
+      <div class="helio-stages" id="helioStages"></div>
     </div>
     <div class="qual-block">
       <div class="block-lbl">Quality</div>
@@ -98,10 +116,30 @@
     <div class="trend-wrap" id="trendWrap"></div>
     <div class="trend-read" id="trendRead"></div>
   </div>
+  <div class="card">
+    <div class="block-lbl">Readiness</div>
+    <div class="ready-row"><span class="ready-dot" id="readyDot"></span><span class="ready-verdict" id="readyVerdict">—</span></div>
+    <div class="ready-nums" id="readyNums"></div>
+  </div>
+  <div class="card">
+    <div class="block-lbl">Bedtime consistency · 7 nights</div>
+    <div class="cons-row"><span class="cons-score" id="consScore">—</span><span class="cons-sub" id="consSub"></span></div>
+    <div class="hc-block">
+      <div class="block-lbl" style="margin-bottom:4px;">HRV · 30 nights</div>
+      <div class="hc-wrap" id="hrvChart"></div>
+      <div class="hc-read" id="hrvRead"></div>
+    </div>
+    <div class="hc-block">
+      <div class="block-lbl" style="margin-bottom:4px;">Resting HR · 30 nights</div>
+      <div class="hc-wrap" id="rhrChart"></div>
+      <div class="hc-read" id="rhrRead"></div>
+    </div>
+  </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="sync.js" defer></script>
 <script src="topbar.js" defer></script>
+<script src="health.js"></script>
 <script>
 function storeGet(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
 function storeSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
@@ -166,7 +204,116 @@ function render(){
     })(i);
   }
   document.getElementById('qualLabel').textContent = s.quality>0 ? QUAL[s.quality] : 'Not rated';
+  var h = LO_HEALTH.map()[getActiveDateString()];
+  document.getElementById('helioTag').style.display = (s.src==='helio') ? '' : 'none';
+  var stg=[];
+  if (h && s.src==='helio'){
+    if (typeof h.asleep_mins==='number') stg.push('asleep '+fmtDur(h.asleep_mins));
+    if (typeof h.deep_mins==='number') stg.push('deep '+fmtDur(h.deep_mins));
+    if (typeof h.rem_mins==='number') stg.push('REM '+fmtDur(h.rem_mins));
+  }
+  document.getElementById('helioStages').textContent = stg.join(' · ');
   renderTrend();
+  renderRecovery();
+}
+// Helio nights fill sleep:<date> unless that night was entered by hand.
+// Typing into bed/wake marks it src:'manual', which Helio never overwrites.
+function applyHealth(map){
+  var dates = lastNDates(30), changed = false;
+  dates.forEach(function(d){
+    var h = map[d]; if (!h || !h.bed || !h.wake) return;
+    var s = storeGet('sleep:'+d) || {};
+    if (s.src==='manual') return;
+    if (s.src!=='helio' && (s.bed || s.wake)) return;
+    if (s.bed===h.bed && s.wake===h.wake && s.src==='helio') return;
+    s.bed=h.bed; s.wake=h.wake; s.src='helio';
+    if (typeof s.quality!=='number') s.quality=0;
+    storeSet('sleep:'+d, s); changed = true;
+  });
+  return changed;
+}
+function bedSpread(){
+  var mins=[];
+  lastNDates(7).forEach(function(d){
+    var b=toMin((storeGet('sleep:'+d)||{}).bed); if (b==null) return;
+    if (b<720) b+=1440;   // after-midnight bedtimes sit after 23:59, not before 00:00
+    mins.push(b);
+  });
+  if (mins.length<3) return { n:mins.length };
+  var m=mins.reduce(function(a,b){return a+b;},0)/mins.length;
+  var sd=Math.sqrt(mins.reduce(function(a,b){return a+(b-m)*(b-m);},0)/mins.length);
+  return { n:mins.length, sd:sd, score:Math.max(0, Math.round(100 - sd*100/90)), avg:Math.round(m)%1440 };
+}
+var READY_COL = { green:'var(--success)', amber:'var(--warning)', red:'var(--danger)' };
+function renderRecovery(){
+  var r = LO_HEALTH.readiness(getActiveDateString());
+  var dot=document.getElementById('readyDot'), v=document.getElementById('readyVerdict'), nums=document.getElementById('readyNums');
+  dot.style.background = READY_COL[r.state] || 'var(--text-3)';
+  v.textContent = r.verdict.charAt(0).toUpperCase()+r.verdict.slice(1);
+  v.style.color = READY_COL[r.state] ? 'var(--text-1)' : 'var(--text-2)';
+  if (r.baseHrv!=null){
+    nums.innerHTML = '<span>HRV <b>'+(+r.hrv.toFixed(1))+'</b> ms ('+(r.dHrv>=0?'+':'')+Math.round(r.dHrv)+'%)</span>'+
+      '<span>RHR <b>'+r.rhr+'</b> bpm ('+(r.dRhr>=0?'+':'')+(+r.dRhr.toFixed(1))+')</span>'+
+      '<span>vs 7-night avg</span>';
+  } else nums.innerHTML = '';
+  var c=bedSpread(), cs=document.getElementById('consScore'), csub=document.getElementById('consSub');
+  if (c.sd==null){ cs.textContent='—'; cs.style.color='var(--text-3)'; csub.textContent='needs 3+ nights ('+c.n+' logged)'; }
+  else {
+    cs.textContent=c.score+'/100';
+    cs.style.color = c.score>=70?'var(--success)':(c.score>=40?'var(--warning)':'var(--danger)');
+    csub.textContent='±'+Math.round(c.sd)+'m around '+pad2(Math.floor(c.avg/60))+':'+pad2(c.avg%60)+' · '+c.n+' nights';
+  }
+  var map=LO_HEALTH.map(), dates=lastNDates(30);
+  lineChart('hrvChart','hrvRead', dates, dates.map(function(d){ return map[d]&&typeof map[d].hrv==='number'?map[d].hrv:null; }), 'var(--cool)', 'ms');
+  lineChart('rhrChart','rhrRead', dates, dates.map(function(d){ return map[d]&&typeof map[d].rhr==='number'?map[d].rhr:null; }), 'var(--accent-lt)', 'bpm');
+}
+function shortDate(d){ return new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+function lineChart(hostId, readId, dates, vals, col, unit){
+  var host=document.getElementById(hostId), read=document.getElementById(readId);
+  var pts=vals.filter(function(v){ return v!=null; });
+  if (!pts.length){ host.innerHTML=''; read.textContent='No Helio data yet.'; return; }
+  var lo=Math.min.apply(null,pts), hi=Math.max.apply(null,pts), span=Math.max(hi-lo, 4);
+  lo-=span*0.15; hi+=span*0.15;
+  var W=320,H=96,padL=4,padR=4,padT=8,padB=18, iw=W-padL-padR, ih=H-padT-padB;
+  function x(i){ return padL + (dates.length<2?iw/2:iw*i/(dates.length-1)); }
+  function y(v){ return padT + ih*(1-(v-lo)/(hi-lo)); }
+  var svg='<svg viewBox="0 0 '+W+' '+H+'">';
+  svg+='<line x1="'+padL+'" y1="'+(padT+ih)+'" x2="'+(W-padR)+'" y2="'+(padT+ih)+'" stroke="var(--hair)"/>';
+  var path='', pen=false;
+  vals.forEach(function(v,i){
+    if (v==null){ pen=false; return; }
+    path += (pen?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)+' '; pen=true;
+  });
+  svg+='<path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  vals.forEach(function(v,i){   // lone points between gaps would be invisible as a path
+    var solo = v!=null && (i===0||vals[i-1]==null) && (i===vals.length-1||vals[i+1]==null);
+    if (solo) svg+='<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.5" fill="'+col+'"/>';
+  });
+  svg+='<text x="'+padL+'" y="'+(H-4)+'" fill="var(--text-3)" font-family="monospace" font-size="8.5">'+shortDate(dates[0])+'</text>';
+  svg+='<text x="'+(W-padR)+'" y="'+(H-4)+'" text-anchor="end" fill="var(--text-3)" font-family="monospace" font-size="8.5">'+shortDate(dates[dates.length-1])+'</text>';
+  svg+='<g class="hc-hover" style="display:none"><line y1="'+padT+'" y2="'+(padT+ih)+'" stroke="var(--text-3)" stroke-dasharray="2 2"/>'+
+    '<circle r="4" fill="'+col+'" stroke="var(--bg)" stroke-width="2"/></g>';
+  svg+='<rect class="hc-hit" x="0" y="0" width="'+W+'" height="'+H+'" fill="transparent"/></svg>';
+  host.innerHTML=svg;
+  var last=-1; for (var k=vals.length-1;k>=0;k--) if(vals[k]!=null){ last=k; break; }
+  var avg=pts.reduce(function(a,b){return a+b;},0)/pts.length;
+  function idle(){ read.innerHTML='Latest <b>'+(+vals[last].toFixed(1))+'</b> '+unit+' · 30-night avg <b>'+(+avg.toFixed(1))+'</b> · '+pts.length+' nights'; }
+  idle();
+  var svgEl=host.querySelector('svg'), g=host.querySelector('.hc-hover');
+  function at(evt){
+    var e = evt.touches ? evt.touches[0] : evt, box=svgEl.getBoundingClientRect();
+    var px=(e.clientX-box.left)/box.width*W, best=-1, bd=1e9;
+    vals.forEach(function(v,i){ if(v!=null && Math.abs(x(i)-px)<bd){ bd=Math.abs(x(i)-px); best=i; } });
+    if (best<0) return;
+    g.style.display='';
+    g.querySelector('line').setAttribute('x1',x(best)); g.querySelector('line').setAttribute('x2',x(best));
+    g.querySelector('circle').setAttribute('cx',x(best)); g.querySelector('circle').setAttribute('cy',y(vals[best]));
+    read.innerHTML='<b>'+new Date(dates[best]+'T12:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+'</b> · '+(+vals[best].toFixed(1))+' '+unit;
+  }
+  var hit=host.querySelector('.hc-hit');
+  hit.addEventListener('mousemove', at); hit.addEventListener('touchstart', at, {passive:true}); hit.addEventListener('touchmove', at, {passive:true});
+  hit.addEventListener('mouseleave', function(){ g.style.display='none'; idle(); });
+  hit.addEventListener('touchend', function(){ g.style.display='none'; idle(); });
 }
 var trendSel = -1;
 function lastNDates(n){
@@ -230,13 +377,19 @@ function renderTrend(){
     b.addEventListener('click', function(){ var i=+b.getAttribute('data-idx'); trendSel=(trendSel===i?-1:i); renderTrend(); });
   });
 }
-document.getElementById('bedIn').addEventListener('input', function(e){ var s=load(); s.bed=e.target.value; save(s); render(); });
-document.getElementById('wakeIn').addEventListener('input', function(e){ var s=load(); s.wake=e.target.value; save(s); render(); });
+document.getElementById('bedIn').addEventListener('input', function(e){ var s=load(); s.bed=e.target.value; s.src='manual'; save(s); render(); });
+document.getElementById('wakeIn').addEventListener('input', function(e){ var s=load(); s.wake=e.target.value; s.src='manual'; save(s); render(); });
 document.getElementById('tgtDown').addEventListener('click', function(){ var t=Math.max(4, getTarget()-0.5); storeSet(TGT_KEY, t); render(); });
 document.getElementById('tgtUp').addEventListener('click', function(){ var t=Math.min(12, getTarget()+0.5); storeSet(TGT_KEY, t); render(); });
 render();
+// only fill once sync.js has pulled remote sleep:* — otherwise a night entered
+// by hand on another device could look empty here and get overwritten
+function healthTick(map){ if (window.LO_SYNC_READY) applyHealth(map); render(); }
+LO_HEALTH.load(healthTick);
+window.addEventListener('lo-sync-ready', function(){ healthTick(LO_HEALTH.map()); });
 window.addEventListener('lo-sync-applied', render);
 window.addEventListener('focus', render);
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='visible') LO_HEALTH.load(healthTick); });
 </script>
 </body>
 </html>
