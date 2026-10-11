@@ -157,9 +157,50 @@ function renderTrend(){
     b.addEventListener('click', function(){ var i=+b.getAttribute('data-idx'); trendSel=(trendSel===i?-1:i); renderTrend(); });
   });
 }
+// Shortcut counts land in Supabase daily_data as 'steps:YYYY-MM-DD' (api/steps.js).
+// Fetched here, cached under 'stepscache' (not a sync prefix), and copied into
+// steps:<date> unless that day was typed by hand (src:'manual').
+var SB_URL = 'https://inxmxqlfkivryhhxgtnd.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlueG14cWxma2l2cnloaHhndG5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NzgzMDksImV4cCI6MjA5NjI1NDMwOX0.TohwbcDQqLbT1f2ol1_Yw7vpa1lJBB-Z0-MnrRaKq7E';
+var syncedSteps = {};
+try { syncedSteps = JSON.parse(localStorage.getItem('stepscache')) || {}; } catch(e){ syncedSteps = {}; }
+function loadSynced(cb){
+  cb();
+  var since = lastNDates(40)[0];
+  fetch(SB_URL+'/rest/v1/daily_data?select=key,value&key=gte.'+encodeURIComponent('steps:'+since)+'&key=lte.'+encodeURIComponent('steps:9999'),
+    { headers:{ apikey:SB_KEY, Authorization:'Bearer '+SB_KEY } })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(rows){
+      if (!rows) return;
+      var next = {};
+      rows.forEach(function(r){ var d=r.key.slice(6), n=Math.round(+r.value); if (/^\d{4}-\d{2}-\d{2}$/.test(d) && isFinite(n) && n>=0) next[d]=n; });
+      var changed = JSON.stringify(next) !== JSON.stringify(syncedSteps);
+      syncedSteps = next;
+      try { localStorage.setItem('stepscache', JSON.stringify(next)); } catch(e){}
+      if (changed) cb();
+    })
+    .catch(function(){});
+}
+function applySynced(){
+  lastNDates(40).forEach(function(d){
+    var n = syncedSteps[d]; if (n==null) return;
+    var s = storeGet('steps:'+d) || {};
+    if (s.src==='manual') return;
+    if (s.src!=='shortcut' && typeof s.count==='number' && s.count>0) return;  // pre-existing hand entry
+    if (s.src==='shortcut' && s.count===n) return;
+    s.count=n; s.src='shortcut'; s.done=n>0;
+    storeSet('steps:'+d, s);
+  });
+}
+// only apply once sync.js has pulled remote steps:* — otherwise a hand entry
+// made on another device could look empty here and get overwritten
+function syncedTick(){ if (window.LO_SYNC_READY) applySynced(); render(); }
 document.getElementById('countIn').addEventListener('input', function(e){
   var v=parseInt(e.target.value,10); if(!isFinite(v)||v<0) v=0;
-  var s=load(); s.count=v; save(s);
+  var s=load(); s.count=v;
+  if (v>0) s.src='manual'; else delete s.src;   // clearing the box hands the day back to the Shortcut
+  save(s);
+  if (v<=0) applySynced();
   var goal=getGoal(), fill=document.getElementById('stpFill'), status=document.getElementById('stpStatus');
   var pct=Math.min(100, goal>0? v/goal*100:0); fill.style.width=pct+'%';
   var col,msg;
@@ -174,8 +215,11 @@ document.getElementById('countIn').addEventListener('blur', render);
 document.getElementById('goalDown').addEventListener('click', function(){ var g=Math.max(2000, getGoal()-500); storeSet(GOAL_KEY, g); render(); });
 document.getElementById('goalUp').addEventListener('click', function(){ var g=Math.min(40000, getGoal()+500); storeSet(GOAL_KEY, g); render(); });
 render();
+loadSynced(syncedTick);
+window.addEventListener('lo-sync-ready', syncedTick);
 window.addEventListener('lo-sync-applied', render);
 window.addEventListener('focus', render);
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='visible') loadSynced(syncedTick); });
 </script>
 </body>
 </html>
