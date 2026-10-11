@@ -162,14 +162,36 @@ function num(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
 function e1rm(w,r){ return w>0&&r>0 ? w*(1+r/30) : 0; }
 var SPLITS = ['Anterior','Posterior'];
 var SPLIT_TEMPLATES = {
-  'Anterior': ['Chest Fly','Incline Chest Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor'],
-  'Posterior': ['Seated Row','Lat Pulldown','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise']
+  'Anterior': ['Chest Fly','Incline Chest Press','Shoulder Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor'],
+  'Posterior': ['Seated Row','Lat Pulldown','Narrow Grip Row','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise']
 };
+// Template additions merged into already-saved split lists (sessions on/after
+// `from` only, so past logged days are left exactly as they were). Inserted
+// right after `after`; appended if that exercise isn't in the list.
+var TPL_V = 2;
+var TPL_ADDS = [
+  { split:'Anterior',  name:'Shoulder Press',  after:'Incline Chest Press', from:'2026-10-11' },
+  { split:'Posterior', name:'Narrow Grip Row', after:'Lat Pulldown',        from:'2026-10-11' }
+];
+function migrateTemplates(s, date){
+  if ((s.tplV||1) >= TPL_V) return;
+  TPL_ADDS.forEach(function(a){
+    var list = s.bySplit[a.split];
+    if (date < a.from || !list.length) return;
+    var lc = function(n){ return (n||'').toLowerCase(); };
+    if (list.some(function(e){ return lc(e.name)===lc(a.name); })) return;
+    var sets=[]; for(var i=0;i<setsForName(a.name);i++) sets.push({weight:'',reps:'',done:false});
+    var at = -1;
+    list.forEach(function(e, i){ if (lc(e.name)===lc(a.after)) at = i; });
+    list.splice(at<0 ? list.length : at+1, 0, { name:a.name, sets:sets });
+  });
+  s.tplV = TPL_V;
+}
 var SETS_PER = 2;
 function setsForName(nm){
   return SETS_PER;
 }
-var SEED_EX = ['Chest Fly','Incline Chest Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor','Seated Row','Lat Pulldown','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise'];
+var SEED_EX = ['Chest Fly','Incline Chest Press','Shoulder Press','Lateral Raise','Triceps Extension','Leg Extension','Hip Adductor','Seated Row','Lat Pulldown','Narrow Grip Row','Bicep Curl','Reverse Curl','Back Extension','Seated Leg Curl','Seated Calf Raise'];
 var viewedDate = getActiveDateString();
 function KEY(){ return 'gym:'+viewedDate; }
 function load(){
@@ -187,6 +209,7 @@ function load(){
   if (typeof s.split !== 'string') s.split = '';
   if (typeof s.finished !== 'boolean') s.finished = false;
   if ('exercises' in s) delete s.exercises;
+  migrateTemplates(s, viewedDate);
   return s;
 }
 function activeEx(s){
